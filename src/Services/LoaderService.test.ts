@@ -2,7 +2,10 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { FnetAdapter } from "@/Adapters/Fnet/FnetAdapter.ts";
+import { FnetDocumentAdapter } from "@/Adapters/Fnet/FnetDocumentAdapter.ts";
 import { HttpRefusedError } from "@/Errors/HttpRefusedError.ts";
+import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type { ProviderRequest, ProviderResult } from "@/Protocols/ProviderProtocol.ts";
 import type { Requirement } from "@/Protocols/SqlGuardProtocol.ts";
 import { LoaderService } from "@/Services/LoaderService.ts";
@@ -24,6 +27,7 @@ const quoteRow = (date: string, close: number, source = "primary"): Record<strin
 });
 
 const DOCUMENT_FIXTURES = join(import.meta.dirname, "..", "Testing", "fixtures", "cvm", "documents");
+const SAMPLE_PDF_PATH = join(DOCUMENT_FIXTURES, "material-fact-sample.pdf");
 const PDF_URL = "https://www.rad.cvm.gov.br/ENET/doc-material-fact";
 const PETR4_FILING: Requirement = {
   table: "chunks",
@@ -238,8 +242,7 @@ describe("LoaderService.ensure()", () => {
       fileRows = [buildFilingRow(PDF_FILING_ID, "material_fact", PDF_URL)];
       rebuildCalls = 0;
       const requested: string[] = [];
-      const pdfPath = join(DOCUMENT_FIXTURES, "material-fact-sample.pdf");
-      documentBytes = () => Promise.resolve(new Uint8Array(readFileSync(pdfPath)));
+      documentBytes = () => Promise.resolve(new Uint8Array(readFileSync(SAMPLE_PDF_PATH)));
       documents = {
         requested,
         category: "documents",
@@ -380,7 +383,7 @@ describe("LoaderService.ensure()", () => {
       it("replaces the chunks when the document has changed", async () => {
         const loader = buildLoader();
         await loader.ensure([PETR4_FILING]);
-        const changed = await Promise.resolve(new Uint8Array(readFileSync(join(DOCUMENT_FIXTURES, "material-fact-sample.pdf"))));
+        const changed = await Promise.resolve(new Uint8Array(readFileSync(SAMPLE_PDF_PATH)));
         documentBytes = () => Promise.resolve(new Uint8Array([...changed, 10]));
         nowMs += (TTL_SECONDS + 1) * 1_000;
 
@@ -411,6 +414,172 @@ describe("LoaderService.ensure()", () => {
 
         expect(entry).toMatchObject({ status: "loaded", indexError: "the full-text extension cannot be installed" });
         expect(await readChunks()).toHaveLength(2);
+      });
+    });
+
+    describe("when configured with FNET (BR:fnet)", () => {
+      const fnetFixturePath = join(import.meta.dirname, "..", "Testing", "fixtures", "fnet", "fnet-search-response.json");
+      const FNET_SEARCH_FIXTURE = readFileSync(fnetFixturePath, "utf8");
+      const SAMPLE_PDF = readFileSync(SAMPLE_PDF_PATH);
+      const INSERT_HGLG11 = "INSERT INTO assets (market, ticker, asset_type, legal_id) VALUES ('BR', 'HGLG11', 'fii', '11728688000147')";
+      const BLANK_PDF = new TextEncoder().encode(
+        "%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>\nendobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \ntrailer\n<< /Size 4 /Root 1 0 R >>\nstartxref\n190\n%%EOF\n",
+      );
+
+      let requestedUrls: string[];
+      let fnetDocBytes: () => Promise<Uint8Array>;
+
+      const buildFnetHttp = (): HttpPort => ({
+        getText: (url: string) => {
+          requestedUrls.push(url);
+          return Promise.resolve(FNET_SEARCH_FIXTURE);
+        },
+        getBytes: (url: string) => {
+          requestedUrls.push(url);
+          return fnetDocBytes();
+        },
+        getCookies: () => Promise.reject(new Error("not used")),
+        postForm: () => Promise.reject(new Error("not used")),
+      });
+
+      const buildFnetLoader = (): LoaderService => {
+        requestedUrls = [];
+        fnetDocBytes = () => Promise.resolve(new Uint8Array(SAMPLE_PDF));
+        const http = buildFnetHttp();
+        const lookup = StoreService.buildLegalIdLookup(store.writer);
+        const fnetAdapter = new FnetAdapter(http, lookup);
+        const fnetDocumentAdapter = new FnetDocumentAdapter(http);
+        const registry = new ProviderRegistryService(
+          {
+            INVESTMENT_MCP_LOG_LEVEL: "error",
+            INVESTMENT_MCP_CACHE_TTL_SECONDS: TTL_SECONDS,
+            INVESTMENT_MCP_FILINGS_PROVIDER: "BR:fnet",
+            INVESTMENT_MCP_DOCUMENTS_PROVIDER: "BR:fnet",
+          },
+          {
+            ...ProviderRegistryService.buildEmptyCatalog(),
+            filings: { fnet: fnetAdapter },
+            documents: { fnet: fnetDocumentAdapter },
+          },
+        );
+        return new LoaderService(store, registry, () => Promise.resolve());
+      };
+
+      it("loads filings when legal_id is set and persists filings row", async () => {
+        await store.writer.run(INSERT_HGLG11);
+        const loader = buildFnetLoader();
+
+        const [entry] = await loader.ensure([{
+          category: "filings",
+          market: "BR",
+          ticker: "HGLG11",
+          assetType: "fii",
+          table: "filings",
+        }]);
+
+        expect(entry).toMatchObject({ status: "loaded", source: "fnet", rowsWritten: 1 });
+        expect(requestedUrls.length).toBeGreaterThan(0);
+        const rows = await store.writer.readRows("SELECT filing_id, ticker, filing_type, source FROM filings WHERE ticker = 'HGLG11'");
+        expect(rows).toHaveLength(1);
+        expect(rows[0]).toMatchObject({ ticker: "HGLG11", filing_type: "fii_management_report", source: "fnet" });
+      });
+
+      it("fails clearly without making any requests when legal_id is null", async () => {
+        await store.writer.run("INSERT INTO assets (market, ticker, asset_type, legal_id) VALUES ('BR', 'KNRI11', 'fii', NULL)");
+        const loader = buildFnetLoader();
+
+        const [entry] = await loader.ensure([{
+          category: "filings",
+          market: "BR",
+          ticker: "KNRI11",
+          assetType: "fii",
+          table: "filings",
+        }]);
+
+        expect(entry).toMatchObject({ status: "failed" });
+        expect(entry?.error).toContain("cannot map BR:KNRI11 to a FNET fund; no CNPJ is known for it");
+        expect(requestedUrls).toStrictEqual([]);
+      });
+
+      it("downloads document with text on 2 pages and stores chunks in page order", async () => {
+        await store.writer.run(INSERT_HGLG11);
+        const loader = buildFnetLoader();
+        await loader.ensure([{ category: "filings", market: "BR", ticker: "HGLG11", assetType: "fii", table: "filings" }]);
+
+        const [entry] = await loader.ensure([{
+          category: "documents",
+          market: "BR",
+          ticker: "HGLG11",
+          assetType: "fii",
+          table: "chunks",
+          filingType: "fii_management_report",
+        }]);
+
+        expect(entry).toMatchObject({ status: "loaded", pagesWithoutText: 1 });
+        const chunks = await readChunks();
+        expect(chunks).toHaveLength(2);
+        expect(chunks.map((chunk) => chunk.page)).toStrictEqual([1, 3]);
+      });
+
+      it("stores zero chunks when PDF has no text and reports pages without text", async () => {
+        await store.writer.run(INSERT_HGLG11);
+        const loader = buildFnetLoader();
+        fnetDocBytes = () => Promise.resolve(BLANK_PDF);
+        await loader.ensure([{ category: "filings", market: "BR", ticker: "HGLG11", assetType: "fii", table: "filings" }]);
+
+        const [entry] = await loader.ensure([{
+          category: "documents",
+          market: "BR",
+          ticker: "HGLG11",
+          assetType: "fii",
+          table: "chunks",
+          filingType: "fii_management_report",
+        }]);
+
+        expect(entry).toMatchObject({ status: "loaded", pagesWithoutText: 1, rowsWritten: 0 });
+        const chunks = await readChunks();
+        expect(chunks).toStrictEqual([]);
+      });
+
+      it("stores zero chunks when FNET returns an HTML page instead of PDF", async () => {
+        await store.writer.run(INSERT_HGLG11);
+        const loader = buildFnetLoader();
+        fnetDocBytes = () => Promise.resolve(new TextEncoder().encode("<!DOCTYPE html><html><body>Erro</body></html>"));
+        await loader.ensure([{ category: "filings", market: "BR", ticker: "HGLG11", assetType: "fii", table: "filings" }]);
+
+        const [entry] = await loader.ensure([{
+          category: "documents",
+          market: "BR",
+          ticker: "HGLG11",
+          assetType: "fii",
+          table: "chunks",
+          filingType: "fii_management_report",
+        }]);
+
+        expect(entry).toMatchObject({ status: "failed" });
+        expect(entry?.error).toContain("FNET answered with a page, not a PDF document");
+        const chunks = await readChunks();
+        expect(chunks).toStrictEqual([]);
+      });
+
+      it("stores zero chunks when PDF is truncated or corrupt", async () => {
+        await store.writer.run(INSERT_HGLG11);
+        const loader = buildFnetLoader();
+        fnetDocBytes = () => Promise.resolve(new TextEncoder().encode("%PDF-corrupted-content-invalid"));
+        await loader.ensure([{ category: "filings", market: "BR", ticker: "HGLG11", assetType: "fii", table: "filings" }]);
+
+        const [entry] = await loader.ensure([{
+          category: "documents",
+          market: "BR",
+          ticker: "HGLG11",
+          assetType: "fii",
+          table: "chunks",
+          filingType: "fii_management_report",
+        }]);
+
+        expect(entry).toMatchObject({ status: "failed" });
+        const chunks = await readChunks();
+        expect(chunks).toStrictEqual([]);
       });
     });
   });

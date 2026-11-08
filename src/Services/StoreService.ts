@@ -5,10 +5,11 @@ import { join } from "node:path";
 import { DuckDbAdapter } from "@/Adapters/DuckDb/DuckDbAdapter.ts";
 import { DuckDbSchemaAdapter } from "@/Adapters/DuckDb/DuckDbSchemaAdapter.ts";
 import type { DatabasePort } from "@/Protocols/DatabaseProtocol.ts";
+import type { LegalIdLookup } from "@/Protocols/CvmProtocol.ts";
 import { StoreUnavailableError } from "@/Errors/StoreUnavailableError.ts";
 import type { Env } from "@/Protocols/EnvProtocol.ts";
 import type { OpenOutcome, SchemaVersionRow, TableCountRow } from "@/Protocols/StoreProtocol.ts";
-import { SchemaVersionRowsSchema, TableCountRowsSchema } from "@/Schemas/StoreSchema.ts";
+import { LegalIdRowsSchema, SchemaVersionRowsSchema, TableCountRowsSchema } from "@/Schemas/StoreSchema.ts";
 import { CacheService } from "@/Services/CacheService.ts";
 import { LogUtil } from "@/Utils/LogUtil.ts";
 
@@ -40,6 +41,24 @@ export class StoreService {
 
   openReader(): Promise<DuckDbAdapter> {
     return DuckDbAdapter.openReader(this.databasePath);
+  }
+
+  static buildLegalIdLookup(database: DatabasePort): LegalIdLookup {
+    return async (market: string, ticker: string): Promise<string | undefined> => {
+      const rows = await database.readRows(
+        "SELECT legal_id FROM assets WHERE market = ? AND ticker = ?",
+        [market, ticker],
+      );
+      const parsed = LegalIdRowsSchema.safeParse(rows);
+      if (!parsed.success) {
+        return undefined;
+      }
+      const legalId = parsed.data[0]?.legal_id;
+      if (typeof legalId === "string" && legalId.trim() !== "") {
+        return legalId.trim();
+      }
+      return undefined;
+    };
   }
 
   close(): void {

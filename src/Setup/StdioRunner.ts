@@ -12,7 +12,8 @@ export class StdioRunner {
 
   static async run(env: Env): Promise<void> {
     const store = await StoreService.open(env);
-    const registry = new ProviderRegistryService(env, VendorCatalogService.build());
+    const lookup = StoreService.buildLegalIdLookup(store.writer);
+    const registry = new ProviderRegistryService(env, VendorCatalogService.build(lookup));
     const server = McpServerSurface.build({
       querySql: {
         guard: new SqlGuardService(store.writer),

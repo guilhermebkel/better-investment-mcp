@@ -147,3 +147,21 @@ describe("StoreService.open()", () => {
     });
   });
 });
+
+describe("StoreService.buildLegalIdLookup()", () => {
+  it("resolves legal_id for known asset and undefined for missing or null asset", async () => {
+    const directory = mkdtempSync(TEMP_PREFIX);
+    const store = await StoreService.open({ INVESTMENT_MCP_LOG_LEVEL: "error", INVESTMENT_MCP_CACHE_DIR: directory, INVESTMENT_MCP_CACHE_TTL_SECONDS: 60 });
+    try {
+      await store.writer.run("INSERT INTO assets (market, ticker, asset_type, legal_id) VALUES ('BR', 'HGLG11', 'fii', '11728688000147'), ('BR', 'KNRI11', 'fii', NULL)");
+      const lookup = StoreService.buildLegalIdLookup(store.writer);
+
+      expect(await lookup("BR", "HGLG11")).toBe("11728688000147");
+      expect(await lookup("BR", "KNRI11")).toBeUndefined();
+      expect(await lookup("BR", "UNKNOWN")).toBeUndefined();
+    } finally {
+      store.close();
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+});

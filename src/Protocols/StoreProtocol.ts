@@ -15,3 +15,5 @@ export type OpenOutcome = UsableOutcome | ReplaceOutcome;
 export type TableCountRow = { tableCount: number };
 
 export type SchemaVersionRow = { version: number };
+
+export type LegalIdRow = { legal_id: string | null };

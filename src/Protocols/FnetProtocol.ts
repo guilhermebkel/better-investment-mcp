@@ -1,8 +1,6 @@
-import type { LegalIdLookup } from "@/Protocols/CvmProtocol.ts";
-
-export type { LegalIdLookup };
-
 export type FnetFilingKind = "fii_management_report";
+
+export type FnetAllowedPath = "/fnet/publico/exibirDocumento" | "/fnet/publico/downloadDocumento";
 
 export type FnetDocumentItem = {
   id: number;

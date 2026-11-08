@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import type { FnetDocumentItem, FnetFilingKind, FnetSearchResponse, LegalIdLookup } from "@/Protocols/FnetProtocol.ts";
+import type { LegalIdLookup } from "@/Protocols/CvmProtocol.ts";
+import type { FnetDocumentItem, FnetFilingKind, FnetSearchResponse } from "@/Protocols/FnetProtocol.ts";
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
 import { FnetSearchResponseSchema } from "@/Schemas/FnetSchema.ts";
@@ -12,6 +13,11 @@ const NON_DIGITS = /\D/gu;
 const DATE_MATCH = /^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?$/u;
 const DIACRITICS = /[\u0300-\u036f]/gu;
 const FILING_KIND: FnetFilingKind = "fii_management_report";
+const HOURS_PER_DAY = 24;
+const MINUTES_PER_HOUR = 60;
+const SECONDS_PER_MINUTE = 60;
+const MONTHS_PER_YEAR = 12;
+const MAX_DAYS_IN_ANY_MONTH = 31;
 
 export class FnetAdapter implements ProviderPort<"filings"> {
   static readonly VENDOR = "fnet";
@@ -20,7 +26,7 @@ export class FnetAdapter implements ProviderPort<"filings"> {
   static readonly MAX_FILE_BYTES = MAX_FILE_MIB * BYTES_PER_MIB;
   static readonly MARKETS: readonly "BR"[] = ["BR"];
   static readonly ASSET_TYPES: readonly "fii"[] = ["fii"];
-  static readonly PAGE_SIZE = 100;
+  static readonly PAGE_SIZE = 30;
   static readonly MAX_PAGES = 50;
 
   readonly category = "filings";
@@ -39,6 +45,37 @@ export class FnetAdapter implements ProviderPort<"filings"> {
   }
 
   async fetchTables(request: ProviderRequest): Promise<ProviderResult> {
+    const digits = await this.resolveDigits(request);
+    const filingIdToRow = new Map<string, ProviderRow>();
+    let offset = 0;
+    let targetTotal = Number.POSITIVE_INFINITY;
+    let pageCount = 0;
+
+    while (offset < targetTotal) {
+      if (pageCount >= FnetAdapter.MAX_PAGES) {
+        throw new Error(
+          `FNET pagination for ${request.ticker} reached maximum page limit of ${FnetAdapter.MAX_PAGES} before completing (fetched ${offset} of ${targetTotal} records)`,
+        );
+      }
+      const response = await this.fetchPage(digits, offset, request.ticker);
+      targetTotal = response.recordsFiltered ?? response.recordsTotal;
+      if (targetTotal === 0) {
+        break;
+      }
+      if (response.data.length === 0 && offset < targetTotal) {
+        throw new Error(
+          `FNET pagination for ${request.ticker} returned an empty page before reaching expected ${targetTotal} records (fetched ${offset})`,
+        );
+      }
+      FnetAdapter.collectRows(response.data, request.market, request.ticker, filingIdToRow);
+      offset += response.data.length;
+      pageCount += 1;
+    }
+
+    return { source: FnetAdapter.VENDOR, tables: { filings: [...filingIdToRow.values()] } };
+  }
+
+  private async resolveDigits(request: ProviderRequest): Promise<string> {
     if (request.market !== "BR") {
       throw new Error(`FNET only serves the BR market; ${request.market} is not supported`);
     }
@@ -53,29 +90,22 @@ export class FnetAdapter implements ProviderPort<"filings"> {
     if (digits.length !== CNPJ_LENGTH) {
       throw new Error(FnetAdapter.buildInvalidCnpjMessage(request.market, request.ticker, cnpj));
     }
-    const filingIdToRow = new Map<string, ProviderRow>();
-    let offset = 0;
-    let recordsTotal = Number.POSITIVE_INFINITY;
-    let pageCount = 0;
+    return digits;
+  }
 
-    while (offset < recordsTotal && pageCount < FnetAdapter.MAX_PAGES) {
-      const response = await this.fetchPage(digits, offset, request.ticker);
-      recordsTotal = response.recordsTotal;
-      if (response.data.length === 0) {
-        break;
+  private static collectRows(
+    items: readonly FnetDocumentItem[],
+    market: string,
+    ticker: string,
+    filingIdToRow: Map<string, ProviderRow>,
+  ): void {
+    for (const item of items) {
+      if (!FnetAdapter.isManagerialReport(item.tipoDocumento)) {
+        continue;
       }
-      for (const item of response.data) {
-        if (!FnetAdapter.isManagerialReport(item.tipoDocumento)) {
-          continue;
-        }
-        const row = FnetAdapter.buildRow(item, request.market, request.ticker);
-        filingIdToRow.set(String(row.filing_id), row);
-      }
-      offset += response.data.length;
-      pageCount += 1;
+      const row = FnetAdapter.buildRow(item, market, ticker);
+      filingIdToRow.set(String(row.filing_id), row);
     }
-
-    return { source: FnetAdapter.VENDOR, tables: { filings: [...filingIdToRow.values()] } };
   }
 
   private async fetchPage(digits: string, offset: number, ticker: string): Promise<FnetSearchResponse> {
@@ -99,9 +129,9 @@ export class FnetAdapter implements ProviderPort<"filings"> {
   ): ProviderRow {
     const identity = [FnetAdapter.VENDOR, String(item.id), String(item.versao)].join("|");
     const filingId = createHash("sha256").update(identity).digest("hex").slice(0, FILING_ID_LENGTH);
-    const deliveredAt = FnetAdapter.parseDeliveredAt(item.dataEntrega);
+    const deliveredAt = FnetAdapter.parseDeliveredAt(item.dataEntrega, ticker);
     const rawCategory = item.categoriaDocumento?.trim();
-    const category = rawCategory !== undefined && rawCategory !== "" ? rawCategory : "Relatórios";
+    const category = rawCategory !== undefined && rawCategory !== "" ? rawCategory : null;
     const subject = item.descricaoFundo?.trim() ?? null;
     const url = `https://${FnetAdapter.HOST}/fnet/publico/exibirDocumento?id=${item.id}&cvm=true`;
 
@@ -149,16 +179,44 @@ export class FnetAdapter implements ProviderPort<"filings"> {
     return normalized === "relatorio gerencial";
   }
 
-  static parseDeliveredAt(dateText: string | null | undefined): string | null {
-    if (!dateText) {
+  static parseDeliveredAt(dateText: string | null | undefined, ticker = "unknown"): string | null {
+    if (dateText === null || dateText === undefined || dateText.trim() === "") {
       return null;
     }
     const match = DATE_MATCH.exec(dateText.trim());
     if (!match) {
-      return null;
+      throw new Error(`the response format changed: FNET sent an invalid delivery date "${dateText}" for ${ticker}; no row was written`);
     }
-    const [, day, month, year, hour = "00", minute = "00", second = "00"] = match;
-    return `${year}-${month}-${day}T${hour}:${minute}:${second}-03:00`;
+    const [, dayStr = "01", monthStr = "01", yearStr = "2000", hourStr = "00", minuteStr = "00", secondStr = "00"] = match;
+    const day = Number(dayStr);
+    const month = Number(monthStr);
+    const year = Number(yearStr);
+    const hour = Number(hourStr);
+    const minute = Number(minuteStr);
+    const second = Number(secondStr);
+
+    if (month < 1 || month > MONTHS_PER_YEAR) {
+      throw new Error(`the response format changed: FNET sent an out-of-bounds delivery date "${dateText}" for ${ticker}; no row was written`);
+    }
+    if (day < 1 || day > MAX_DAYS_IN_ANY_MONTH) {
+      throw new Error(`the response format changed: FNET sent an out-of-bounds delivery date "${dateText}" for ${ticker}; no row was written`);
+    }
+    if (hour < 0 || hour >= HOURS_PER_DAY) {
+      throw new Error(`the response format changed: FNET sent an out-of-bounds delivery date "${dateText}" for ${ticker}; no row was written`);
+    }
+    if (minute < 0 || minute >= MINUTES_PER_HOUR) {
+      throw new Error(`the response format changed: FNET sent an out-of-bounds delivery date "${dateText}" for ${ticker}; no row was written`);
+    }
+    if (second < 0 || second >= SECONDS_PER_MINUTE) {
+      throw new Error(`the response format changed: FNET sent an out-of-bounds delivery date "${dateText}" for ${ticker}; no row was written`);
+    }
+
+    const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    if (day > daysInMonth) {
+      throw new Error(`the response format changed: FNET sent an invalid calendar date "${dateText}" for ${ticker}; no row was written`);
+    }
+
+    return `${yearStr}-${monthStr}-${dayStr}T${hourStr}:${minuteStr}:${secondStr}-03:00`;
   }
 
   static readDigits(cnpj: string): string {

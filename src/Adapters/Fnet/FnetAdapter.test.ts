@@ -6,10 +6,16 @@ import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type { ProviderRequest } from "@/Protocols/ProviderProtocol.ts";
 
 const FIXTURES_DIR = join(import.meta.dirname, "..", "..", "Testing", "fixtures", "fnet");
-const SAMPLE_JSON = readFileSync(join(FIXTURES_DIR, "fnet-search-response.json"), "utf8");
+const REAL_SEARCH_JSON = readFileSync(join(FIXTURES_DIR, "fnet-search-response.json"), "utf8");
+const HGLG11_EXCERPT = readFileSync(join(FIXTURES_DIR, "hglg11-doc-1348097-page5-excerpt.txt"), "utf8");
+const KNRI11_EXCERPT = readFileSync(join(FIXTURES_DIR, "knri11-doc-1368920-page1-excerpt.txt"), "utf8");
+
 const KNOWN_CNPJ = "11.728.688/0001-47";
 const KNOWN_DIGITS = "11728688000147";
 const REPORT_TYPE = "Relatório Gerencial";
+const SAMPLE_DELIVERY_DATE = "01/01/2026 10:00";
+const SHAPE_ERROR = "the response format changed: FNET sent an error or an unknown shape for HGLG11";
+const OUT_OF_BOUNDS_ERROR = "the response format changed: FNET sent an out-of-bounds delivery date";
 
 const REQUEST: ProviderRequest = {
   market: "BR",
@@ -44,7 +50,7 @@ const buildHttp = (responses: Record<string, string> | ((url: string) => string)
 };
 
 describe("FnetAdapter.fetchTables()", () => {
-  it("rejects non-BR markets with zero HTTP requests (AC2)", async () => {
+  it("rejects non-BR markets with zero HTTP requests", async () => {
     const { http, urls } = buildHttp({});
     const adapter = new FnetAdapter(http, () => Promise.resolve(KNOWN_CNPJ));
 
@@ -53,7 +59,7 @@ describe("FnetAdapter.fetchTables()", () => {
     expect(urls).toStrictEqual([]);
   });
 
-  it("rejects non-fii asset types with zero HTTP requests (AC2)", async () => {
+  it("rejects non-fii asset types with zero HTTP requests", async () => {
     const { http, urls } = buildHttp({});
     const adapter = new FnetAdapter(http, () => Promise.resolve(KNOWN_CNPJ));
 
@@ -62,7 +68,7 @@ describe("FnetAdapter.fetchTables()", () => {
     expect(urls).toStrictEqual([]);
   });
 
-  it("throws when CNPJ is missing or unmapped, making zero HTTP requests (AC2)", async () => {
+  it("throws when CNPJ is missing or unmapped, making zero HTTP requests", async () => {
     const { http, urls } = buildHttp({});
     const adapter = new FnetAdapter(http, () => Promise.resolve(undefined));
 
@@ -71,7 +77,7 @@ describe("FnetAdapter.fetchTables()", () => {
     expect(urls).toStrictEqual([]);
   });
 
-  it("throws when CNPJ is invalid (not 14 digits), making zero HTTP requests (AC2)", async () => {
+  it("throws when CNPJ is invalid (not 14 digits), making zero HTTP requests", async () => {
     const { http, urls } = buildHttp({});
     const adapter = new FnetAdapter(http, () => Promise.resolve("12345"));
 
@@ -80,10 +86,10 @@ describe("FnetAdapter.fetchTables()", () => {
     expect(urls).toStrictEqual([]);
   });
 
-  it("normalizes CNPJ punctuation and filters strictly for managerial reports (AC2)", async () => {
+  it("normalizes CNPJ punctuation and filters real fixture strictly for managerial reports", async () => {
     const { http, urls } = buildHttp((url) => {
       expect(url).toContain(`cnpjFundo=${KNOWN_DIGITS}`);
-      return SAMPLE_JSON;
+      return REAL_SEARCH_JSON;
     });
     const adapter = new FnetAdapter(http, () => Promise.resolve(KNOWN_CNPJ));
 
@@ -92,8 +98,8 @@ describe("FnetAdapter.fetchTables()", () => {
     expect(urls).toHaveLength(1);
     expect(result.source).toBe("fnet");
     const filings = result.tables.filings ?? [];
-    // Why: the sample JSON has 5 items; 3 are Relatório Gerencial and 2 are other types that must be filtered out.
-    expect(filings).toHaveLength(3);
+    // Why: real search fixture has 5 records from offset 5, where exactly 1 is Relatório Gerencial (id 1348097).
+    expect(filings).toHaveLength(1);
 
     const first = filings[0];
     expect(first?.filing_type).toBe("fii_management_report");
@@ -108,8 +114,8 @@ describe("FnetAdapter.fetchTables()", () => {
     expect(first?.filing_id).toMatch(/^[a-f0-9]{32}$/);
   });
 
-  it("produces stable unique IDs per document version and prevents duplicates on re-fetch (AC2)", async () => {
-    const { http } = buildHttp(() => SAMPLE_JSON);
+  it("produces stable unique IDs per document version and prevents duplicates on re-fetch", async () => {
+    const { http } = buildHttp(() => REAL_SEARCH_JSON);
     const adapter = new FnetAdapter(http, () => Promise.resolve(KNOWN_CNPJ));
 
     const runOne = await adapter.fetchTables(REQUEST);
@@ -121,17 +127,18 @@ describe("FnetAdapter.fetchTables()", () => {
     expect(new Set(idsOne).size).toBe(idsOne.length);
   });
 
-  it("paginates across multiple pages until recordsTotal is reached (AC2)", async () => {
+  it("paginates across multiple pages until recordsFiltered is reached", async () => {
     const pageOne = JSON.stringify({
       data: [
         {
           id: 1001,
           versao: 1,
           tipoDocumento: REPORT_TYPE,
-          dataEntrega: "01/01/2026 10:00",
+          dataEntrega: SAMPLE_DELIVERY_DATE,
         },
       ],
-      recordsTotal: 2,
+      recordsTotal: 10,
+      recordsFiltered: 2,
     });
     const pageTwo = JSON.stringify({
       data: [
@@ -142,7 +149,8 @@ describe("FnetAdapter.fetchTables()", () => {
           dataEntrega: "01/02/2026 10:00",
         },
       ],
-      recordsTotal: 2,
+      recordsTotal: 10,
+      recordsFiltered: 2,
     });
 
     const { http, urls } = buildHttp((url) => {
@@ -161,7 +169,39 @@ describe("FnetAdapter.fetchTables()", () => {
     expect(result.tables.filings).toHaveLength(2);
   });
 
-  it("handles empty listing gracefully without looping (AC2)", async () => {
+  it("throws explicit error when pagination returns an empty page before reaching expected total", async () => {
+    const pageOne = JSON.stringify({
+      data: [],
+      recordsTotal: 50,
+      recordsFiltered: 50,
+    });
+    const { http } = buildHttp(() => pageOne);
+    const adapter = new FnetAdapter(http, () => Promise.resolve(KNOWN_CNPJ));
+
+    await expect(adapter.fetchTables(REQUEST))
+      .rejects.toThrow("FNET pagination for HGLG11 returned an empty page before reaching expected 50 records (fetched 0)");
+  });
+
+  it("throws explicit error when pagination reaches page cap before reaching total", async () => {
+    const syntheticItem = {
+      id: 1000,
+      versao: 1,
+      tipoDocumento: REPORT_TYPE,
+      dataEntrega: SAMPLE_DELIVERY_DATE,
+    };
+    const syntheticPage = JSON.stringify({
+      data: [syntheticItem],
+      recordsTotal: 1000,
+      recordsFiltered: 1000,
+    });
+    const { http } = buildHttp(() => syntheticPage);
+    const adapter = new FnetAdapter(http, () => Promise.resolve(KNOWN_CNPJ));
+
+    await expect(adapter.fetchTables(REQUEST))
+      .rejects.toThrow("FNET pagination for HGLG11 reached maximum page limit of 50 before completing");
+  });
+
+  it("handles empty listing gracefully without looping", async () => {
     const emptyJson = JSON.stringify({ data: [], recordsTotal: 0 });
     const { http, urls } = buildHttp(() => emptyJson);
     const adapter = new FnetAdapter(http, () => Promise.resolve(KNOWN_CNPJ));
@@ -180,7 +220,7 @@ describe("FnetAdapter.fetchTables()", () => {
       .rejects.toThrow("FNET answered HGLG11 with an empty body");
   });
 
-  it("fails when FNET returns invalid JSON (AC4)", async () => {
+  it("fails when FNET returns invalid JSON", async () => {
     const { http } = buildHttp(() => "<html>502 Bad Gateway</html>");
     const adapter = new FnetAdapter(http, () => Promise.resolve(KNOWN_CNPJ));
 
@@ -188,12 +228,33 @@ describe("FnetAdapter.fetchTables()", () => {
       .rejects.toThrow("the response format changed: FNET did not send JSON for HGLG11");
   });
 
-  it("fails when FNET schema deviates from expected structure (AC4)", async () => {
-    const { http } = buildHttp(() => JSON.stringify({ data: "not-an-array", recordsTotal: "invalid" }));
+  it("fails when FNET schema deviates: missing data array", async () => {
+    const { http } = buildHttp(() => JSON.stringify({ recordsTotal: 10 }));
     const adapter = new FnetAdapter(http, () => Promise.resolve(KNOWN_CNPJ));
 
     await expect(adapter.fetchTables(REQUEST))
-      .rejects.toThrow("the response format changed: FNET sent an error or an unknown shape for HGLG11");
+      .rejects.toThrow(SHAPE_ERROR);
+  });
+
+  it("fails when FNET schema deviates: missing recordsTotal", async () => {
+    const { http } = buildHttp(() => JSON.stringify({ data: [] }));
+    const adapter = new FnetAdapter(http, () => Promise.resolve(KNOWN_CNPJ));
+
+    await expect(adapter.fetchTables(REQUEST))
+      .rejects.toThrow(SHAPE_ERROR);
+  });
+
+  it("fails when FNET schema deviates: missing version in document item", async () => {
+    const itemWithoutVersion = {
+      id: 123,
+      tipoDocumento: REPORT_TYPE,
+      dataEntrega: SAMPLE_DELIVERY_DATE,
+    };
+    const { http } = buildHttp(() => JSON.stringify({ data: [itemWithoutVersion], recordsTotal: 1 }));
+    const adapter = new FnetAdapter(http, () => Promise.resolve(KNOWN_CNPJ));
+
+    await expect(adapter.fetchTables(REQUEST))
+      .rejects.toThrow(SHAPE_ERROR);
   });
 });
 
@@ -209,10 +270,31 @@ describe("FnetAdapter.isManagerialReport()", () => {
 
 describe("FnetAdapter.parseDeliveredAt()", () => {
   it("parses Brazilian date string to UTC-3 ISO string", () => {
-    expect(FnetAdapter.parseDeliveredAt("13/10/2026 19:23")).toBe("2026-10-13T19:23:00-03:00");
-    expect(FnetAdapter.parseDeliveredAt("13/10/2026 19:23:45")).toBe("2026-10-13T19:23:45-03:00");
-    expect(FnetAdapter.parseDeliveredAt("13/10/2026")).toBe("2026-10-13T00:00:00-03:00");
-    expect(FnetAdapter.parseDeliveredAt("invalid")).toBeNull();
-    expect(FnetAdapter.parseDeliveredAt(null)).toBeNull();
+    expect(FnetAdapter.parseDeliveredAt("13/10/2026 19:23", "HGLG11")).toBe("2026-10-13T19:23:00-03:00");
+    expect(FnetAdapter.parseDeliveredAt("13/10/2026 19:23:45", "HGLG11")).toBe("2026-10-13T19:23:45-03:00");
+    expect(FnetAdapter.parseDeliveredAt("13/10/2026", "HGLG11")).toBe("2026-10-13T00:00:00-03:00");
+    expect(FnetAdapter.parseDeliveredAt(null, "HGLG11")).toBeNull();
+    expect(FnetAdapter.parseDeliveredAt("", "HGLG11")).toBeNull();
+  });
+
+  it("fails with format error when delivery date is impossible calendar date", () => {
+    expect(() => FnetAdapter.parseDeliveredAt("99/99/2026 19:23", "HGLG11"))
+      .toThrow(OUT_OF_BOUNDS_ERROR);
+    expect(() => FnetAdapter.parseDeliveredAt("31/02/2026 10:00", "HGLG11"))
+      .toThrow("the response format changed: FNET sent an invalid calendar date \"31/02/2026 10:00\" for HGLG11");
+    expect(() => FnetAdapter.parseDeliveredAt("13/10/2026 25:00", "HGLG11"))
+      .toThrow(OUT_OF_BOUNDS_ERROR);
+  });
+});
+
+describe("FnetAdapter.buildRow()", () => {
+  it("verifies financial contents in real unpdf text excerpts for HGLG11 and KNRI11", () => {
+    expect(HGLG11_EXCERPT).toContain("R$ 7,5 bilhões");
+    expect(HGLG11_EXCERPT).toContain("R$ 165,48");
+    expect(HGLG11_EXCERPT).toContain("R$ 1,17/cota");
+
+    expect(KNRI11_EXCERPT).toContain("R$ 4.602.278.866,50");
+    expect(KNRI11_EXCERPT).toContain("1,93%");
+    expect(KNRI11_EXCERPT).toContain("R$ 1,10 por cota");
   });
 });

@@ -12,7 +12,7 @@ import type { CategoryToVendors } from "@/Protocols/ProviderProtocol.ts";
 import { ProviderRegistryService } from "@/Services/ProviderRegistryService.ts";
 
 export class VendorCatalogService {
-  static build(): CategoryToVendors {
+  static build(lookup: LegalIdLookup = VendorCatalogService.resolveNoLegalId): CategoryToVendors {
     // Why: the adapters are built here, in a service, because the entry points in src/Setup/ never import an adapter.
     const yahooHttp = new HttpAdapter({ allowedHosts: YahooAdapter.HOSTS, headers: YahooAdapter.HEADERS });
     const bcbHttp = new HttpAdapter({ allowedHosts: [BcbAdapter.HOST] });
@@ -36,10 +36,10 @@ export class VendorCatalogService {
       fundamentals: { statusinvest: new StatusInvestAdapter("fundamentals", statusInvestHttp) },
       fund_data: { statusinvest: new StatusInvestAdapter("fund_data", statusInvestHttp) },
       filings: {
-        cvm: new CvmAdapter(cvmHttp, VendorCatalogService.resolveNoLegalId),
-        fnet: new FnetAdapter(fnetHttp, VendorCatalogService.resolveNoLegalId),
+        cvm: new CvmAdapter(cvmHttp, lookup),
+        fnet: new FnetAdapter(fnetHttp, lookup),
       },
-      statements: { cvm: new CvmStatementAdapter(cvmHttp, VendorCatalogService.resolveNoLegalId) },
+      statements: { cvm: new CvmStatementAdapter(cvmHttp, lookup) },
       documents: {
         cvm: new CvmDocumentAdapter(cvmDocumentHttp),
         fnet: new FnetDocumentAdapter(fnetDocumentHttp),

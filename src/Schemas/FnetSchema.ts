@@ -3,7 +3,7 @@ import type { FnetDocumentItem, FnetSearchResponse } from "@/Protocols/FnetProto
 
 export const FnetDocumentItemSchema: z.ZodType<FnetDocumentItem> = z.object({
   id: z.number().int(),
-  versao: z.number().int().default(1),
+  versao: z.number().int(),
   tipoDocumento: z.string().nullable().optional(),
   categoriaDocumento: z.string().nullable().optional(),
   dataEntrega: z.string().nullable().optional(),
@@ -14,7 +14,7 @@ export const FnetDocumentItemSchema: z.ZodType<FnetDocumentItem> = z.object({
 });
 
 export const FnetSearchResponseSchema: z.ZodType<FnetSearchResponse> = z.object({
-  data: z.array(FnetDocumentItemSchema).nullish().transform((items) => items ?? []),
-  recordsTotal: z.number().int().nonnegative().default(0),
+  data: z.array(FnetDocumentItemSchema),
+  recordsTotal: z.number().int().nonnegative(),
   recordsFiltered: z.number().int().nonnegative().optional(),
 });
