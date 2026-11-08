@@ -1,0 +1,71 @@
+{
+  "data": [
+    {
+      "id": 1348097,
+      "versao": 1,
+      "tipoDocumento": "Relatório Gerencial",
+      "categoriaDocumento": "Relatórios",
+      "dataEntrega": "13/10/2026 19:23",
+      "dataReferencia": "30/09/2026",
+      "descricaoFundo": "PÁTRIA LOG - FUNDO DE INVESTIMENTO IMOBILIÁRIO - RESPONSABILIDADE LIMITADA",
+      "descricaoModalidade": "Apresentação",
+      "descricaoStatus": "Ativo com visualização",
+      "situacaoDocumento": "A",
+      "status": "AC"
+    },
+    {
+      "id": 1327262,
+      "versao": 2,
+      "tipoDocumento": "Relatório Gerencial",
+      "categoriaDocumento": "Relatórios",
+      "dataEntrega": "23/09/2026 21:35",
+      "dataReferencia": "31/08/2026",
+      "descricaoFundo": "PÁTRIA LOG - FUNDO DE INVESTIMENTO IMOBILIÁRIO - RESPONSABILIDADE LIMITADA",
+      "descricaoModalidade": "Apresentação",
+      "descricaoStatus": "Ativo com visualização",
+      "situacaoDocumento": "A",
+      "status": "AC"
+    },
+    {
+      "id": 1316897,
+      "versao": 1,
+      "tipoDocumento": "Relatório Gerencial",
+      "categoriaDocumento": "Relatórios",
+      "dataEntrega": "11/09/2026 20:07",
+      "dataReferencia": "31/08/2026",
+      "descricaoFundo": "PÁTRIA LOG - FUNDO DE INVESTIMENTO IMOBILIÁRIO - RESPONSABILIDADE LIMITADA",
+      "descricaoModalidade": "Apresentação",
+      "descricaoStatus": "Inativo com visualização",
+      "situacaoDocumento": "I",
+      "status": "IC"
+    },
+    {
+      "id": 1348000,
+      "versao": 1,
+      "tipoDocumento": "Rendimentos e Amortizações",
+      "categoriaDocumento": "Avisos aos Cotistas",
+      "dataEntrega": "13/10/2026 18:00",
+      "dataReferencia": "30/09/2026",
+      "descricaoFundo": "PÁTRIA LOG - FUNDO DE INVESTIMENTO IMOBILIÁRIO - RESPONSABILIDADE LIMITADA",
+      "descricaoModalidade": "Apresentação",
+      "descricaoStatus": "Ativo com visualização",
+      "situacaoDocumento": "A",
+      "status": "AC"
+    },
+    {
+      "id": 1347000,
+      "versao": 1,
+      "tipoDocumento": "Informe Mensal Estruturado",
+      "categoriaDocumento": "Informes Periódicos",
+      "dataEntrega": "10/10/2026 12:00",
+      "dataReferencia": "30/09/2026",
+      "descricaoFundo": "PÁTRIA LOG - FUNDO DE INVESTIMENTO IMOBILIÁRIO - RESPONSABILIDADE LIMITADA",
+      "descricaoModalidade": "Apresentação",
+      "descricaoStatus": "Ativo com visualização",
+      "situacaoDocumento": "A",
+      "status": "AC"
+    }
+  ],
+  "recordsTotal": 5,
+  "recordsFiltered": 5
+}

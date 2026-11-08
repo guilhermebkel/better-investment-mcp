@@ -22,11 +22,11 @@
     },
     "FilingProvider": {
       "status": "implemented",
-      "reason": "Filing list from the CVM IPE file (#9); a load of a ticker fails with a named error until a source maps tickers to CNPJ."
+      "reason": "Filing list from CVM IPE files (#9) and FNET managerial reports (#12); a load of a ticker fails with a named error until a source maps tickers to CNPJ."
     },
     "DocumentProvider": {
       "status": "implemented",
-      "reason": "Filing documents (PDF and HTML) from CVM through www.rad.cvm.gov.br; the CVM document adapter (#10) downloads them per filing, with a size limit and a host list. FNET documents come with #12."
+      "reason": "Filing documents (PDF and HTML) from CVM through www.rad.cvm.gov.br (#10) and FNET through fnet.bmfbovespa.com.br (#12); downloads them per filing, with a size limit and an allowed host list."
     },
     "MacroProvider": {
       "status": "implemented",

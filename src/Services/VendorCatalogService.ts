@@ -2,6 +2,8 @@ import { BcbAdapter } from "@/Adapters/Bcb/BcbAdapter.ts";
 import { CvmAdapter } from "@/Adapters/Cvm/CvmAdapter.ts";
 import { CvmDocumentAdapter } from "@/Adapters/Cvm/CvmDocumentAdapter.ts";
 import { CvmStatementAdapter } from "@/Adapters/Cvm/CvmStatementAdapter.ts";
+import { FnetAdapter } from "@/Adapters/Fnet/FnetAdapter.ts";
+import { FnetDocumentAdapter } from "@/Adapters/Fnet/FnetDocumentAdapter.ts";
 import { HttpAdapter } from "@/Adapters/Http/HttpAdapter.ts";
 import { StatusInvestAdapter } from "@/Adapters/StatusInvest/StatusInvestAdapter.ts";
 import { YahooAdapter } from "@/Adapters/Yahoo/YahooAdapter.ts";
@@ -20,6 +22,12 @@ export class VendorCatalogService {
       maxBytes: CvmDocumentAdapter.MAX_DOCUMENT_BYTES,
       timeoutMs: CvmDocumentAdapter.TIMEOUT_MS,
     });
+    const fnetHttp = new HttpAdapter({ allowedHosts: [FnetAdapter.HOST], maxBytes: FnetAdapter.MAX_FILE_BYTES });
+    const fnetDocumentHttp = new HttpAdapter({
+      allowedHosts: [FnetDocumentAdapter.HOST],
+      maxBytes: FnetDocumentAdapter.MAX_DOCUMENT_BYTES,
+      timeoutMs: FnetDocumentAdapter.TIMEOUT_MS,
+    });
     const statusInvestHttp = new HttpAdapter({ allowedHosts: [StatusInvestAdapter.HOST] });
     return {
       ...ProviderRegistryService.buildEmptyCatalog(),
@@ -27,9 +35,15 @@ export class VendorCatalogService {
       dividends: { yahoo: new YahooAdapter("dividends", yahooHttp) },
       fundamentals: { statusinvest: new StatusInvestAdapter("fundamentals", statusInvestHttp) },
       fund_data: { statusinvest: new StatusInvestAdapter("fund_data", statusInvestHttp) },
-      filings: { cvm: new CvmAdapter(cvmHttp, VendorCatalogService.resolveNoLegalId) },
+      filings: {
+        cvm: new CvmAdapter(cvmHttp, VendorCatalogService.resolveNoLegalId),
+        fnet: new FnetAdapter(fnetHttp, VendorCatalogService.resolveNoLegalId),
+      },
       statements: { cvm: new CvmStatementAdapter(cvmHttp, VendorCatalogService.resolveNoLegalId) },
-      documents: { cvm: new CvmDocumentAdapter(cvmDocumentHttp) },
+      documents: {
+        cvm: new CvmDocumentAdapter(cvmDocumentHttp),
+        fnet: new FnetDocumentAdapter(fnetDocumentHttp),
+      },
       macro: { bcb: new BcbAdapter(bcbHttp) },
     };
   }
