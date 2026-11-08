@@ -93,7 +93,7 @@ describe("CacheService.runOnce()", () => {
       const load = async (): Promise<CacheLoadResult> => {
         loads += 1;
         await Promise.resolve();
-        return { rowsRead: 5 };
+        return { rowsWritten: 5, source: "fake", isFallback: false };
       };
 
       const results = await Promise.all([
@@ -101,7 +101,7 @@ describe("CacheService.runOnce()", () => {
         store.cache.runOnce("quotes", "BR", "PETR4", load),
       ]);
 
-      expect([loads, results]).toStrictEqual([1, [{ rowsRead: 5 }, { rowsRead: 5 }]]);
+      expect([loads, results]).toStrictEqual([1, [{ rowsWritten: 5, source: "fake", isFallback: false }, { rowsWritten: 5, source: "fake", isFallback: false }]]);
     });
   });
 
@@ -110,13 +110,13 @@ describe("CacheService.runOnce()", () => {
       let loads = 0;
       const load = (): Promise<CacheLoadResult> => {
         loads += 1;
-        return Promise.resolve({ rowsRead: loads });
+        return Promise.resolve({ rowsWritten: loads, source: "fake", isFallback: false });
       };
 
       await store.cache.runOnce("quotes", "BR", "PETR4", load);
       const second = await store.cache.runOnce("quotes", "BR", "PETR4", load);
 
-      expect([loads, second]).toStrictEqual([2, { rowsRead: 2 }]);
+      expect([loads, second]).toStrictEqual([2, { rowsWritten: 2, source: "fake", isFallback: false }]);
     });
   });
 
@@ -126,7 +126,7 @@ describe("CacheService.runOnce()", () => {
       const load = async (): Promise<CacheLoadResult> => {
         loads += 1;
         await Promise.resolve();
-        return { rowsRead: 1 };
+        return { rowsWritten: 1, source: "fake", isFallback: false };
       };
 
       await Promise.all([

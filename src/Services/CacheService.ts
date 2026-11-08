@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { CacheCategory, CacheLoadResult, CacheRunOutcome, CacheRunStart } from "@/Protocols/CacheProtocol.ts";
 import type { DatabasePort } from "@/Protocols/DatabaseProtocol.ts";
-import { FreshRunRowsSchema } from "@/Schemas/CacheSchema.ts";
+import { FreshRunRowsSchema, SourceRowsSchema } from "@/Schemas/CacheSchema.ts";
 
 export class CacheService {
   private readonly writer: DatabasePort;
@@ -58,6 +58,15 @@ export class CacheService {
     });
     this.keyToInFlightLoad.set(key, started);
     return started;
+  }
+
+  async readLastSource(category: CacheCategory, market: string, ticker: string): Promise<string | undefined> {
+    const rows = await this.writer.readRows(
+      "SELECT source FROM cache_runs WHERE category = ? AND market = ? AND ticker = ? AND error IS NULL AND finished_at IS NOT NULL ORDER BY finished_at DESC LIMIT 1",
+      [category, market, ticker],
+    );
+    const [row] = SourceRowsSchema.parse(rows);
+    return row?.source;
   }
 
   private static readFreshRunCount(rows: Record<string, unknown>[]): number {

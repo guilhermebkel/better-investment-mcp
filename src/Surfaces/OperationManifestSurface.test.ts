@@ -1,9 +1,18 @@
 import { describe, expect, it } from "vitest";
+import type { OperationDependencies } from "@/Protocols/OperationProtocol.ts";
 import { OperationManifestSurface } from "@/Surfaces/OperationManifestSurface.ts";
+
+const UNUSED_DEPENDENCIES: OperationDependencies = {
+  querySql: {
+    guard: { checkSql: () => Promise.resolve({ isAccepted: true, requirements: [] }) },
+    loader: { ensure: () => Promise.resolve([]) },
+    openReader: () => Promise.reject(new Error("not used by the manifest test")),
+  },
+};
 
 describe("OperationManifestSurface.listOperations()", () => {
   it("lists exactly the three read-only tools of the architecture", () => {
-    const toolNames = OperationManifestSurface.listOperations().map((operation) => {
+    const toolNames = OperationManifestSurface.listOperations(UNUSED_DEPENDENCIES).map((operation) => {
       return OperationManifestSurface.formatToolName(operation.name);
     });
 
@@ -11,7 +20,8 @@ describe("OperationManifestSurface.listOperations()", () => {
   });
 
   it("starts every description with Read-only.", () => {
-    const descriptions = OperationManifestSurface.listOperations().map((operation) => operation.description);
+    const operations = OperationManifestSurface.listOperations(UNUSED_DEPENDENCIES);
+    const descriptions = operations.map((operation) => operation.description);
 
     expect(descriptions.map((description) => description.startsWith("Read-only."))).toStrictEqual([true, true, true]);
   });

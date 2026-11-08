@@ -34,7 +34,7 @@ export class DuckDbAdapter implements DatabasePort {
 
   async readRows(sql: string, values: DatabaseValue[] = []): Promise<Record<string, unknown>[]> {
     const reader = await this.connection.runAndReadAll(sql, values);
-    return reader.getRowObjects();
+    return reader.getRowObjectsJS();
   }
 
   close(): void {
