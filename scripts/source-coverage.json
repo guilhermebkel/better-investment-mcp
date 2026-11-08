@@ -1,0 +1,12 @@
+{
+  "providers": {
+    "QuoteProvider": { "status": "planned", "reason": "Prices and splits from Yahoo Finance; built in the Yahoo adapter issue." },
+    "DividendProvider": { "status": "planned", "reason": "Dividends from Yahoo Finance; built in the Yahoo adapter issue." },
+    "FundamentalsProvider": { "status": "planned", "reason": "Yearly fundamentals from StatusInvest; built in the StatusInvest adapter issue, after its terms are read." },
+    "StatementProvider": { "status": "planned", "reason": "Financial statements from CVM ITR and DFP; built in the CVM statements issue." },
+    "FundDataProvider": { "status": "planned", "reason": "Monthly FII data from StatusInvest; built in the StatusInvest adapter issue." },
+    "FilingProvider": { "status": "planned", "reason": "Filing lists from CVM IPE and FNET; built in the CVM filings issue and the FNET issue." },
+    "DocumentProvider": { "status": "planned", "reason": "Document download and text for CVM and FNET filings; built in the document text issue." },
+    "MacroProvider": { "status": "planned", "reason": "Macro series from BCB SGS; built in the BCB adapter issue." }
+  }
+}

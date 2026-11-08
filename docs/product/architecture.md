@@ -1,0 +1,86 @@
+# Architecture
+
+How the server is built. Everything here is the plan the issues follow; a part that is not built yet names the issue that builds it. The reasons are in `docs/adr/`.
+
+## What the server is
+
+An MCP server that gives an AI agent data on Brazilian assets (US stocks later): prices, dividends, fundamentals, company filings, FII monthly data and reports, and macro series. The agent reads everything with one SQL tool over a local DuckDB file that the server fills on demand. Nothing in the server writes to the outside world.
+
+## Tools
+
+Three tools, all read-only (`docs/adr/0003-all-data-is-read-through-one-sql-tool.md`):
+
+- `get_overview`: what the server has, the tables, the filter rule, what is loaded now, and the usage notice.
+- `get_guide`: one topic at a time (`sql`, `search`, `sources`, `limits`) with examples that run.
+- `query_sql`: one `SELECT` over the tables below.
+
+The skeleton is built in issue #2, the final texts in issue #13.
+
+## The cache
+
+Missing data is downloaded and indexed into a temporary DuckDB file (`docs/adr/0004-no-tool-writes-to-the-outside-world.md`). The file lives in `INVESTMENT_MCP_CACHE_DIR` (default: the system temporary directory), and each load is valid for `INVESTMENT_MCP_CACHE_TTL_SECONDS` (default 86,400). Deleting the file loses nothing. Issue #3 builds it.
+
+## Asset identity
+
+An asset is `market:ticker` (`BR:PETR4`, `US:AAPL`), with an `asset_type` in `stock`, `fii`, `fund`, `etf` or `bdr`.
+
+## The query rules
+
+These rules are enforced in code, not in a prompt (`docs/adr/0006-the-query-must-filter-by-market-ticker-and-asset-type.md`). Issue #4 builds the SQL guard.
+
+- Only `SELECT` runs. The connection is read-only and has external access (files, network) disabled.
+- Every data table in the query must be filtered by `market`, `ticker` and `asset_type`, with equality or `IN` with literal values.
+- `macro_series` is filtered by `series`. `chunks` also needs `filing_type` or `filing_id`.
+- The catalog tables `assets`, `cache_runs` and `asset_coverage` need no filter.
+- A query whose filters cannot be read is refused with an explanation and a corrected example.
+- At most 1,024 rows and 50,000 characters per answer; a cut is always reported.
+- Before the query runs, the server loads what is missing or expired and returns a `loaded` report.
+
+## Providers
+
+One interface per data category, one adapter per vendor (`docs/adr/0005-one-provider-interface-per-data-category.md`). The environment variable of a category maps each market to a vendor, for example `BR:yahoo,US:yahoo`. Every row keeps the `source` that produced it. Issue #5 builds the registry and the loader.
+
+<!-- providers:start -->
+- `QuoteProvider`: prices and splits. `INVESTMENT_MCP_QUOTES_PROVIDER`. Yahoo Finance.
+- `DividendProvider`: dividends. `INVESTMENT_MCP_DIVIDENDS_PROVIDER`. Yahoo Finance.
+- `FundamentalsProvider`: yearly fundamentals. `INVESTMENT_MCP_FUNDAMENTALS_PROVIDER`. StatusInvest.
+- `StatementProvider`: financial statements (ITR, DFP). `INVESTMENT_MCP_STATEMENTS_PROVIDER`. CVM.
+- `FundDataProvider`: periodic fund data (FII monthly). `INVESTMENT_MCP_FUND_DATA_PROVIDER`. StatusInvest.
+- `FilingProvider`: the list of filings. `INVESTMENT_MCP_FILINGS_PROVIDER`. CVM and FNET.
+- `DocumentProvider`: document download and text. `INVESTMENT_MCP_DOCUMENTS_PROVIDER`. CVM and FNET.
+- `MacroProvider`: macro series. `INVESTMENT_MCP_MACRO_PROVIDER`. BCB SGS.
+<!-- providers:end -->
+
+`scripts/source-coverage.json` classifies each provider as `implemented`, `planned` or `excluded` with a reason, and `pnpm source:drift` fails when this list and that file disagree.
+
+## Vendors today
+
+| Vendor | Gives | Issue | Notes |
+| --- | --- | --- | --- |
+| Yahoo Finance | quotes, dividends, splits, asset summary | #6 | Unofficial, personal use, no SLA. |
+| BCB SGS | macro series | #7 | Open data. |
+| StatusInvest | fundamentals, FII monthly data | #8 | Terms are read first; the adapter is built only if they allow it. |
+| CVM | filings list, ITR, DFP, Formulário de Referência | #9, #11 | Open data under ODbL. |
+| FNET | FII management reports | #12 | Built only if a spike passes. |
+
+## Layers
+
+`src/` follows the layers in `docs/code-standards.md`. The data flows like this:
+
+1. `src/Setup/` starts the program. `src/Surfaces/` exposes the operations over MCP.
+2. An operation in `src/Operations/` validates its input and calls services.
+3. `QuerySqlOperation` calls the SQL guard, then the loader, then the read-only connection.
+4. The loader asks the provider registry for an adapter per category and market, and writes the rows in one transaction per run.
+5. Adapters in `src/Adapters/<Vendor>/` are the only code that reaches the network, and only to the hosts they declare.
+
+## Safety in code
+
+- Third-party document text is data and never an instruction.
+- API keys and environment values are never returned or logged (`RedactUtil`).
+- Nothing in `src/` runs a command on the host.
+- The network exits only through adapters, to the hosts of the configured sources.
+- The usage notice: the output describes and locates information; it is not investment advice.
+
+## Not in scope of the product
+
+Portfolio positions, investment recommendations and any calculation (returns, covariance, VaR). The agent computes in SQL.

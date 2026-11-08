@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Why: the jobs run in parallel and together run everything `pnpm check` runs (the Docker path arrives with the packaging issue); CI never uses lint-staged.
+jobs:
+  typecheck-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/cache@v4
+        with:
+          path: tsconfig.tsbuildinfo
+          key: tsbuildinfo-${{ hashFiles('pnpm-lock.yaml', 'tsconfig.json') }}
+      - run: pnpm typecheck
+      # Why: ESLint's content cache is keyed by the config, so a rule or config change re-lints every file even on a hit; Oxlint keeps no cache.
+      - uses: actions/cache@v4
+        with:
+          path: .eslintcache
+          key: eslint-${{ hashFiles('pnpm-lock.yaml', 'eslint.config.mjs', '.oxlintrc.json', 'scripts/eslint-local-rules.mjs', 'tsconfig.json') }}
+      - run: pnpm lint
+
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm quality
+      - run: pnpm source:drift
+      - run: pnpm check:tool-docs
+
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  package-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm check:pack
+      - run: pnpm check:licenses
+      - run: pnpm smoke
+      # Why: this is the way a user runs it: the packed tarball through npx, not the folder.
+      - name: Run the packed tarball through npx
+        run: |
+          TARBALL=$(npm pack --silent)
+          pnpm smoke -- npx --yes --package "./$TARBALL" better-investment-analysis-mcp
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      # Why: no integration test exists yet; the command passes while there are none, and the job is the place the first one runs.
+      - run: pnpm test:integration
