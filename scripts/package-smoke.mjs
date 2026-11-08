@@ -1,7 +1,10 @@
 import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-const TIMEOUT_MS = 30_000;
+// Why: `npx --package` installs the tarball and its native DuckDB binding first, which takes well over 30 s on a cold Windows runner.
+const TIMEOUT_MS = 180_000;
+const STDERR_SHOWN_CHARS = 500;
+const IS_WINDOWS = process.platform === "win32";
 const FIRST_USER_ARG = 2;
 const DEFAULT_COMMAND = ["node", "dist/main.js"];
 const SIGTERM = "SIGTERM";
@@ -72,7 +75,7 @@ const stopChildProcessTree = (child) => {
     child.kill();
     return;
   }
-  if (process.platform === "win32") {
+  if (IS_WINDOWS) {
     spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"]);
     return;
   }
@@ -86,12 +89,14 @@ const stopChildProcessTree = (child) => {
 const runProgram = (command) => {
   return new Promise((resolve, reject) => {
     const [program, ...args] = command;
-    const child = spawn(program, args, { stdio: ["pipe", "pipe", "pipe"], detached: process.platform !== "win32" });
+    // Why: on Windows, npx is a .cmd shim, which only a shell can start.
+    const child = spawn(program, args, { stdio: ["pipe", "pipe", "pipe"], detached: !IS_WINDOWS, shell: IS_WINDOWS });
     let stdout = "";
     let stderr = "";
     const timer = setTimeout(() => {
       stopChildProcessTree(child);
-      reject(new Error(`the program did not exit after ${TIMEOUT_MS} ms`));
+      // Why: a timeout is reported with what the program wrote, so the cause shows in the log without a rerun.
+      reject(new Error(`the program did not exit after ${TIMEOUT_MS} ms; stdout ${stdout.length} characters; stderr: ${stderr.slice(-STDERR_SHOWN_CHARS)}`));
     }, TIMEOUT_MS);
     child.on("error", reject);
     child.stdout.on("data", (chunk) => {

@@ -9,5 +9,5 @@ The server is written in TypeScript on Node 22 and bundled into one file with ts
 
 ## Consequences
 
-- One bundled file keeps `npx` fast. A native package (DuckDB) is the exception and is declared as external by the issue that adds it.
+- One bundled file keeps `npx` fast. A native package (DuckDB) is the exception and stays external (`docs/adr/0008-duckdb-is-an-external-runtime-dependency.md`).
 - Docker is for people who do not want Node on their machine; the packaging issue (#14) adds it.

@@ -6,7 +6,7 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 
 ## Tables
 
-| Table | Columns (planned) | Source | Built in |
+| Table | Columns | Source | Built in |
 | --- | --- | --- | --- |
 | `assets` | **market**, **ticker**, asset_type, legal_id, name, sector, currency | Yahoo summary, CVM registry | #3, #6 |
 | `filings` | **filing_id**, market, ticker, asset_type, filing_type, category, delivered_at, subject, url, file_hash, source | CVM IPE, FNET | #9, #12 |
@@ -19,6 +19,7 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 | `fii_monthly` | market, ticker, asset_type, period, distribution_per_unit, rental_revenue, property_sales_revenue, other_revenue, total_revenue, distributable_income, management_fee, performance_fee, property_acquisitions, other_expenses, total_expenses, liquidity_requirement, cash_available, government_bonds, corporate_bonds, fixed_income_funds, net_worth, source | StatusInvest | #8 |
 | `macro_series` | **series**, **date**, value, source | BCB SGS | #7 |
 | `cache_runs` | run_id, category, market, ticker, source, started_at, finished_at, expires_at, rows_read, error | the loader | #3, #5 |
+| `schema_version` | version | the store (one row, the schema version of the file) | #3 |
 
 ## Views and macros
 
@@ -35,7 +36,7 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 | `quotes`, `dividends`, `splits`, `fundamentals`, `financial_statements`, `fii_monthly`, `filings` | `market`, `ticker`, `asset_type` |
 | `chunks` | `market`, `ticker`, `asset_type` and `filing_type` or `filing_id` |
 | `macro_series` | `series` |
-| `assets`, `cache_runs`, `asset_coverage` | nothing |
+| `assets`, `cache_runs`, `asset_coverage`, `schema_version` | nothing |
 
 ## Quality columns
 

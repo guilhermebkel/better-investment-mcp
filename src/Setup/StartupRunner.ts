@@ -14,7 +14,7 @@ export class StartupRunner {
     LogUtil.logInfo("environment_valid");
     const [command] = args;
     if (command === undefined) {
-      await StdioRunner.run();
+      await StdioRunner.run(env);
       return;
     }
     if (command !== StartupRunner.INIT_COMMAND) {
