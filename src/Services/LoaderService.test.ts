@@ -1,7 +1,7 @@
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 import { FnetAdapter } from "@/Adapters/Fnet/FnetAdapter.ts";
 import { FnetDocumentAdapter } from "@/Adapters/Fnet/FnetDocumentAdapter.ts";
 import { HttpRefusedError } from "@/Errors/HttpRefusedError.ts";
@@ -11,6 +11,8 @@ import type { Requirement } from "@/Protocols/SqlGuardProtocol.ts";
 import { LoaderService } from "@/Services/LoaderService.ts";
 import { ProviderRegistryService } from "@/Services/ProviderRegistryService.ts";
 import { StoreService } from "@/Services/StoreService.ts";
+import { VendorCatalogService } from "@/Services/VendorCatalogService.ts";
+import { ChunkService } from "@/Services/ChunkService.ts";
 import { FakeProvider } from "@/Testing/FakeProvider.ts";
 import type { DocumentProvider } from "@/Protocols/DocumentProviderProtocol.ts";
 const START_MS = Date.parse("2026-11-08T12:00:00Z");
@@ -580,6 +582,197 @@ describe("LoaderService.ensure()", () => {
         expect(entry).toMatchObject({ status: "failed" });
         const chunks = await readChunks();
         expect(chunks).toStrictEqual([]);
+      });
+
+      describe("when using factory composition via VendorCatalogService.build()", () => {
+        const INSERT_FILING_SQL = "INSERT INTO filings (filing_id, market, ticker, asset_type, filing_type, source, delivered_at, category, url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        const INSERT_CHUNK_SQL = "INSERT INTO chunks (filing_id, market, ticker, asset_type, filing_type, section, page, seq, text) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        const RELATORIOS_CATEGORY = "Relatórios";
+        const CREDENTIALS_ERROR = "the filing link contains credentials for FNET; no document was read";
+
+        const resolveInputUrl = (input: string | URL | Request): string => {
+          if (typeof input === "string") {
+            return input;
+          }
+          if (input instanceof URL) {
+            return input.toString();
+          }
+          return input.url;
+        };
+
+        let fetchSpy: MockInstance<typeof globalThis.fetch>;
+
+        beforeEach(() => {
+          fetchSpy = vi.spyOn(globalThis, "fetch");
+        });
+
+        afterEach(() => {
+          fetchSpy.mockRestore();
+        });
+
+        const buildComposedLoader = (): LoaderService => {
+          const lookup = StoreService.buildLegalIdLookup(store.writer);
+          const catalog = VendorCatalogService.build(lookup);
+          const registry = new ProviderRegistryService(
+            {
+              INVESTMENT_MCP_LOG_LEVEL: "error",
+              INVESTMENT_MCP_CACHE_TTL_SECONDS: TTL_SECONDS,
+              INVESTMENT_MCP_FILINGS_PROVIDER: "BR:fnet",
+              INVESTMENT_MCP_DOCUMENTS_PROVIDER: "BR:fnet",
+            },
+            catalog,
+          );
+          return new LoaderService(store, registry, () => Promise.resolve());
+        };
+
+        it("loads filings and document chunks through full factory composition when legal_id is known", async () => {
+          await store.writer.run(INSERT_HGLG11);
+          const samplePdfBytes = new Uint8Array(readFileSync(SAMPLE_PDF_PATH));
+          fetchSpy.mockImplementation((input: string | URL | Request) => {
+            const url = resolveInputUrl(input);
+            if (url.includes("pesquisarGerenciadorDocumentosDados")) {
+              return Promise.resolve(new Response(FNET_SEARCH_FIXTURE, {
+                status: 200,
+                headers: { "content-type": "application/json" },
+              }));
+            }
+            if (url.includes("exibirDocumento")) {
+              return Promise.resolve(new Response(samplePdfBytes, {
+                status: 200,
+                headers: { "content-type": "application/pdf" },
+              }));
+            }
+            return Promise.resolve(new Response("Not Found", { status: 404 }));
+          });
+
+          const loader = buildComposedLoader();
+
+          const [filingEntry] = await loader.ensure([{
+            category: "filings",
+            market: "BR",
+            ticker: "HGLG11",
+            assetType: "fii",
+            table: "filings",
+          }]);
+
+          expect(filingEntry).toMatchObject({ status: "loaded", source: "fnet", rowsWritten: 1 });
+          const storedFilings = await store.writer.readRows("SELECT filing_id, ticker, filing_type, source FROM filings WHERE ticker = 'HGLG11'");
+          expect(storedFilings).toHaveLength(1);
+
+          const [docEntry] = await loader.ensure([{
+            category: "documents",
+            market: "BR",
+            ticker: "HGLG11",
+            assetType: "fii",
+            table: "chunks",
+            filingType: "fii_management_report",
+          }]);
+
+          expect(docEntry).toMatchObject({ status: "loaded" });
+          const storedChunks = await readChunks();
+          expect(storedChunks).toHaveLength(2);
+        });
+
+        it("fails FNET filings load without calling HTTP when legal_id is NULL in store", async () => {
+          await store.writer.run("INSERT INTO assets (market, ticker, asset_type, legal_id) VALUES ('BR', 'KNRI11', 'fii', NULL)");
+          const loader = buildComposedLoader();
+
+          const [entry] = await loader.ensure([{
+            category: "filings",
+            market: "BR",
+            ticker: "KNRI11",
+            assetType: "fii",
+            table: "filings",
+          }]);
+
+          expect(entry).toMatchObject({ status: "failed" });
+          expect(entry?.error).toContain("cannot map BR:KNRI11 to a FNET fund; no CNPJ is known for it");
+          expect(fetchSpy).not.toHaveBeenCalled();
+        });
+
+        it("fails document load and does not leak credentials or secret tokens to error messages or runs table", async () => {
+          const fakeSecret = "fake-secret-123456";
+          const secretUrl = `https://user:${fakeSecret}@fnet.bmfbovespa.com.br/fnet/publico/exibirDocumento?id=1348097`;
+          await store.writer.run("INSERT INTO assets (market, ticker, asset_type, legal_id) VALUES ('BR', 'XPLG11', 'fii', '26502794000185')");
+          await store.writer.run(
+            INSERT_FILING_SQL,
+            ["sec_id", "BR", "XPLG11", "fii", "fii_management_report", "fnet", "2026-10-15T00:00:00-03:00", RELATORIOS_CATEGORY, secretUrl],
+          );
+          const runId = await store.cache.startRun({ category: "filings", market: "BR", ticker: "XPLG11", source: "fnet" });
+          await store.cache.finishRun(runId, { rowsRead: 1 });
+
+          const loader = buildComposedLoader();
+
+          const [entry] = await loader.ensure([{
+            category: "documents",
+            market: "BR",
+            ticker: "XPLG11",
+            assetType: "fii",
+            table: "chunks",
+            filingType: "fii_management_report",
+          }]);
+
+          expect(entry).toMatchObject({ status: "failed" });
+          expect(entry?.error).toContain(CREDENTIALS_ERROR);
+          expect(entry?.error).not.toContain(fakeSecret);
+          expect(fetchSpy).not.toHaveBeenCalled();
+
+          const runs = await store.writer.readRows("SELECT error FROM cache_runs WHERE category = 'documents'");
+          expect(runs[0]?.error).toContain(CREDENTIALS_ERROR);
+          expect(runs[0]?.error).not.toContain(fakeSecret);
+        });
+
+        it("persists real extracted page segments through ChunkService and verifies SQL query preservation", async () => {
+          const hglgPath = join(import.meta.dirname, "..", "Testing", "fixtures", "fnet", "hglg11-doc-1348097-page5-excerpt.txt");
+          const knriPath = join(import.meta.dirname, "..", "Testing", "fixtures", "fnet", "knri11-doc-1368920-page1-excerpt.txt");
+          const hglgText = readFileSync(hglgPath, "utf8");
+          const knriText = readFileSync(knriPath, "utf8");
+
+          await store.writer.run(INSERT_HGLG11);
+          await store.writer.run("INSERT INTO assets (market, ticker, asset_type, legal_id) VALUES ('BR', 'KNRI11', 'fii', '12005956000165')");
+
+          await store.writer.run(
+            INSERT_FILING_SQL,
+            ["hglg_f1", "BR", "HGLG11", "fii", "fii_management_report", "fnet", "2026-10-13T19:23:00-03:00", RELATORIOS_CATEGORY, "https://fnet.bmfbovespa.com.br/fnet/publico/exibirDocumento?id=1348097&cvm=true"],
+          );
+          await store.writer.run(
+            INSERT_FILING_SQL,
+            ["knri_f1", "BR", "KNRI11", "fii", "fii_management_report", "fnet", "2026-10-30T10:00:00-03:00", RELATORIOS_CATEGORY, "https://fnet.bmfbovespa.com.br/fnet/publico/exibirDocumento?id=1368920&cvm=true"],
+          );
+
+          const hglgChunks = ChunkService.split([{ section: "Gestão", page: 5, text: hglgText }]);
+          for (const chunk of hglgChunks) {
+            await store.writer.run(
+              INSERT_CHUNK_SQL,
+              ["hglg_f1", "BR", "HGLG11", "fii", "fii_management_report", chunk.section, chunk.page, chunk.seq, chunk.text],
+            );
+          }
+
+          const knriChunks = ChunkService.split([{ section: "Objetivo", page: 1, text: knriText }]);
+          for (const chunk of knriChunks) {
+            await store.writer.run(
+              INSERT_CHUNK_SQL,
+              ["knri_f1", "BR", "KNRI11", "fii", "fii_management_report", chunk.section, chunk.page, chunk.seq, chunk.text],
+            );
+          }
+
+          const hglgRows = await store.writer.readRows("SELECT page, seq, section, text FROM chunks WHERE ticker = 'HGLG11' ORDER BY seq");
+          expect(hglgRows.length).toBeGreaterThan(0);
+          expect(hglgRows[0]?.page).toBe(5);
+          expect(hglgRows[0]?.text).toContain("Patrimônio Líquido");
+          expect(hglgRows[0]?.text).toContain("R$ 7,5 bilhões");
+          expect(hglgRows[0]?.text).toContain("R$ 165,48");
+          expect(hglgRows[0]?.text).toContain("R$ 1,17/cota");
+
+          const knriRows = await store.writer.readRows("SELECT page, seq, section, text FROM chunks WHERE ticker = 'KNRI11' ORDER BY seq");
+          expect(knriRows).toHaveLength(4);
+          expect(knriRows.every((row) => row.page === 1)).toBe(true);
+          expect(knriRows[0]?.text).toContain("PATRIMÔNIO LÍQUIDO");
+          expect(knriRows[0]?.text).toContain("R$ 4.602.278.866,50");
+          expect(knriRows[0]?.text).toContain("1,93%");
+          expect(knriRows[0]?.text).toContain("4,83%");
+          expect(knriRows.some((row) => String(row.text).includes("R$ 1,10 por cota"))).toBe(true);
+        });
       });
     });
   });

@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import { FnetDocumentAdapter } from "@/Adapters/Fnet/FnetDocumentAdapter.ts";
-import { RedactUtil } from "@/Utils/RedactUtil.ts";
 
 const EXIBIR_URL = "https://fnet.bmfbovespa.com.br/fnet/publico/exibirDocumento?id=1348097&cvm=true";
 const DOWNLOAD_URL = "https://fnet.bmfbovespa.com.br/fnet/publico/downloadDocumento?id=1348097";
 const HOST_ERROR_MESSAGE = "the filing link is not on fnet.bmfbovespa.com.br";
 const PATH_ERROR_MESSAGE = "the filing link path is not allowed on fnet.bmfbovespa.com.br";
-const ID_ERROR_MESSAGE = "the filing link has an invalid or missing document id";
+const ID_ERROR_MESSAGE = "the filing link has an invalid or missing document id for FNET";
 
 type FakeHttp = {
   http: HttpPort;
@@ -75,13 +74,20 @@ describe("FnetDocumentAdapter.fetchDocument()", () => {
     expect(requested).toStrictEqual([]);
   });
 
-  it("refuses unexpected ports and embedded credentials", async () => {
+  it("refuses unexpected ports and embedded credentials without leaking secrets or calling HTTP", async () => {
     const { http, requested } = buildHttp(new Uint8Array());
+    const fakeSecret = "fake-secret-123456";
 
     await expect(new FnetDocumentAdapter(http).fetchDocument("https://fnet.bmfbovespa.com.br:8443/fnet/publico/exibirDocumento?id=123"))
-      .rejects.toThrow("the filing link specifies an unexpected port");
-    await expect(new FnetDocumentAdapter(http).fetchDocument("https://user:pass@fnet.bmfbovespa.com.br/fnet/publico/exibirDocumento?id=123"))
-      .rejects.toThrow("the filing link contains credentials");
+      .rejects.toThrow("the filing link specifies an unexpected port for FNET; no document was read");
+
+    const credentialUrl = `https://user:${fakeSecret}@fnet.bmfbovespa.com.br/fnet/publico/exibirDocumento?id=123`;
+    let caughtCredentialError: Error | undefined;
+    await new FnetDocumentAdapter(http).fetchDocument(credentialUrl).catch((error: unknown) => {
+      caughtCredentialError = error as Error;
+    });
+    expect(caughtCredentialError?.message).toBe("the filing link contains credentials for FNET; no document was read");
+    expect(caughtCredentialError?.message).not.toContain(fakeSecret);
     expect(requested).toStrictEqual([]);
   });
 
@@ -93,8 +99,9 @@ describe("FnetDocumentAdapter.fetchDocument()", () => {
     expect(requested).toStrictEqual([]);
   });
 
-  it("refuses missing or non-positive document IDs", async () => {
+  it("refuses missing or non-positive document IDs without echoing query secrets or calling HTTP", async () => {
     const { http, requested } = buildHttp(new Uint8Array());
+    const fakeSecret = "fake-query-secret-789";
 
     await expect(new FnetDocumentAdapter(http).fetchDocument("https://fnet.bmfbovespa.com.br/fnet/publico/exibirDocumento"))
       .rejects.toThrow(ID_ERROR_MESSAGE);
@@ -102,17 +109,14 @@ describe("FnetDocumentAdapter.fetchDocument()", () => {
       .rejects.toThrow(ID_ERROR_MESSAGE);
     await expect(new FnetDocumentAdapter(http).fetchDocument("https://fnet.bmfbovespa.com.br/fnet/publico/exibirDocumento?id=-42"))
       .rejects.toThrow(ID_ERROR_MESSAGE);
-    await expect(new FnetDocumentAdapter(http).fetchDocument("https://fnet.bmfbovespa.com.br/fnet/publico/exibirDocumento?id=abc"))
-      .rejects.toThrow(ID_ERROR_MESSAGE);
+
+    const secretQueryUrl = `https://fnet.bmfbovespa.com.br/fnet/publico/exibirDocumento?id=abc&token=${fakeSecret}`;
+    let caughtQueryError: Error | undefined;
+    await new FnetDocumentAdapter(http).fetchDocument(secretQueryUrl).catch((error: unknown) => {
+      caughtQueryError = error as Error;
+    });
+    expect(caughtQueryError?.message).toBe("the filing link has an invalid or missing document id for FNET; no document was read");
+    expect(caughtQueryError?.message).not.toContain(fakeSecret);
     expect(requested).toStrictEqual([]);
-  });
-
-  it("redacts secret tokens if present in failure strings", () => {
-    const fakeSecret = "secret-token-123456";
-    const rawError = `failed fetching https://fnet.bmfbovespa.com.br/fnet/publico/exibirDocumento?id=123&token=${fakeSecret}`;
-    const redacted = RedactUtil.redactText(rawError, [fakeSecret]);
-
-    expect(redacted).not.toContain(fakeSecret);
-    expect(redacted).toContain("[REDACTED]");
   });
 });

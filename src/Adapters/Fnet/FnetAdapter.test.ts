@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { FnetAdapter } from "@/Adapters/Fnet/FnetAdapter.ts";
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type { ProviderRequest } from "@/Protocols/ProviderProtocol.ts";
+import { ChunkService } from "@/Services/ChunkService.ts";
 
 const FIXTURES_DIR = join(import.meta.dirname, "..", "..", "Testing", "fixtures", "fnet");
 const REAL_SEARCH_JSON = readFileSync(join(FIXTURES_DIR, "fnet-search-response.json"), "utf8");
@@ -288,13 +289,28 @@ describe("FnetAdapter.parseDeliveredAt()", () => {
 });
 
 describe("FnetAdapter.buildRow()", () => {
-  it("verifies financial contents in real unpdf text excerpts for HGLG11 and KNRI11", () => {
-    expect(HGLG11_EXCERPT).toContain("R$ 7,5 bilhões");
-    expect(HGLG11_EXCERPT).toContain("R$ 165,48");
-    expect(HGLG11_EXCERPT).toContain("R$ 1,17/cota");
+  it("processes real extracted pages through ChunkService and preserves financial data with page references", () => {
+    const hglgChunks = ChunkService.split([
+      { section: "Comentários da Gestão", page: 5, text: HGLG11_EXCERPT },
+    ]);
+    expect(hglgChunks.length).toBeGreaterThan(0);
+    expect(hglgChunks[0]?.page).toBe(5);
+    expect(hglgChunks[0]?.section).toBe("Comentários da Gestão");
+    expect(hglgChunks[0]?.text).toContain("Patrimônio Líquido");
+    expect(hglgChunks[0]?.text).toContain("R$ 7,5 bilhões");
+    expect(hglgChunks[0]?.text).toContain("R$ 165,48");
+    expect(hglgChunks[0]?.text).toContain("R$ 1,17/cota");
 
-    expect(KNRI11_EXCERPT).toContain("R$ 4.602.278.866,50");
-    expect(KNRI11_EXCERPT).toContain("1,93%");
-    expect(KNRI11_EXCERPT).toContain("R$ 1,10 por cota");
+    const knriChunks = ChunkService.split([
+      { section: "Objetivo do Fundo", page: 1, text: KNRI11_EXCERPT },
+    ]);
+    expect(knriChunks).toHaveLength(4);
+    expect(knriChunks.every((chunk) => chunk.page === 1)).toBe(true);
+    expect(knriChunks[0]?.section).toBe("Objetivo do Fundo");
+    expect(knriChunks[0]?.text).toContain("PATRIMÔNIO LÍQUIDO");
+    expect(knriChunks[0]?.text).toContain("R$ 4.602.278.866,50");
+    expect(knriChunks[0]?.text).toContain("1,93%");
+    expect(knriChunks[0]?.text).toContain("4,83%");
+    expect(knriChunks.some((chunk) => chunk.text.includes("R$ 1,10 por cota"))).toBe(true);
   });
 });
