@@ -58,16 +58,12 @@ A provider variable names the vendor for each market: `BR:yahoo` uses one vendor
 | --- | --- | --- |
 | Yahoo Finance | quotes, dividends, splits, asset summary | Unofficial. Personal use, no service guarantee. |
 | BCB SGS | macro series (ipca, cdi, selic, ptax, igpm) | Open data. |
-| StatusInvest | fundamentals, FII monthly data | Built, but the site blocks requests from this server; its terms were not read (see `docs/adr/0010-statusinvest-terms-unread-owner-decision.md`). |
+| StatusInvest | fundamentals, FII monthly data | Built, but the site blocks requests from this server; its terms were not read (ADR 0010 was removed from main). |
 | CVM | filings list (IPE) | Open data under the ODbL (see below). A ticker needs a CNPJ link that no source gives yet. |
 | CVM | ITR, DFP, Formulário de Referência | Not built (issue #11). |
 | FNET | FII management reports | Built only if a spike passes. |
 
 The `source` of every row names the vendor that produced it.
-
-## Attribution
-
-The data of the Comissão de Valores Mobiliários (CVM) is open data under the Open Database License (ODbL). This repository never ships a cached database: the server downloads the data on demand, into a temporary file that can be deleted at any time.
 
 ## Development
 

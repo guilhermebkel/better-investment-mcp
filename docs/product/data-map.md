@@ -101,10 +101,6 @@ The map of the CVM open data that serves the tables above. CVM is the primary so
 - A document is downloaded only from `www.rad.cvm.gov.br` (CVM) or `fnet.bmfbovespa.com.br` (FNET, the host of the FII reports linked by CVM), over https, and only when a query asks for its chunks. The text is indexed in `chunks` and searched with `search_chunks`. A scanned PDF without text is not read (no OCR).
 - A load that cannot finish says which class of failure it is (HTTP error, blocked request, file that could not be read, or unmapped ticker); a CVM failure never falls back to another source.
 
-## Licenses of the data
-
-CVM open data is published under ODbL, so this repository never ships a cached database. Yahoo Finance data is for personal use, with no service guarantee. BCB SGS data is open data. StatusInvest's terms of use were not read, and the site blocks requests from this server (ADR 0010).
-
 ## Known gap: tickers and CNPJ
 
 CVM's files carry the CNPJ of a company or a fund, not its ticker. The CVM adapters resolve a ticker in two places, and nothing else:

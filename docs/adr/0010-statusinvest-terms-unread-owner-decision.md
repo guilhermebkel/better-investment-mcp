@@ -1,3 +1,0 @@
-# StatusInvest
-
-Partially implemented.

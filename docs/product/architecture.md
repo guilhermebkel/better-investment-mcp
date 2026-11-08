@@ -57,7 +57,7 @@ One interface per data category, one adapter per vendor (`docs/adr/0005-one-prov
 
 | Vendor | Gives | Issue | Notes |
 | --- | --- | --- | --- |
-| Yahoo Finance | quotes, dividends, splits, asset summary | #6 | Built. Unofficial, personal use, no SLA. |
+| Yahoo Finance | quotes, dividends, splits, asset summary | #6 | Built. |
 | BCB SGS | macro series | #7 | Built. Open data. |
 | StatusInvest | fundamentals, FII monthly data | #8 | Built, but blocked by the site from this server; terms not read (ADR 0010). |
 | CVM | filings list (IPE, ITR, DFP, FRE, the eventual fund file), ITR and DFP statements, FII monthly files, the company list that maps stock tickers to CNPJ | #9, #11, #28 | Built. The primary source of what it carries, with the version and the file of each row. A stock ticker maps through the company list; a FII ticker maps through a short curated list; any other ticker is pending. Open data under ODbL. The reference form (FRE) has no item text in the open data. |
