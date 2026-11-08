@@ -1,0 +1,5 @@
+CNPJ_CIA;DT_REFER;VERSAO;DENOM_CIA;CD_CVM;CATEG_DOC;ID_DOC;DT_RECEB;LINK_DOC
+12.345.678/0001-90;2025-03-31;1;EMPRESA EXEMPLO S.A.;009999;ITR;147933;2025-05-15;http://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=147933
+12.345.678/0001-90;2025-12-31;1;EMPRESA EXEMPLO S.A.;009999;DFP;154715;2026-02-11;http://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=154715
+12.345.678/0001-90;2025-12-31;2;EMPRESA EXEMPLO S.A.;009999;FRE WEB;148606;2025-05-30;http://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=148606
+98.765.432/0001-10;2025-03-31;1;OUTRA EMPRESA S.A.;008888;ITR;150000;2025-05-16;http://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=150000

@@ -56,7 +56,15 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 - `dividends.kind` is `dividend` for every Yahoo row; Yahoo does not tell a dividend from interest on equity.
 - `assets.sector` and `assets.legal_id` are null from Yahoo: its chart endpoint gives neither.
 - `fundamentals` and `fii_monthly` keep a missing value as null, never zero. `fii_monthly.net_worth` is read from the monthly net worth endpoint and stays null for a month that endpoint does not cover.
-- `filings.filing_type` is `material_fact`, `sustainability` or `other`, from the CVM IPE categories. The IPE file does not hold ITR, DFP or Formulário de Referência; those come from other CVM datasets (issue #11) and are not built.
+- `filings.filing_type` is `material_fact`, `sustainability` or `other` from the CVM IPE categories, and `itr`, `dfp` or `fre` from the yearly ITR, DFP and FRE datasets (issue #11). `filings.category` keeps the vendor's own name (`ITR`, `DFP`, `FRE WEB`).
+- `financial_statements.value` is in currency units: the file's scale (`MIL` or `UNIDADE`) is applied, so a thousand-scale value is multiplied by 1000. `currency` is `BRL` for the real.
+- `financial_statements.statement` is the statement and the version: `DRE`, `BPA` (assets), `BPP` (liabilities and equity) or `DFC_MD` (cash flow, direct method), with `_con` for consolidated and `_ind` for individual, for example `DRE_con`.
+- `financial_statements.line_item` is the CVM account code and name, for example `3.01 Receita de Venda`. The code is the key to use in a query; names change between companies.
+- `financial_statements.period_type` is `quarter` (a three-month income statement), `ytd` (the year so far in a quarterly filing), `year` (a full year) or `instant` (a balance sheet date, which has no start date). `period_end` is the last day of the period.
+- A restated period keeps the row of the later filing (the later reference date, then the higher version). The restatement is not reported in the load report yet.
+- A line the file leaves without a value is absent for that period, never zero.
+- A load of `financial_statements` or `filings` for a company downloads the yearly CVM zips of the last three years: ITR (about 32 MB each), DFP (about 13 MB) and FRE (about 8 MB), plus the IPE zip. The first load is slow; the cache keeps the result for `INVESTMENT_MCP_CACHE_TTL_SECONDS`.
+- The CVM open data has no item text of the Formulário de Referência, so the reference form is not in `chunks` (issue #11, scope item S3, not built).
 - `filings.filing_id` is a hash of the delivery protocol, version and document link, so a re-delivery keeps its own row.
 - `filings.delivered_at` is the date of delivery at Brasília time (`-03:00`).
 
@@ -66,4 +74,4 @@ CVM open data is published under ODbL, so this repository never ships a cached d
 
 ## Known gap: tickers and CNPJ
 
-CVM's IPE file and its company registry carry the CNPJ of a company, not its ticker. The CVM filings adapter needs a ticker-to-CNPJ link to answer a query for `BR:PETR4`. No source in the repository gives that link yet, so the load fails with a message that names the ticker, and the filings table stays empty until the link is chosen.
+CVM's files carry the CNPJ of a company, not its ticker. The CVM filings and statements adapters need a ticker-to-CNPJ link to answer a query for `BR:PETR4`. No source in the repository gives that link yet, so the load fails with a message that names the ticker, and `filings` and `financial_statements` stay empty until the link is chosen.

@@ -13,8 +13,8 @@
       "reason": "Yearly fundamentals from StatusInvest; the adapter is built (#8), but the site blocks requests from this server, so loads fail with the block message (ADR 0010)."
     },
     "StatementProvider": {
-      "status": "planned",
-      "reason": "Financial statements from CVM ITR and DFP; built in the CVM statements issue."
+      "status": "implemented",
+      "reason": "Financial statements from CVM ITR and DFP; the CVM statements adapter (#11) fills them per company, with the consolidated and individual versions. A load needs a CNPJ for the ticker, which no source gives yet."
     },
     "FundDataProvider": {
       "status": "implemented",

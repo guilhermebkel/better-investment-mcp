@@ -1,18 +1,20 @@
 import { readFileSync } from "node:fs";
 import { Readable } from "node:stream";
 import { join } from "node:path";
-import { deflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import { CvmAdapter } from "@/Adapters/Cvm/CvmAdapter.ts";
-import { HttpFailureError } from "@/Errors/HttpFailureError.ts";
-import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
+import { FakeHttp } from "@/Testing/FakeHttp.ts";
+import { ZipFixture } from "@/Testing/ZipFixture.ts";
 
-const SAMPLE_PATH = join(import.meta.dirname, "..", "..", "Testing", "fixtures", "cvm", "ipe-2024-petrobras-sample.csv");
-const SAMPLE = readFileSync(SAMPLE_PATH, "latin1");
+const FIXTURES = join(import.meta.dirname, "..", "..", "Testing", "fixtures", "cvm");
+const SAMPLE = readFileSync(join(FIXTURES, "ipe-2024-petrobras-sample.csv"), "latin1");
+const PERIODIC_SAMPLE = readFileSync(join(FIXTURES, "periodic-sample.csv"), "latin1");
 const PETROBRAS = "33.000.167/0001-01";
+const SAMPLE_COMPANY = "12.345.678/0001-90";
 const key = { market: "BR", ticker: "PETR4", assetType: "stock" };
 const rowKey = { market: "BR", ticker: "PETR4", asset_type: "stock" };
 const CURRENT_YEAR = 2025;
+const BASE = "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC";
 const splitLines = (text: string): string[] => text.split(/\r?\n/u);
 const collectLines = async (lines: AsyncIterable<string>): Promise<string[]> => {
   const collected: string[] = [];
@@ -21,54 +23,13 @@ const collectLines = async (lines: AsyncIterable<string>): Promise<string[]> => 
   }
   return collected;
 };
-
-const buildZipOf = (name: string, text: string): Uint8Array => {
-  // Why: a small zip with one entry, built here, so the test never needs the 2 MB yearly file.
-  const nameBytes = Buffer.from(name);
-  const raw = Buffer.from(text, "latin1");
-  const packed = deflateRawSync(raw);
-  const local = Buffer.alloc(30);
-  local.writeUInt32LE(0x04034b50, 0);
-  local.writeUInt16LE(8, 8);
-  local.writeUInt32LE(packed.length, 18);
-  local.writeUInt32LE(Buffer.byteLength(text, "latin1"), 22);
-  local.writeUInt16LE(nameBytes.length, 26);
-  const central = Buffer.alloc(46);
-  central.writeUInt32LE(0x02014b50, 0);
-  central.writeUInt16LE(8, 10);
-  central.writeUInt32LE(packed.length, 20);
-  central.writeUInt32LE(Buffer.byteLength(text, "latin1"), 24);
-  central.writeUInt16LE(nameBytes.length, 28);
-  const end = Buffer.alloc(22);
-  end.writeUInt32LE(0x06054b50, 0);
-  end.writeUInt16LE(1, 10);
-  end.writeUInt32LE(central.length + nameBytes.length, 12);
-  end.writeUInt32LE(local.length + nameBytes.length + packed.length, 16);
-  return new Uint8Array(Buffer.concat([local, nameBytes, packed, central, nameBytes, end]));
-};
-
-const buildHttpServing = (pathToFile: Readonly<Record<string, Uint8Array>>): {
-  http: HttpPort;
-  urls: string[];
-} => {
-  const urls: string[] = [];
-  const http: HttpPort = {
-    getText: () => Promise.reject(new Error("not used")),
-    postForm: () => Promise.reject(new Error("not used")),
-    getCookies: () => Promise.reject(new Error("not used")),
-    getBytes: (url: string) => {
-      urls.push(url);
-      const file = pathToFile[url];
-      if (file === undefined) {
-        return Promise.reject(new HttpFailureError("the vendor answered with status 404", 404));
-      }
-      return Promise.resolve(file);
-    },
-  };
-  return { http, urls };
-};
-
 const resolveKnownCompany = () => Promise.resolve(PETROBRAS);
+const readPeriodicLines = (category: string): string => {
+  const [header = "", ...lines] = splitLines(PERIODIC_SAMPLE);
+  // Why: the periodic sample holds one line per kind; a yearly file holds only its own kind, so the test takes the kind's lines.
+  const kept = lines.filter((line) => line.includes(`;${category};`)).map((line) => line.replace(SAMPLE_COMPANY, PETROBRAS));
+  return [header, ...kept].join("\n");
+};
 
 describe("CvmAdapter.readRows()", () => {
   it("keeps the lines of the company with the filing type and the original category (AC1, AC2)", async () => {
@@ -123,36 +84,80 @@ describe("CvmAdapter.readRows()", () => {
   });
 });
 
+describe("CvmAdapter.readPeriodicRows()", () => {
+  it("keeps the company's ITR lines with the kind of the file, the delivery date and the document link", async () => {
+    const lines = splitLines(readPeriodicLines("ITR"));
+    const rows = await CvmAdapter.readPeriodicRows(lines, "33000167000101", rowKey, "itr");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      market: "BR",
+      ticker: "PETR4",
+      asset_type: "stock",
+      filing_type: "itr",
+      category: "ITR",
+      delivered_at: "2025-05-15T00:00:00-03:00",
+      subject: null,
+      source: "cvm",
+    });
+    expect(rows[0]?.url).toContain("NumeroSequencialDocumento=147933");
+  });
+
+  it("gives the FRE lines a filing id of their own, distinct from the same company's ITR", async () => {
+    const freLines = splitLines(readPeriodicLines("FRE WEB"));
+    const itrLines = splitLines(readPeriodicLines("ITR"));
+    const fre = await CvmAdapter.readPeriodicRows(freLines, "33000167000101", rowKey, "fre");
+    const itr = await CvmAdapter.readPeriodicRows(itrLines, "33000167000101", rowKey, "itr");
+    expect(fre[0]?.filing_type).toBe("fre");
+    expect(fre[0]?.filing_id).not.toBe(itr[0]?.filing_id);
+  });
+
+  it("fails with a format-changed message when the header is not the one the adapter reads", () => {
+    const attempt = CvmAdapter.readPeriodicRows(["a;b;c"], "33000167000101", rowKey, "itr");
+    return expect(attempt).rejects.toThrow("the response format changed");
+  });
+});
+
 describe("CvmAdapter.fetchTables()", () => {
-  it("reads the yearly files, skips a year without a file and fills filings (AC1)", async () => {
+  it("reads the yearly IPE, ITR, DFP and FRE files, skips a year without a file and fills filings (AC1)", async () => {
+    const itrZip = ZipFixture.buildZipOf({ "itr_cia_aberta_2025.csv": readPeriodicLines("ITR") });
     const files = {
-      "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/IPE/DADOS/ipe_cia_aberta_2024.zip": buildZipOf("ipe_cia_aberta_2024.csv", SAMPLE),
+      [`${BASE}/IPE/DADOS/ipe_cia_aberta_2024.zip`]: ZipFixture.buildZipOf({ "ipe_cia_aberta_2024.csv": SAMPLE }),
+      [`${BASE}/ITR/DADOS/itr_cia_aberta_2025.zip`]: itrZip,
     };
-    const { http, urls } = buildHttpServing(files);
+    const { http, urls } = FakeHttp.buildServing(files);
     const adapter = new CvmAdapter(http, resolveKnownCompany, CvmAdapter.BASE_URL, () => CURRENT_YEAR);
     const result = await adapter.fetchTables(key);
 
-    expect(urls).toStrictEqual([
-      "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/IPE/DADOS/ipe_cia_aberta_2023.zip",
-      "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/IPE/DADOS/ipe_cia_aberta_2024.zip",
-      "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/IPE/DADOS/ipe_cia_aberta_2025.zip",
+    expect(urls).toHaveLength(12);
+    expect(urls.slice(0, 4)).toStrictEqual([
+      `${BASE}/IPE/DADOS/ipe_cia_aberta_2023.zip`,
+      `${BASE}/ITR/DADOS/itr_cia_aberta_2023.zip`,
+      `${BASE}/DFP/DADOS/dfp_cia_aberta_2023.zip`,
+      `${BASE}/FRE/DADOS/fre_cia_aberta_2023.zip`,
     ]);
     expect(result.source).toBe("cvm");
-    expect(result.tables.filings).toHaveLength(6);
+    expect(result.tables.filings).toHaveLength(7);
   });
 
   it("names the ticker when it cannot be mapped to a company (AC3)", async () => {
-    const { http } = buildHttpServing({});
+    const { http } = FakeHttp.buildServing({});
     await expect(new CvmAdapter(http, () => Promise.resolve(undefined)).fetchTables(key))
       .rejects.toThrow("cannot map BR:PETR4 to a CVM company");
   });
 
   it("stops the load when a file is damaged, and writes nothing", async () => {
     const brokenFile = new TextEncoder().encode("broken");
-    const { http } = buildHttpServing({
-      "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/IPE/DADOS/ipe_cia_aberta_2024.zip": brokenFile,
+    const { http } = FakeHttp.buildServing({
+      [`${BASE}/IPE/DADOS/ipe_cia_aberta_2024.zip`]: brokenFile,
     });
     await expect(new CvmAdapter(http, resolveKnownCompany, CvmAdapter.BASE_URL, () => CURRENT_YEAR).fetchTables(key))
       .rejects.toThrow("not a zip archive");
+  });
+});
+
+describe("CvmAdapter.resolveYears()", () => {
+  it("gives the current year and the two years before it, from the first IPE year", () => {
+    expect(CvmAdapter.resolveYears(2025)).toStrictEqual([2023, 2024, 2025]);
+    expect(CvmAdapter.resolveYears(2004)).toStrictEqual([2003, 2004]);
   });
 });
