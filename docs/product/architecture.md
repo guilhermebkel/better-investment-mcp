@@ -61,7 +61,7 @@ One interface per data category, one adapter per vendor (`docs/adr/0005-one-prov
 | BCB SGS | macro series | #7 | Built. Open data. |
 | StatusInvest | fundamentals, FII monthly data | #8 | Built, but blocked by the site from this server; terms not read (ADR 0010). |
 | CVM | filings list (IPE, ITR, DFP, FRE), ITR and DFP statements | #9, #11 | Built. A ticker needs a CNPJ link that no source gives yet. Open data under ODbL. The reference form (FRE) has no item text in the open data. |
-| FNET | FII management reports | #12 | Built only if a spike passes. |
+| FNET | FII management reports | #12 | Built. Public B3 infrastructure; a load needs a CNPJ in assets.legal_id (ADR 0015). |
 
 ## Layers
 

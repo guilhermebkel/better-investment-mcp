@@ -1,8 +1,10 @@
 # FNET Test Fixtures & Provenance
 
 ## Collection Date
-- **Artifacts Collection Date**: `2026-11-08` (retrieved during Phase 1 & 2 research spike session, ~14:00 BRT).
-- **Filing Delivery Timestamps**: HGLG11 document delivered on `13/10/2026 19:23`; KNRI11 document delivered on `30/10/2026`.
+- **Artifacts Collection Date**: `2026-11-08` (retrieved during Phase 1 & 2 research spike session; exact original collection time is unknown).
+- **Filing Dates**:
+  - HGLG11 (doc `1348097`): `dataEntrega`: `13/10/2026 19:23`; `dataReferencia`: `30/09/2026`.
+  - KNRI11 (doc `1368920`): `dataEntrega`: `04/11/2026 18:12`; `dataReferencia`: `30/10/2026`.
 
 ## Listing Fixture (`fnet-search-response.json`)
 - **Query Endpoint**: `https://fnet.bmfbovespa.com.br/fnet/publico/pesquisarGerenciadorDocumentosDados?d=1&s=5&l=5&tipoFundo=1&cnpjFundo=11728688000147&o[0][dataEntrega]=desc`.
