@@ -16,7 +16,7 @@ Many fast low-level tests, few slow ones. Pick the lowest level that can fail fo
 
 - **Unit and service tests** for utils, schemas, services and operations (with a double for the provider).
 - **Server tests** for what a client sees: a real MCP client talks to the built server object in memory.
-- **Package smoke** (`pnpm smoke`) for the built bundle: it starts the program through `node` and `npx` and checks that it starts, keeps `stdout` clean and exits as expected. The server skeleton issue extends it to the MCP `initialize` exchange; the packaging issue adds `docker run -i`.
+- **Package smoke** (`pnpm smoke`) for the built bundle: it starts the program through `node` and `npx` and checks that it starts, keeps `stdout` clean and exits as expected. It also runs the MCP `initialize` and `tools/list` exchange over stdio; the packaging issue adds `docker run -i`.
 - **Integration** (`pnpm test:integration`, files `scripts/*.integration.test.mjs`) for what a double cannot prove: the built bundle with the real DuckDB file, a vendor format that changed. `pnpm test` leaves these out and they need `pnpm build` first. None exists yet and the command passes while there are none; a test that reaches a real vendor is never part of `pnpm test` or of CI.
 
 A bug found at a high level (smoke, integration, a user report) is first reproduced in a lower-level test, then fixed.

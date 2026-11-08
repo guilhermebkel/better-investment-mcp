@@ -1,6 +1,6 @@
 # Adding an operation
 
-This page is the contract a new tool must meet. A tool is a class in `src/Operations/` and the server has only read-only tools (`docs/adr/0004-no-tool-writes-to-the-outside-world.md`), so a new tool needs an ADR first. The port and the manifest arrive with the server skeleton issue (#2); the steps below are the plan for them. In order:
+This page is the contract a new tool must meet. A tool is a class in `src/Operations/` and the server has only read-only tools (`docs/adr/0004-no-tool-writes-to-the-outside-world.md`), so a new tool needs an ADR first. The port (`OperationPort` in `src/Protocols/OperationProtocol.ts`) and the manifest (`src/Surfaces/OperationManifestSurface.ts`) are in place. In order:
 
 1. Write the ADR that says why the tool cannot be a `query_sql` query or a guide topic.
 2. Create `src/Operations/<Name>Operation.ts` with `static readonly NAME = "<name>"`, `implements OperationPort<Input>` and the members `description`, `inputSchema` and `execute`. Its constructor takes the services it needs.

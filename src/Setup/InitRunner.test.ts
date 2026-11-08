@@ -1,0 +1,36 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { InitRunner } from "@/Setup/InitRunner.ts";
+
+describe("InitRunner.run()", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  it("prints the JSON client configuration with the npx command on stderr", () => {
+    const stderr = vi.spyOn(process.stderr, "write").mockReturnValue(true);
+
+    InitRunner.run();
+
+    expect(stderr).toHaveBeenCalledWith(expect.stringContaining("{\n  \"mcpServers\": {\n    \"better-investment-analysis\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"better-investment-analysis-mcp\"]\n    }\n  }\n}"));
+  });
+
+  it("prints the Codex configuration as TOML, since Codex does not read JSON", () => {
+    const stderr = vi.spyOn(process.stderr, "write").mockReturnValue(true);
+
+    InitRunner.run();
+
+    expect(stderr).toHaveBeenCalledWith(expect.stringContaining("[mcp_servers.better-investment-analysis]\ncommand = \"npx\"\nargs = [\"-y\", \"better-investment-analysis-mcp\"]"));
+  });
+
+  it("never prints a secret from the environment", () => {
+    vi.stubEnv("INVESTMENT_MCP_CACHE_DIR", "fake-secret-value-123");
+    const stderr = vi.spyOn(process.stderr, "write").mockReturnValue(true);
+    const stdout = vi.spyOn(process.stdout, "write").mockReturnValue(true);
+
+    InitRunner.run();
+
+    expect(stderr).not.toHaveBeenCalledWith(expect.stringContaining("fake-secret-value-123"));
+    expect(stdout).not.toHaveBeenCalled();
+  });
+});

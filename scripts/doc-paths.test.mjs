@@ -11,14 +11,8 @@ const PLANNED_PATHS = new Set([
   "src/Adapters/",
   "src/Adapters/DuckDb/",
   "src/Adapters/Yahoo/",
-  "src/Operations",
-  "src/Operations/",
-  "src/Services/",
-  "src/Surfaces/",
   "src/Testing/",
   "src/Testing/fixtures/",
-  "src/Surfaces/OperationManifestSurface.ts",
-  "src/Protocols/OperationProtocol.ts",
 ]);
 const ROOT_FILES = ["AGENTS.md", "README.md", "GLOSSARY.md", "knip.json", ".jscpd.json", "tsup.config.ts", ".oxlintrc.json"];
 

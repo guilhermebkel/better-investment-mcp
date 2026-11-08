@@ -15,7 +15,7 @@ const buildAgents = (count) => `Exposes <!-- tools:count -->${count}<!-- /tools:
 
 describe("readToolNames()", () => {
   it("reads the static NAME of each operation", () => {
-    const sources = [{ path: "src/Operations/QuerySqlOperation.ts", text: "static readonly NAME = \"query_sql\";" }];
+    const sources = [{ path: "src/Operations/QuerySqlOperation.ts", text: "static readonly NAME = \"querySql\";" }];
 
     expect(readToolNames(sources)).toStrictEqual(["query_sql"]);
   });
