@@ -17,6 +17,8 @@ export type Requirement = {
   market: string;
   ticker: string;
   assetType?: string;
+  filingId?: string;
+  filingType?: string;
 };
 
 export type GuardAccepted = {
@@ -58,6 +60,7 @@ export type FromReading = {
   refs: TableRef[];
   joinConditions: unknown[];
   problems: string[];
+  constraints: Constraint[];
 };
 
 export type TableFilters = {
@@ -68,3 +71,19 @@ export type TableFilters = {
 export type ConditionType = "CONJUNCTION_AND" | "CONJUNCTION_OR" | "COMPARE_EQUAL" | "COMPARE_IN";
 
 export type ConditionReader = (node: unknown, children: unknown[]) => Constraint[];
+
+export type FilingSelector = {
+  filingId?: string;
+  filingType?: string;
+};
+
+export type MacroReading = {
+  problems: string[];
+  constraints: Constraint[];
+};
+
+export type AssetKey = {
+  market: string;
+  ticker: string;
+  assetType: string;
+};

@@ -28,7 +28,7 @@ Folders are created when the first file needs them.
     nvm use
     pnpm ensure-deps   # runs pnpm install when node_modules is missing or package.json / pnpm-lock.yaml changed since the last install (also at the start of pnpm check and pnpm check:changed)
     pnpm test
-    pnpm test:integration # integration tests (none yet; the command passes while there are none)
+    pnpm test:integration # integration tests (scripts/*.integration.test.{mjs,ts}; the full-text one installs the DuckDB extension)
     pnpm check:pack    # the package holds only what it should and is under the size limit (needs pnpm build)
     pnpm check:licenses # every package the bundle reads has an allowed license
     pnpm source:drift  # fails when a data provider in docs/product/architecture.md is not classified in scripts/source-coverage.json

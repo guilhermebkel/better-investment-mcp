@@ -34,6 +34,12 @@ export type ProviderPort<Category extends CacheCategory = CacheCategory> = {
   fetchTables(request: ProviderRequest): Promise<ProviderResult>;
 };
 
+export type ServedVendor = {
+  vendor: string;
+  markets: readonly string[];
+  assetTypes: readonly string[];
+};
+
 export type ResolvedProviders = {
   primary: ProviderPort;
   fallback?: ProviderPort;

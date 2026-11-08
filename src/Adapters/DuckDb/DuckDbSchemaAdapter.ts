@@ -9,7 +9,7 @@ const FII_COLUMNS = [
 ].map((column) => `${column} DOUBLE`).join(", ");
 
 export class DuckDbSchemaAdapter {
-  static readonly VERSION = 1;
+  static readonly VERSION = 2;
 
   static readonly STATEMENTS: readonly string[] = [
     "CREATE TABLE schema_version (version INTEGER NOT NULL);",
@@ -24,7 +24,7 @@ export class DuckDbSchemaAdapter {
     `CREATE TABLE financial_statements (${ASSET_KEY}, period_end DATE NOT NULL, period_type VARCHAR NOT NULL, statement VARCHAR NOT NULL, line_item VARCHAR NOT NULL, value DOUBLE, currency VARCHAR, source VARCHAR NOT NULL);`,
     `CREATE TABLE fii_monthly (${ASSET_KEY}, period DATE NOT NULL, ${FII_COLUMNS}, source VARCHAR NOT NULL, PRIMARY KEY (market, ticker, period));`,
     "CREATE TABLE macro_series (series VARCHAR NOT NULL, date DATE NOT NULL, value DOUBLE, source VARCHAR NOT NULL, PRIMARY KEY (series, date));",
-    "CREATE TABLE cache_runs (run_id VARCHAR PRIMARY KEY, category VARCHAR NOT NULL, market VARCHAR NOT NULL, ticker VARCHAR NOT NULL, source VARCHAR NOT NULL, started_at TIMESTAMPTZ NOT NULL, finished_at TIMESTAMPTZ, expires_at TIMESTAMPTZ, rows_read BIGINT, error VARCHAR);",
+    "CREATE TABLE cache_runs (run_id VARCHAR PRIMARY KEY, category VARCHAR NOT NULL, market VARCHAR NOT NULL, ticker VARCHAR NOT NULL, source VARCHAR NOT NULL, started_at TIMESTAMPTZ NOT NULL, finished_at TIMESTAMPTZ, expires_at TIMESTAMPTZ, rows_read BIGINT, error VARCHAR, filing_id VARCHAR);",
     "CREATE VIEW document_text AS SELECT filing_id, seq, section, page, text FROM chunks ORDER BY filing_id, seq;",
     [
       "CREATE VIEW asset_coverage AS",

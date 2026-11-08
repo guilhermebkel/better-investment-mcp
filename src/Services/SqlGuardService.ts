@@ -1,13 +1,17 @@
 import type { CacheCategory } from "@/Protocols/CacheProtocol.ts";
 import type { DatabasePort } from "@/Protocols/DatabaseProtocol.ts";
 import type {
+  AssetKey,
   ColumnRef,
   ConditionReader,
   ConditionType,
   Constraint,
   DataTable,
+  FilingSelector,
   FromReading,
   GuardVerdict,
+  MacroReading,
+  Requirement,
   SelectCheck,
   SqlGuardPort,
   TableFilters,
@@ -16,6 +20,7 @@ import type {
 import {
   BaseTableSchema,
   ColumnRefSchema,
+  ConstantExpressionSchema,
   EqualityNodeSchema,
   JoinSchema,
   ParsedSqlSchema,
@@ -28,6 +33,9 @@ const SELECT_TYPES: readonly ("SELECT_NODE" | "SET_OPERATION_NODE")[] = ["SELECT
 const isSelectType = (value: string): boolean => SELECT_TYPES.some((candidate) => candidate === value);
 const SERIES_MARKET = "SERIES";
 const QUALIFIED_COLUMN_PARTS = 2;
+const SEARCH_MACRO = "search_chunks";
+const SEARCH_MACRO_FILTERS = ["market", "ticker", "asset_type", "filing_type", "section"] as const;
+const SEARCH_MACRO_ARGUMENT_COUNT = SEARCH_MACRO_FILTERS.length + 1;
 
 export class SqlGuardService implements SqlGuardPort {
   static readonly TABLE_TO_CATEGORY: Record<DataTable, CacheCategory> = {
@@ -147,7 +155,10 @@ export class SqlGuardService implements SqlGuardPort {
       + "Query chunks instead, with its filters and filing_type or filing_id.");
     const whereClause: unknown = Reflect.get(select as object, "where_clause");
     const conditions = [whereClause, ...from.joinConditions];
-    const constraints = conditions.flatMap((condition) => SqlGuardService.readConstraints(condition));
+    const constraints = [
+      ...conditions.flatMap((condition) => SqlGuardService.readConstraints(condition)),
+      ...from.constraints,
+    ];
     const dataRefs = from.refs.filter((ref) => {
       return !cteNames.includes(ref.name.toLowerCase()) && SqlGuardService.isDataTable(ref.table);
     });
@@ -162,6 +173,7 @@ export class SqlGuardService implements SqlGuardPort {
     const refs: TableRef[] = [];
     const joinConditions: unknown[] = [];
     const problems: string[] = [];
+    const constraints: Constraint[] = [];
     const visit = (node: unknown): void => {
       const base = BaseTableSchema.safeParse(node);
       if (base.success) {
@@ -179,13 +191,54 @@ export class SqlGuardService implements SqlGuardPort {
         return;
       }
       const tableFunction = TableFunctionSchema.safeParse(node);
+      if (tableFunction.success && tableFunction.data.function.function_name.toLowerCase() === SEARCH_MACRO) {
+        const reading = SqlGuardService.readSearchMacro(tableFunction.data.function.arguments ?? []);
+        problems.push(...reading.problems);
+        constraints.push(...reading.constraints);
+        if (reading.problems.length === 0) {
+          refs.push({ table: "chunks", name: SEARCH_MACRO });
+        }
+        return;
+      }
       if (tableFunction.success) {
         problems.push(`${tableFunction.data.function.function_name}(...) is not available in query_sql yet. `
           + "Read the table it reads instead, with its filters.");
       }
     };
     visit(Reflect.get(select as object, "from_table"));
-    return { refs, joinConditions, problems };
+    return { refs, joinConditions, problems, constraints };
+  }
+
+  private static readSearchMacro(args: readonly { expression?: unknown }[]): MacroReading {
+    const expected = `search_chunks takes ${SEARCH_MACRO_ARGUMENT_COUNT} arguments: query text, market, ticker, asset_type, filing_type and section (NULL for no section).`;
+    if (args.length !== SEARCH_MACRO_ARGUMENT_COUNT) {
+      return { problems: [expected], constraints: [] };
+    }
+    const values = args.map((argument) => SqlGuardService.readConstant(argument.expression));
+    const [queryText] = values;
+    if (queryText === undefined || queryText === null) {
+      return { problems: ["search_chunks needs the query text as a literal string, first."], constraints: [] };
+    }
+    // Why: a NULL argument is no filter, so it adds no constraint.
+    const constraints = SEARCH_MACRO_FILTERS.flatMap((column, index): Constraint[] => {
+      const value = values[index + 1];
+      if (typeof value !== "string") {
+        return [];
+      }
+      return [{ column, qualifier: SEARCH_MACRO, values: [value] }];
+    });
+    return { problems: [], constraints };
+  }
+
+  private static readConstant(expression: unknown): string | null | undefined {
+    const constant = ConstantExpressionSchema.safeParse(expression);
+    if (!constant.success) {
+      return undefined;
+    }
+    const { literal } = constant.data;
+    // Why: NULL means no filter, so it is told apart from a column or a function, which are not literals (undefined).
+    const isNull = literal.kind === "NULL_LITERAL";
+    return isNull ? null : literal.text;
   }
 
   private static checkRef(ref: TableRef, isSingleRef: boolean, constraints: Constraint[]): SelectCheck {
@@ -207,17 +260,48 @@ export class SqlGuardService implements SqlGuardPort {
       const requirements = series.map((value) => ({ table, category, market: SERIES_MARKET, ticker: value }));
       return { problems: [], requirements };
     }
-    const market = readValues("market") ?? [];
-    const ticker = readValues("ticker") ?? [];
-    const assetType = readValues("asset_type") ?? [];
-    const requirements = market.flatMap((marketValue) => ticker.flatMap((tickerValue) => assetType.map((typeValue) => ({
+    const requirements = SqlGuardService.buildRequirements(table, category, readValues);
+    return { problems: [], requirements };
+  }
+
+  private static buildRequirements(
+    table: DataTable,
+    category: CacheCategory,
+    readValues: (column: string) => string[] | undefined,
+  ): Requirement[] {
+    const selectors = SqlGuardService.readFilingSelectors(table, readValues);
+    return SqlGuardService.readAssets(readValues).flatMap((asset) => selectors.map((selector) => ({
+      ...selector,
       table,
       category,
-      market: marketValue,
-      ticker: tickerValue,
-      assetType: typeValue,
+      ...asset,
+    })));
+  }
+
+  private static readAssets(readValues: (column: string) => string[] | undefined): AssetKey[] {
+    const markets = readValues("market") ?? [];
+    const tickers = readValues("ticker") ?? [];
+    const assetTypes = readValues("asset_type") ?? [];
+    return markets.flatMap((market) => tickers.flatMap((ticker) => assetTypes.map((assetType) => ({
+      market,
+      ticker,
+      assetType,
     }))));
-    return { problems: [], requirements };
+  }
+
+  private static readFilingSelectors(
+    table: DataTable,
+    readValues: (column: string) => string[] | undefined,
+  ): FilingSelector[] {
+    if (table !== "chunks") {
+      return [{}];
+    }
+    // Why: a chunk load names one filing, or every filing of one type; the loader never downloads the other filings of the company.
+    const filingIds = readValues("filing_id");
+    if (filingIds !== undefined) {
+      return filingIds.map((filingId) => ({ filingId }));
+    }
+    return (readValues("filing_type") ?? []).map((filingType) => ({ filingType }));
   }
 
   private static readValues(

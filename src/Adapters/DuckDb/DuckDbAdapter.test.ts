@@ -54,13 +54,13 @@ describe("DuckDbAdapter.openReader()", () => {
   it("refuses to read a file through a file function", async () => {
     reader = await DuckDbAdapter.openReader(databasePath);
 
-    await expect(reader.readRows("SELECT * FROM read_csv('/etc/hostname')")).rejects.toThrow("file system operations are disabled");
+    await expect(reader.readRows("SELECT * FROM read_csv('/etc/hostname')")).rejects.toThrow("LocalFileSystem has been disabled");
   });
 
   it("refuses to attach another file", async () => {
     reader = await DuckDbAdapter.openReader(databasePath);
 
-    await expect(reader.run(`ATTACH '${join(directory, "other.duckdb")}' AS other`)).rejects.toThrow("file system operations are disabled");
+    await expect(reader.run(`ATTACH '${join(directory, "other.duckdb")}' AS other`)).rejects.toThrow("LocalFileSystem has been disabled");
   });
 
   it("leaves the writer working after the reader is closed", async () => {

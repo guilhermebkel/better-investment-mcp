@@ -77,6 +77,9 @@ A document a company or fund delivers to the regulator: a quarterly report (ITR)
 **Chunk**:
 A piece of the text of a filing with its section and page, searchable by full text.
 
+**Full-text index**:
+The BM25 index over the chunks, built with DuckDB's full-text extension after each load that changed a chunk. Rules in `docs/product/search.md`.
+
 **ITR**, **DFP**, **FRE**:
 The quarterly report, the annual statement and the reference form (Formulário de Referência) of a listed company, as CVM publishes them.
 

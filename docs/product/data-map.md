@@ -10,7 +10,7 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 | --- | --- | --- | --- |
 | `assets` | **market**, **ticker**, asset_type, legal_id, name, sector, currency | Yahoo summary, CVM registry | #3, #6 |
 | `filings` | **filing_id**, market, ticker, asset_type, filing_type, category, delivered_at, subject, url, file_hash, source | CVM IPE, FNET | #9, #12 |
-| `chunks` | **filing_id**, **seq**, market, ticker, asset_type, filing_type, section, page, text | text of a filing | #10 |
+| `chunks` | **filing_id**, **seq**, market, ticker, asset_type, filing_type, section, page, text | text of a filing (CVM PDF, HTML) | #10 |
 | `quotes` | **market**, **ticker**, **date**, asset_type, open, high, low, close, adj_close, volume, is_stale, suspect_tick, source | Yahoo | #6 |
 | `dividends` | **market**, **ticker**, **ex_date**, **kind**, asset_type, pay_date, amount, source | Yahoo | #6 |
 | `splits` | market, ticker, date, asset_type, ratio, source | Yahoo | #6 |
@@ -18,7 +18,7 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 | `financial_statements` | market, ticker, asset_type, period_end, period_type, statement, line_item, value, currency, source | CVM ITR, DFP | #11 |
 | `fii_monthly` | market, ticker, asset_type, period, distribution_per_unit, rental_revenue, property_sales_revenue, other_revenue, total_revenue, distributable_income, management_fee, performance_fee, property_acquisitions, other_expenses, total_expenses, liquidity_requirement, cash_available, government_bonds, corporate_bonds, fixed_income_funds, net_worth, source | StatusInvest | #8 |
 | `macro_series` | **series**, **date**, value, source | BCB SGS | #7 |
-| `cache_runs` | run_id, category, market, ticker, source, started_at, finished_at, expires_at, rows_read, error | the loader | #3, #5 |
+| `cache_runs` | run_id, category, market, ticker, source, started_at, finished_at, expires_at, rows_read, error, filing_id | the loader (`filing_id` set for a document) | #3, #5, #10 |
 | `schema_version` | version | the store (one row, the schema version of the file) | #3 |
 
 ## Views and macros
@@ -27,7 +27,8 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 | --- | --- | --- |
 | `document_text` | The chunks of one document in order: `filing_id`, `seq`, `section`, `page`, `text`. | #3, #10 |
 | `asset_coverage` | What is loaded and how long it is valid: `market`, `ticker`, `asset_type`, `category`, `first_date`, `last_date`, `source`, `expires_at`. | #3 |
-| `search_chunks(query, ticker, type, section)` | Full-text search over the chunks (BM25, Portuguese stemmer and stop words), with score, filing, section and page. | #10 |
+| `search_chunks(query, market, ticker, asset_type, filing_type, section)` | Full-text search over the chunks (BM25, Portuguese stemmer and stop words), with score, filing, section and page. Rules in `search.md`. | #10 |
+| `chunk_search`, `pt_stopwords` | The index source (`filing_id:seq` and the text) and the stop words. Written by the store; not for queries. | #10 |
 
 ## Filters
 
@@ -35,6 +36,7 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 | --- | --- |
 | `quotes`, `dividends`, `splits`, `fundamentals`, `financial_statements`, `fii_monthly`, `filings` | `market`, `ticker`, `asset_type` |
 | `chunks` | `market`, `ticker`, `asset_type` and `filing_type` or `filing_id` |
+| `search_chunks` | the arguments `market`, `ticker`, `asset_type` and `filing_type` (literal strings); `section` may be NULL |
 | `macro_series` | `series` |
 | `assets`, `cache_runs`, `asset_coverage`, `schema_version` | nothing |
 

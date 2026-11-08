@@ -32,7 +32,15 @@ export const JoinSchema = z.looseObject({
 
 export const TableFunctionSchema = z.looseObject({
   type: z.literal("TABLE_FUNCTION"),
-  function: z.looseObject({ function_name: z.string() }),
+  function: z.looseObject({
+    function_name: z.string(),
+    arguments: z.array(z.looseObject({ expression: z.unknown() })).optional(),
+  }),
+});
+
+export const ConstantExpressionSchema = z.looseObject({
+  type: z.literal("VALUE_CONSTANT"),
+  literal: z.looseObject({ kind: z.string(), text: z.string().optional() }),
 });
 
 export const EqualityNodeSchema = z.looseObject({ left: z.unknown(), right: z.unknown() });

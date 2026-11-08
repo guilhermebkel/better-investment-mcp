@@ -43,7 +43,13 @@ const ACCEPTED: [string, string, Requirement[]][] = [
     { table: "macro_series", category: "macro", market: "SERIES", ticker: "SELIC" },
   ]],
   ["chunks with filing_type", "SELECT text FROM chunks WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND filing_type = 'ITR'", [
-    { table: "chunks", category: "documents", market: "BR", ticker: "PETR4", assetType: "stock" },
+    { table: "chunks", category: "documents", market: "BR", ticker: "PETR4", assetType: "stock", filingType: "ITR" },
+  ]],
+  ["chunks with filing_id", "SELECT text FROM chunks WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND filing_id = 'abc'", [
+    { table: "chunks", category: "documents", market: "BR", ticker: "PETR4", assetType: "stock", filingId: "abc" },
+  ]],
+  ["search_chunks with its six arguments", "SELECT text FROM search_chunks('lucro líquido', 'BR', 'PETR4', 'stock', 'material_fact', NULL)", [
+    { table: "chunks", category: "documents", market: "BR", ticker: "PETR4", assetType: "stock", filingType: "material_fact" },
   ]],
   ["FII monthly data", "SELECT net_worth FROM fii_monthly WHERE market = 'BR' AND ticker = 'KNRI11' AND asset_type = 'fii'", [
     { table: "fii_monthly", category: "fund_data", market: "BR", ticker: "KNRI11", assetType: "fii" },
@@ -81,7 +87,10 @@ const REFUSED: [string, string, string][] = [
   ["a ticker taken from a subquery", "SELECT close FROM quotes WHERE market = 'BR' AND ticker = (SELECT 'PETR4') AND asset_type = 'stock'", QUOTES_NEEDS_TICKER],
   ["an OR that hides the ticker", "SELECT close FROM quotes WHERE market = 'BR' AND asset_type = 'stock' AND (ticker = 'PETR4' OR close > 10)", QUOTES_NEEDS_TICKER],
   ["document_text", "SELECT text FROM document_text", "document_text has no market, ticker or asset_type column"],
-  ["a table function", "SELECT * FROM search_chunks('dividend')", "search_chunks(...) is not available in query_sql yet"],
+  ["search_chunks without a ticker", "SELECT * FROM search_chunks('lucro', 'BR', NULL, 'stock', 'material_fact', NULL)", "needs a WHERE filter on ticker"],
+  ["search_chunks with a column as the query", "SELECT * FROM search_chunks(text, 'BR', 'PETR4', 'stock', 'material_fact', NULL)", "needs the query text as a literal string"],
+  ["a table function", "SELECT * FROM read_text('/etc/hosts')", "read_text(...) is not available in query_sql yet"],
+  ["search_chunks with four arguments", "SELECT * FROM search_chunks('lucro', 'PETR4', 'itr', NULL)", "search_chunks takes 6 arguments"],
   ["a CTE named like a data table", "WITH quotes AS (SELECT 1 AS close) SELECT * FROM quotes", "A WITH name cannot be the name of a data table: rename quotes"],
   ["a syntax error", "SELEC 1", "The query has a syntax error"],
 ];
