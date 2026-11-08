@@ -10,7 +10,7 @@ import { ProviderRegistryService } from "@/Services/ProviderRegistryService.ts";
 export class VendorCatalogService {
   static build(): CategoryToVendors {
     // Why: the adapters are built here, in a service, because the entry points in src/Setup/ never import an adapter.
-    const yahooHttp = new HttpAdapter({ allowedHosts: [YahooAdapter.HOST] });
+    const yahooHttp = new HttpAdapter({ allowedHosts: YahooAdapter.HOSTS, headers: YahooAdapter.HEADERS });
     const bcbHttp = new HttpAdapter({ allowedHosts: [BcbAdapter.HOST] });
     const cvmHttp = new HttpAdapter({ allowedHosts: [CvmAdapter.HOST], maxBytes: CvmAdapter.MAX_YEAR_FILE_BYTES });
     const statusInvestHttp = new HttpAdapter({ allowedHosts: [StatusInvestAdapter.HOST] });

@@ -21,6 +21,7 @@ const buildHttpAnswering = (answer: (url: string) => string): {
     },
     getBytes: () => Promise.reject(new Error(NOT_USED)),
     postForm: () => Promise.reject(new Error(NOT_USED)),
+    getCookies: () => Promise.reject(new Error("not used")),
   };
   return { http, urls };
 };
@@ -29,6 +30,7 @@ const buildHttpFailing = (error: Error): HttpPort => ({
   getText: () => Promise.reject(error),
   getBytes: () => Promise.reject(error),
   postForm: () => Promise.reject(error),
+  getCookies: () => Promise.reject(new Error("not used")),
 });
 
 describe("BcbAdapter.fetchTables()", () => {

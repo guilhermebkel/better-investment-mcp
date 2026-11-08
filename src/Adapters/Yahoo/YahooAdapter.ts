@@ -1,7 +1,7 @@
 import { HttpFailureError } from "@/Errors/HttpFailureError.ts";
 import { ProviderConfigError } from "@/Errors/ProviderConfigError.ts";
-import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
-import type { KnownMarket, YahooChart, YahooChartResult, YahooDay } from "@/Protocols/YahooProtocol.ts";
+import type { HeaderNameToValue, HttpPort } from "@/Protocols/HttpProtocol.ts";
+import type { KnownMarket, YahooChart, YahooChartResult, YahooDay, YahooSession } from "@/Protocols/YahooProtocol.ts";
 import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow, TableToRows } from "@/Protocols/ProviderProtocol.ts";
 import { YahooChartSchema } from "@/Schemas/YahooSchema.ts";
 import { QualityFlagService } from "@/Services/QualityFlagService.ts";
@@ -10,12 +10,28 @@ const MS_PER_SECOND = 1000;
 const ISO_DATE_LENGTH = 10;
 const NOT_FOUND_STATUS = 404;
 const RATE_LIMIT_STATUS = 429;
-const MARKET_TO_SUFFIX: ReadonlyMap<KnownMarket, string> = new Map<KnownMarket, string>([["BR", ".SA"], ["US", ""]]);
+const UNAUTHORIZED_STATUS = 401;
+const FORBIDDEN_STATUS = 403;
+const MAX_CRUMB_LENGTH = 64;
+const CRUMB_FORMAT = /^[\w.-]+$/u;
+const KNOWN_MARKET_TO_SUFFIX: Readonly<Record<KnownMarket, string>> = {
+  BR: ".SA",
+  US: "",
+};
+const ACCEPT_HEADER = "Accept";
+const COOKIE_HEADER = "Cookie";
 
 export class YahooAdapter<Category extends "quotes" | "dividends"> implements ProviderPort<Category> {
   static readonly VENDOR = "yahoo";
   static readonly HOST = "query1.finance.yahoo.com";
   static readonly BASE_URL = `https://${YahooAdapter.HOST}`;
+  static readonly COOKIE_HOST = "fc.yahoo.com";
+  static readonly COOKIE_URL = `https://${YahooAdapter.COOKIE_HOST}`;
+  static readonly HOSTS: readonly string[] = [YahooAdapter.HOST, YahooAdapter.COOKIE_HOST];
+  static readonly HEADERS: HeaderNameToValue = {
+    [ACCEPT_HEADER]: "application/json",
+  };
+
   static readonly MARKETS: readonly KnownMarket[] = ["BR", "US"];
   static readonly ASSET_TYPES: readonly ("stock" | "fii" | "etf")[] = ["stock", "fii", "etf"];
 
@@ -26,6 +42,8 @@ export class YahooAdapter<Category extends "quotes" | "dividends"> implements Pr
 
   private readonly http: HttpPort;
   private readonly baseUrl: string;
+  // Why: the cookie and crumb are requested once per adapter and reused until Yahoo refuses them.
+  private session: YahooSession | undefined;
 
   constructor(category: Category, http: HttpPort, baseUrl: string = YahooAdapter.BASE_URL) {
     this.category = category;
@@ -75,26 +93,77 @@ export class YahooAdapter<Category extends "quotes" | "dividends"> implements Pr
   }
 
   private static readSuffix(market: string): string | undefined {
-    const entry = [...MARKET_TO_SUFFIX].find(([known]) => known === market);
-    return entry?.[1];
+    return Object.entries(KNOWN_MARKET_TO_SUFFIX).find(([known]) => known === market)?.[1];
   }
 
   private async fetchChart(symbol: string): Promise<YahooChart> {
     const chartPath = `${this.baseUrl}/v8/finance/chart/${encodeURIComponent(symbol)}`;
-    let text: string;
-    try {
-      text = await this.http.getText(`${chartPath}?range=max&interval=1d&events=div,splits`);
-    } catch (error) {
-      if (error instanceof HttpFailureError && error.status === NOT_FOUND_STATUS) {
-        throw new Error(`Yahoo did not find the symbol ${symbol}; no row was written`, { cause: error });
-      }
-      if (error instanceof HttpFailureError && error.status === RATE_LIMIT_STATUS) {
-        const reason = "Yahoo answered with a rate limit; the run is recorded and the next load retries";
-        throw new Error(reason, { cause: error });
-      }
-      throw error;
-    }
+    const text = await this.fetchChartText(chartPath, symbol);
     return YahooAdapter.parseChart(text, symbol);
+  }
+
+  private async fetchChartText(chartPath: string, symbol: string): Promise<string> {
+    const session = await this.readSession().catch((error: unknown) => {
+      throw YahooAdapter.mapChartError(error, symbol);
+    });
+    try {
+      return await this.getChart(chartPath, session);
+    } catch (error) {
+      if (!YahooAdapter.isRefusedCrumb(error)) {
+        throw YahooAdapter.mapChartError(error, symbol);
+      }
+    }
+    // Why: an expired or refused crumb is renewed once; a second refusal stops the load with no row written.
+    const renewed = await this.refreshSession();
+    try {
+      return await this.getChart(chartPath, renewed);
+    } catch (error) {
+      throw YahooAdapter.mapChartError(error, symbol);
+    }
+  }
+
+  private async getChart(chartPath: string, session: YahooSession): Promise<string> {
+    const query = `range=max&interval=1d&events=div,splits&crumb=${encodeURIComponent(session.crumb)}`;
+    const headers: HeaderNameToValue = {
+      ...YahooAdapter.HEADERS,
+      [COOKIE_HEADER]: session.cookie,
+    };
+    return this.http.getText(`${chartPath}?${query}`, "utf-8", headers);
+  }
+
+  private async readSession(): Promise<YahooSession> {
+    return this.session ?? this.refreshSession();
+  }
+
+  private async refreshSession(): Promise<YahooSession> {
+    const cookie = (await this.http.getCookies(YahooAdapter.COOKIE_URL))
+      .map((setCookie) => setCookie.split(";")[0] ?? "")
+      .filter((pair) => pair.includes("="))
+      .join("; ");
+    const crumbHeaders: HeaderNameToValue = { [COOKIE_HEADER]: cookie };
+    const crumb = (await this.http.getText(`${this.baseUrl}/v1/test/getcrumb`, "utf-8", crumbHeaders)).trim();
+    if (!CRUMB_FORMAT.test(crumb) || crumb.length > MAX_CRUMB_LENGTH) {
+      throw new Error("the response format changed: Yahoo did not send a crumb; no row was written");
+    }
+    this.session = { cookie, crumb };
+    return this.session;
+  }
+
+  private static isRefusedCrumb(error: unknown): boolean {
+    if (!(error instanceof HttpFailureError)) {
+      return false;
+    }
+    return error.status === UNAUTHORIZED_STATUS || error.status === FORBIDDEN_STATUS;
+  }
+
+  private static mapChartError(error: unknown, symbol: string): unknown {
+    if (error instanceof HttpFailureError && error.status === NOT_FOUND_STATUS) {
+      return new Error(`Yahoo did not find the symbol ${symbol}; no row was written`, { cause: error });
+    }
+    if (error instanceof HttpFailureError && error.status === RATE_LIMIT_STATUS) {
+      return new Error("Yahoo answered with a rate limit; the run is recorded and the next load retries", { cause: error });
+    }
+    return error;
   }
 
   private static parseChart(text: string, symbol: string): YahooChart {

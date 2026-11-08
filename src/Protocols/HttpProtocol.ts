@@ -1,14 +1,19 @@
+export type HeaderNameToValue = Readonly<Record<string, string>>;
+export type FieldNameToValue = Readonly<Record<string, string>>;
+
 export type HttpOptions = {
   allowedHosts: readonly string[];
+  headers?: HeaderNameToValue;
   maxBytes?: number;
   timeoutMs?: number;
   retryDelayMs?: number;
 };
 
 export type HttpPort = {
-  getText(url: string, encoding?: string): Promise<string>;
+  getText(url: string, encoding?: string, requestHeaders?: HeaderNameToValue): Promise<string>;
+  getCookies(url: string): Promise<string[]>;
   getBytes(url: string): Promise<Uint8Array>;
-  postForm(url: string, fieldToValue: Readonly<Record<string, string>>): Promise<string>;
+  postForm(url: string, fieldToValue: FieldNameToValue): Promise<string>;
 };
 
 export type HttpAnswer = {

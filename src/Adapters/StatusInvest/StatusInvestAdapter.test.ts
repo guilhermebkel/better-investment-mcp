@@ -38,6 +38,7 @@ const buildHttpAnswering = (pathToAnswer: Readonly<Record<string, Answer>>): {
     getText: resolveRoute,
     getBytes: () => Promise.reject(new Error(NOT_USED)),
     postForm: resolveRoute,
+    getCookies: () => Promise.reject(new Error("not used")),
   };
   return { http, calls };
 };
@@ -46,6 +47,7 @@ const buildHttpFailing = (error: Error): HttpPort => ({
   getText: () => Promise.reject(error),
   getBytes: () => Promise.reject(error),
   postForm: () => Promise.reject(error),
+  getCookies: () => Promise.reject(new Error("not used")),
 });
 
 describe("StatusInvestAdapter.fetchTables()", () => {

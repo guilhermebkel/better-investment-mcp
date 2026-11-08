@@ -55,6 +55,7 @@ const buildHttpServing = (pathToFile: Readonly<Record<string, Uint8Array>>): {
   const http: HttpPort = {
     getText: () => Promise.reject(new Error("not used")),
     postForm: () => Promise.reject(new Error("not used")),
+    getCookies: () => Promise.reject(new Error("not used")),
     getBytes: (url: string) => {
       urls.push(url);
       const file = pathToFile[url];

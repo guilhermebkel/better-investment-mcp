@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { HttpFailureError } from "@/Errors/HttpFailureError.ts";
 import { YahooAdapter } from "@/Adapters/Yahoo/YahooAdapter.ts";
-import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
+import type { HeaderNameToValue, HttpPort } from "@/Protocols/HttpProtocol.ts";
 
 const FIXTURES = join(import.meta.dirname, "..", "..", "Testing", "fixtures", "yahoo");
 const CHART_FIXTURE = "chart-petr4.json";
@@ -15,18 +15,52 @@ const NOT_USED = "not used";
 
 const readFixture = (name: string): string => readFileSync(join(FIXTURES, name), "utf8");
 
+const CRUMB = "CRUMB1";
+const SESSION_COOKIE = "A3=abc";
+
+type YahooCall = {
+  url: string;
+  headers: HeaderNameToValue | undefined;
+};
+
+type YahooFake = {
+  http: HttpPort;
+  charts: YahooCall[];
+  counts: {
+    cookies: number;
+    crumbs: number;
+  };
+};
+
+const buildYahooHttp = (chart: (callNumber: number) => Promise<string>, urls: string[] = []): YahooFake => {
+  const charts: YahooCall[] = [];
+  const counts = { cookies: 0, crumbs: 0 };
+  const http: HttpPort = {
+    // Why: the crumb endpoint is not a chart call, so its answer is kept out of the chart calls.
+    getText: (url: string, _encoding?: string, headers?: HeaderNameToValue) => {
+      if (url.includes("/v1/test/getcrumb")) {
+        counts.crumbs += 1;
+        return Promise.resolve(`${CRUMB}\n`);
+      }
+      charts.push({ url, headers });
+      urls.push(url);
+      return chart(charts.length);
+    },
+    getBytes: () => Promise.reject(new Error(NOT_USED)),
+    postForm: () => Promise.reject(new Error(NOT_USED)),
+    getCookies: () => {
+      counts.cookies += 1;
+      return Promise.resolve([`${SESSION_COOKIE}; Path=/; Domain=yahoo.com`]);
+    },
+  };
+  return { http, charts, counts };
+};
+
 const buildHttpReturning = (text: string): {
   http: HttpPort; urls: string[];
 } => {
   const urls: string[] = [];
-  const http: HttpPort = {
-    getText: (url: string) => {
-      urls.push(url);
-      return Promise.resolve(text);
-    },
-    getBytes: () => Promise.reject(new Error(NOT_USED)),
-    postForm: () => Promise.reject(new Error(NOT_USED)),
-  };
+  const { http } = buildYahooHttp(() => Promise.resolve(text), urls);
   return { http, urls };
 };
 
@@ -34,6 +68,7 @@ const buildHttpFailing = (error: Error): HttpPort => ({
   getText: () => Promise.reject(error),
   getBytes: () => Promise.reject(error),
   postForm: () => Promise.reject(error),
+  getCookies: () => Promise.reject(error),
 });
 
 describe("YahooAdapter.fetchTables()", () => {
@@ -93,6 +128,50 @@ describe("YahooAdapter.fetchTables()", () => {
   it("names the rate limit when Yahoo answers 429 (AC6)", async () => {
     const http = buildHttpFailing(new HttpFailureError("the vendor answered with a rate limit (status 429)", 429));
     await expect(new YahooAdapter("quotes", http).fetchTables(PETR4)).rejects.toThrow("Yahoo answered with a rate limit");
+  });
+
+  it("requests the cookie and crumb once and reuses them for the next load (AC8)", async () => {
+    const { http, counts, charts } = buildYahooHttp(() => Promise.resolve(readFixture(CHART_FIXTURE)));
+    const adapter = new YahooAdapter("quotes", http, YahooAdapter.BASE_URL);
+    await adapter.fetchTables(PETR4);
+    await adapter.fetchTables(PETR4);
+
+    expect(counts).toStrictEqual({ cookies: 1, crumbs: 1 });
+    expect(charts).toHaveLength(2);
+    expect(charts.every((call) => call.url.includes(`crumb=${CRUMB}`))).toBe(true);
+  });
+
+  it("sends the cookie with the crumb and the adapter headers with the chart (AC8)", async () => {
+    const { http, charts } = buildYahooHttp(() => Promise.resolve(readFixture(CHART_FIXTURE)));
+    await new YahooAdapter("quotes", http, YahooAdapter.BASE_URL).fetchTables(PETR4);
+
+    expect(charts[0]?.headers).toStrictEqual({ ...YahooAdapter.HEADERS, Cookie: SESSION_COOKIE });
+  });
+
+  it("renews an expired crumb once, then loads (AC8)", async () => {
+    const { http, counts } = buildYahooHttp((callNumber) => (callNumber === 1
+      ? Promise.reject(new HttpFailureError("the vendor answered with status 401", 401))
+      : Promise.resolve(readFixture(CHART_FIXTURE))));
+    const result = await new YahooAdapter("quotes", http, YahooAdapter.BASE_URL).fetchTables(PETR4);
+
+    expect(counts.crumbs).toBe(2);
+    expect(result.tables.quotes).toHaveLength(6);
+  });
+
+  it("stops the load when the renewed crumb is refused too, and writes nothing (AC8)", async () => {
+    const { http, counts } = buildYahooHttp(() => Promise.reject(new HttpFailureError("the vendor answered with status 401", 401)));
+    await expect(new YahooAdapter("quotes", http, YahooAdapter.BASE_URL).fetchTables(PETR4))
+      .rejects.toThrow("status 401");
+    expect(counts.crumbs).toBe(2);
+  });
+
+  it("fails with a format-changed message when Yahoo sends no usable crumb (AC5)", async () => {
+    const http: HttpPort = {
+      ...buildYahooHttp(() => Promise.resolve("")).http,
+      getText: () => Promise.resolve("<html>blocked</html>"),
+    };
+    await expect(new YahooAdapter("quotes", http, YahooAdapter.BASE_URL).fetchTables(PETR4))
+      .rejects.toThrow("Yahoo did not send a crumb");
   });
 
   it("refuses an asset whose market Yahoo does not map", async () => {

@@ -1,6 +1,6 @@
 import { HttpFailureError } from "@/Errors/HttpFailureError.ts";
 import { HttpRefusedError } from "@/Errors/HttpRefusedError.ts";
-import type { HttpAttempt, HttpOptions, HttpPort } from "@/Protocols/HttpProtocol.ts";
+import type { FieldNameToValue, HeaderNameToValue, HttpAttempt, HttpOptions, HttpPort } from "@/Protocols/HttpProtocol.ts";
 
 const TOO_MANY_REQUESTS = 429;
 const SERVER_ERROR_MIN = 500;
@@ -18,23 +18,42 @@ export class HttpAdapter implements HttpPort {
   static readonly USER_AGENT = "better-investment-analysis-mcp (+https://github.com/guilhermebkel/better-investment-analysis-mcp)";
 
   private readonly allowedHosts: ReadonlySet<string>;
+  private readonly headers: HeaderNameToValue;
   private readonly maxBytes: number;
   private readonly timeoutMs: number;
   private readonly retryDelayMs: number;
 
   constructor(options: HttpOptions) {
     this.allowedHosts = new Set(options.allowedHosts);
+    this.headers = options.headers ?? {};
     this.maxBytes = options.maxBytes ?? HttpAdapter.DEFAULT_MAX_BYTES;
     this.timeoutMs = options.timeoutMs ?? HttpAdapter.DEFAULT_TIMEOUT_MS;
     this.retryDelayMs = options.retryDelayMs ?? HttpAdapter.DEFAULT_RETRY_DELAY_MS;
   }
 
-  async getText(url: string, encoding = "utf-8"): Promise<string> {
-    const bytes = await this.getBytes(url);
+  async getText(url: string, encoding = "utf-8", requestHeaders: HeaderNameToValue = {}): Promise<string> {
+    const bytes = await this.request(url, { method: "GET", headers: requestHeaders });
     return new TextDecoder(encoding).decode(bytes);
   }
 
-  async postForm(url: string, fieldToValue: Readonly<Record<string, string>>): Promise<string> {
+  async getCookies(url: string): Promise<string[]> {
+    this.checkHost(url);
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        redirect: "manual",
+        headers: this.buildHeaders({}),
+        signal: AbortSignal.timeout(this.timeoutMs),
+      });
+      await response.body?.cancel();
+      return response.headers.getSetCookie();
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "unknown error";
+      throw new HttpFailureError(`the request failed: ${detail}`);
+    }
+  }
+
+  async postForm(url: string, fieldToValue: FieldNameToValue): Promise<string> {
     const body = new FormData();
     for (const [name, value] of Object.entries(fieldToValue)) {
       body.append(name, value);
@@ -48,7 +67,9 @@ export class HttpAdapter implements HttpPort {
   }
 
   private async request(url: string, init: {
-    method: string; body?: FormData;
+    method: string;
+    body?: FormData;
+    headers?: HeaderNameToValue;
   }): Promise<Uint8Array> {
     // Why: a host outside the adapter's list is refused before any connection, so no request reaches a host the adapter did not declare.
     this.checkHost(url);
@@ -71,15 +92,22 @@ export class HttpAdapter implements HttpPort {
     }
   }
 
+  private buildHeaders(requestHeaders: HeaderNameToValue): HeaderNameToValue {
+    // Why: the client identity comes first; an adapter's own headers come after it and never replace it.
+    return { "User-Agent": HttpAdapter.USER_AGENT, ...this.headers, ...requestHeaders };
+  }
+
   private async fetchOnce(url: string, init: {
-    method: string; body?: FormData;
+    method: string;
+    body?: FormData;
+    headers?: HeaderNameToValue;
   }): Promise<HttpAttempt> {
     let response: Response;
     try {
       response = await fetch(url, {
         ...init,
         redirect: "manual",
-        headers: { "User-Agent": HttpAdapter.USER_AGENT },
+        headers: this.buildHeaders(init.headers ?? {}),
         signal: AbortSignal.timeout(this.timeoutMs),
       });
     } catch (error) {

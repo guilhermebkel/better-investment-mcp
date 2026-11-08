@@ -60,3 +60,8 @@ export type YahooDay = {
   index: number;
   close: number;
 };
+
+export type YahooSession = {
+  cookie: string;
+  crumb: string;
+};
