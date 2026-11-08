@@ -23,6 +23,15 @@ describe("InitRunner.run()", () => {
     expect(stderr).toHaveBeenCalledWith(expect.stringContaining("[mcp_servers.better-investment-analysis]\ncommand = \"npx\"\nargs = [\"-y\", \"better-investment-analysis-mcp\"]"));
   });
 
+  it("prints the Docker configuration with the cache in a named volume", () => {
+    const stderr = vi.spyOn(process.stderr, "write").mockReturnValue(true);
+
+    InitRunner.run();
+
+    expect(stderr).toHaveBeenCalledWith(expect.stringContaining("\"command\": \"docker\""));
+    expect(stderr).toHaveBeenCalledWith(expect.stringContaining("\"-v\", \"better-investment-analysis-cache:/cache\""));
+  });
+
   it("never prints a secret from the environment", () => {
     vi.stubEnv("INVESTMENT_MCP_CACHE_DIR", "fake-secret-value-123");
     const stderr = vi.spyOn(process.stderr, "write").mockReturnValue(true);

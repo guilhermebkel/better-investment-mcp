@@ -20,6 +20,17 @@ export class InitRunner {
     "[mcp_servers.better-investment-analysis]",
     "command = \"npx\"",
     "args = [\"-y\", \"better-investment-analysis-mcp\"]",
+    "",
+    "Docker (the image runs over stdio, and its cache is a named volume):",
+    "",
+    "{",
+    "  \"mcpServers\": {",
+    "    \"better-investment-analysis\": {",
+    "      \"command\": \"docker\",",
+    "      \"args\": [\"run\", \"-i\", \"--rm\", \"-v\", \"better-investment-analysis-cache:/cache\", \"ghcr.io/guilhermebkel/better-investment-analysis-mcp\"]",
+    "    }",
+    "  }",
+    "}",
   ].join("\n");
 
   static run(): void {

@@ -2,7 +2,7 @@
 
 An open-source MCP server that gives AI agents data on Brazilian assets (US stocks later): prices, dividends, fundamentals, quarterly and annual reports, reference forms, FII monthly data and reports, and macro series. The agent reads everything with one read-only SQL tool over a local DuckDB cache that the server fills on demand. Nothing in the server writes to the outside world.
 
-> **Work in progress.** The server skeleton is in place: the three tools answer, but the data behind them comes issue by issue. The list below shows what exists today.
+> **Work in progress.** The server runs and its three tools answer, but the data behind them arrives issue by issue. The list below shows what exists today.
 
 > **Usage notice.** The output describes and locates information. It is not investment advice, a recommendation or an analysis of what to buy or sell. Unofficial; not affiliated with B3, CVM, Yahoo or any other data vendor.
 
@@ -18,9 +18,55 @@ The server exposes <!-- tools:count -->3<!-- /tools:count --> tools. All of them
 
 ## Install
 
-Available after the packaging issue:
+Add the server to your MCP client. `init` prints the configuration for Claude, Cursor and Codex, for `npx` and for Docker:
+
+    npx -y better-investment-analysis-mcp init
+
+With `npx`, the client starts the server:
 
     npx -y better-investment-analysis-mcp
+
+With Docker, the cache is a named volume:
+
+    docker run -i --rm -v better-investment-analysis-cache:/cache ghcr.io/guilhermebkel/better-investment-analysis-mcp
+
+The package and the image are published with the first release (see `docs/product/releasing.md`).
+
+## Configuration
+
+Every setting is an environment variable. The server reads them once at start and stops with a message when one is wrong.
+
+| Variable | Default | What it does |
+| --- | --- | --- |
+| `INVESTMENT_MCP_LOG_LEVEL` | `info` | `error`, `info` or `debug`. Log lines go to stderr. |
+| `INVESTMENT_MCP_CACHE_DIR` | the system temporary directory | Where the DuckDB cache file is kept. Created when missing. |
+| `INVESTMENT_MCP_CACHE_TTL_SECONDS` | `86400` | How long a loaded piece of data stays valid, in seconds. |
+| `INVESTMENT_MCP_QUOTES_PROVIDER` | unset | Quote source per market, for example `BR:yahoo`. Unset, the category loads nothing. |
+| `INVESTMENT_MCP_DIVIDENDS_PROVIDER` | unset | Dividend source per market. Same rule. |
+| `INVESTMENT_MCP_FUNDAMENTALS_PROVIDER` | unset | Fundamentals source per market. Same rule. |
+| `INVESTMENT_MCP_STATEMENTS_PROVIDER` | unset | Financial statements source per market. Same rule. |
+| `INVESTMENT_MCP_FUND_DATA_PROVIDER` | unset | FII monthly data source per market. Same rule. |
+| `INVESTMENT_MCP_FILINGS_PROVIDER` | unset | Filings list source per market. Same rule. |
+| `INVESTMENT_MCP_DOCUMENTS_PROVIDER` | unset | Document download source per market. Same rule. |
+| `INVESTMENT_MCP_MACRO_PROVIDER` | unset | Macro series source. Same rule. |
+
+The provider variables take effect as their adapters arrive.
+
+## Data sources
+
+| Vendor | Gives | Terms |
+| --- | --- | --- |
+| Yahoo Finance | quotes, dividends, splits, asset summary | Unofficial. Personal use, no service guarantee. |
+| BCB SGS | macro series | Open data. |
+| StatusInvest | fundamentals, FII monthly data | Terms are read before the adapter is built. |
+| CVM | filings list, ITR, DFP, Formulário de Referência | Open data under the ODbL (see below). |
+| FNET | FII management reports | Built only if a spike passes. |
+
+The `source` of every row names the vendor that produced it.
+
+## Attribution
+
+The data of the Comissão de Valores Mobiliários (CVM) is open data under the Open Database License (ODbL). This repository never ships a cached database: the server downloads the data on demand, into a temporary file that can be deleted at any time.
 
 ## Development
 
@@ -31,10 +77,6 @@ Available after the packaging issue:
 
 `AGENTS.md` lists every command, the layout and the rules. The architecture is in `docs/product/architecture.md`, the data tables in `docs/product/data-map.md`, and the decisions in `docs/adr/`. Work is planned as GitHub issues written as specs (`docs/agents/issue-tracker.md`).
 
-## Data and licenses
+## Licenses
 
-The code is MIT. Data comes from third parties under their own terms: CVM open data is under ODbL, so this repository never ships a cached database; Yahoo Finance data is for personal use with no service guarantee. The terms of each vendor are checked in the issue that adds its adapter.
-
-## License
-
-MIT. See `LICENSE`.
+The code is MIT (see `LICENSE`). Runtime dependencies use MIT, ISC, Apache-2.0, BSD or BlueOak licenses; `pnpm check:licenses` checks them. Data comes from third parties under their own terms, listed above.

@@ -2,6 +2,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const TIMEOUT_MS = 30_000;
+const IS_WINDOWS = process.platform === "win32";
 const FIRST_USER_ARG = 2;
 const DEFAULT_COMMAND = ["node", "dist/main.js"];
 const SIGTERM = "SIGTERM";
@@ -72,7 +73,7 @@ const stopChildProcessTree = (child) => {
     child.kill();
     return;
   }
-  if (process.platform === "win32") {
+  if (IS_WINDOWS) {
     spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"]);
     return;
   }
@@ -86,7 +87,8 @@ const stopChildProcessTree = (child) => {
 const runProgram = (command) => {
   return new Promise((resolve, reject) => {
     const [program, ...args] = command;
-    const child = spawn(program, args, { stdio: ["pipe", "pipe", "pipe"], detached: process.platform !== "win32" });
+    // Why: on Windows, npx is a .cmd shim, which only a shell can start.
+    const child = spawn(program, args, { stdio: ["pipe", "pipe", "pipe"], detached: !IS_WINDOWS, shell: IS_WINDOWS });
     let stdout = "";
     let stderr = "";
     const timer = setTimeout(() => {

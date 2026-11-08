@@ -113,6 +113,7 @@ Commit once per task, not per file. Before the commit, `pnpm check:changed` must
 
 ## Dependencies
 
+- **Licenses.** A package the bundle or the runtime installs has one of these licenses: MIT, ISC, Apache-2.0, BSD-2-Clause, BSD-3-Clause, 0BSD or BlueOak-1.0.0 (the list in `scripts/license-rules.mjs`). `pnpm check:licenses` fails on any other.
 - **pnpm only.** Commit `pnpm-lock.yaml`; never `package-lock.json`.
 - **The lockfile changes only with `package.json`.**
 - **A new runtime dependency needs a reason** in the PR description.
