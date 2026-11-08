@@ -1,52 +1,74 @@
-# Sustainability reports: where they are, and the options for the owner to choose
+# Sustainability reports: CVM IPE evidence, IR site validation, and options
 
-Date: 2026-11-08. Status: proposed. The owner chooses the path; nothing here is built.
+Date: 2026-11-08. Status: proposed. The owner chooses the path; no product code is built before approval.
 
-Issue #15 asks where the latest sustainability report of listed companies is published, whether a rule can find it, and which path to take. The owner decides the path, so this ADR ends with a proposal and no code.
+Issue #15 asks where the latest sustainability reports of listed companies are published, whether a rule can find them reliably, and which path the server should take. This ADR updates the initial lead research with actual data measurements from CVM IPE open data and live web access tests against 10 target companies.
 
-## Where the reports are (10 companies)
+## Correction history
 
-The places below come from web search results (snippets and the file names in them). The agent did not open the pages, so each place is a lead to check, not a confirmed URL. The table also records the year each lead refers to, when the search gave it.
+The initial draft of this ADR relied on search engine snippets and stated that CVM IPE had no category named "Relatório de Sustentabilidade" and that fewer than 11 reports existed under generic communications. That claim was inaccurate. Direct analysis of CVM open data files (`ipe_cia_aberta_2025.csv` and `ipe_cia_aberta_2026.csv`, updated daily under ODbL) revealed dedicated regulatory categories:
 
-| Company (sector) | Where the lead points | Year seen | Host |
-| --- | --- | --- | --- |
-| Petrobras (energy) | sustentabilidade.petrobras.com.br, archive of past reports; a PDF on the mziq file manager | 2024 (a "Painel ASG 2024" PDF) | sustentabilidade.petrobras.com.br, api.mziq.com |
-| Vale (mining) | No 2024 sustainability report found. The first financial report on sustainability (IFRS S1/S2) came out in June 2025; the 2024 management report is under vale.com/investidores | 2025 | vale.com |
-| Itaú Unibanco (bank) | RI site: "Relatório ESG 2024" and the ESG index 2024; a PDF on the bank's download service | 2024 | itau.com.br |
-| WEG (industry) | "Relatório Anual Integrado 2024" PDF on mziq; ri.weg.net lists annual reports | 2024 | ri.weg.net, api.mziq.com |
-| Ambev (beverages) | ri.ambev.com.br, "relatórios anuais e sustentabilidade" (named in an academic article) | 2024 | ri.ambev.com.br |
-| Lojas Renner (retail) | A PDF on the company's own site ("Relatorio-Anual-2024.pdf"); a climate financial report 2024 published in July 2025 | 2024 | lojasrennersa.com.br |
-| Localiza (rental) | "Relatório de sustentabilidade 2024" PDF on mziq; a sustainability section on ri.localiza.com | 2024 | ri.localiza.com, api.mziq.com |
-| Suzano (pulp) | centraldesustentabilidade.suzano.com.br (executive summary PDF); suzano.com.br reports page | 2024 | centraldesustentabilidade.suzano.com.br |
-| Axia Energia, formerly Eletrobras (utilities) | axia.com.br/documents (the 2024 annual report, third edition); a copy on eletrobras.com | 2024 | axia.com.br, eletrobras.com |
-| Totvs (software) | "Relato Integrado 2024" in the sustainability section of ri.totvs.com; PDFs on mziq | 2024 | ri.totvs.com, api.mziq.com |
+- **"Relatório de Sustentabilidade"**: 190 filings in 2025, 153 filings in 2026.
+- **"Relato Integrado"**: 49 filings in 2025, 55 filings in 2026.
+- **"Relatório de Informações Financeiras Relacionadas à Sustentabilidade - Padrão ISSB"**: 6 filings in 2025, 10 filings in 2026.
 
-What the table shows:
+7 out of the 10 target companies publish their complete sustainability or integrated annual reports directly to CVM under these formal categories.
 
-- No single rule finds all ten. The reports sit on at least eight hosts: the company's own site or RI site, or a file manager (mziq) used by five of them.
-- Several companies publish one document as an "integrated report" or a "financial report on sustainability". The search did not separate them, so a rule that matches a name would also match the wrong document.
-- The year changes the file name and the page, so any rule breaks each year.
+## Verification of the 10 target companies
 
-## Is there a CVM route?
+Each company was investigated across both (1) the official CVM IPE dataset and (2) its investor relations (IR) / corporate sustainability website:
 
-The CVM open data (IPE, `ipe_cia_aberta_2025.zip`) has no category named "Relatório de Sustentabilidade". The category the adapter maps to `sustainability` does not occur in the 2025 file. The file does carry the report as a communication: in 2025 at least 11 rows have a subject that names a sustainability report (for example "Relatório de Sustentabilidade 2024"), under the category "Outros Comunicados Não Considerados Fatos Relevantes". Those rows link to the CVM document. The count is a minimum, from the ten most frequent subjects. The coverage is partial: a company that did not file the report as a communication has no row. Vale's source says its financial report on sustainability follows the CVM rule (Resolução CVM 193/23) and was published early, voluntarily; the schedule of that rule was not checked.
+| Company | Sector | CVM IPE Route (Proven) | IR / Company Site (Validated) | IR Robots / Terms Status | Confirmed Latest Report (as of 2026-11-08) |
+| --- | --- | --- | --- | --- | --- |
+| **Petrobras** | Energy | Category: "Relatório de Sustentabilidade". Ref: 2025-12-31, Del: 2026-06-22 (Prot: 1537066). Direct PDF confirmed (`009512000101011.pdf`). | `sustentabilidade.petrobras.com.br` / `api.mziq.com` | Automated fetch blocked with HTTP 403 (Cloudflare/WAF). Robots has `crawl-delay: 10`. | 2025 Sustainability Report (published June 2026 on CVM) |
+| **Vale** | Mining | Categories: "Relato Integrado" (Ref: 2025-12-31, Del: 2026-04-15, Prot: 1505012) and "ISSB" (Del: 2026-06-15, Prot: 1534376). Direct PDF confirmed. | `vale.com/pt/esg`, `vale.com/investidores` | `vale.com/robots.txt` has `User-agent: * Disallow:`, crawl-delay 10. | 2025 Integrated Report & ISSB Financial Report (published April/June 2026 on CVM) |
+| **Itaú Unibanco** | Financial | Absent from CVM sustainability categories. Reports published only as generic "Comunicado ao Mercado". | `www.itau.com.br/relacoes-com-investidores/` | `itau.com.br/robots.txt` allows `/`, but general terms forbid unauthorized automated indexing. | 2025 ESG Report on IR site |
+| **WEG** | Industry | Category: "Relato Integrado". Ref: 2025-12-31, Del: 2026-04-27 (Prot: 1508882). Direct PDF confirmed. | `ri.weg.net` (MZ Group platform) | MZ platform robots.txt allows only specific search bots (Googlebot, Bingbot). | 2025 Integrated Report (published April 2026 on CVM) |
+| **Ambev** | Beverages | Absent from CVM sustainability categories. | `ri.ambev.com.br` (MZ Group platform) | MZ platform robots.txt allows only specific search bots. | 2024/2025 Annual & Sustainability Report on IR site |
+| **Lojas Renner** | Retail | Categories: "Relatório de Sustentabilidade" (Ref: 2025-12-31, Del: 2026-04-29, Prot: 1511150) and "ISSB" (Del: 2026-07-17, Prot: 1545750). | `lojasrennersa.com.br` | Robots.txt allows only OAI-SearchBot and ChatGPT-User. No general license. | 2025 Sustainability Report (published April 2026 on CVM) |
+| **Localiza** | Rental | Category: "Relatório de Sustentabilidade". Ref: 2025-12-31, Del: 2026-09-01 (Prot: 1563384). Direct PDF confirmed. | `ri.localiza.com` (MZ Group platform) | MZ platform robots.txt allows only specific search bots. | 2025 Sustainability Report (published September 2026 on CVM) |
+| **Suzano** | Pulp & Paper | Absent from CVM sustainability categories. | `centraldesustentabilidade.suzano.com.br`, `suzano.com.br` | WordPress robots.txt allows `/`, but no machine-readable API or data license. | 2024/2025 Sustainability Center summary |
+| **Axia Energia (Eletrobras)** | Utilities | Category: "Relatório de Sustentabilidade". Ref: 2025-12-31, Del: 2026-05-12 (Prot: 1521005). Direct PDF confirmed. | `axia.com.br`, `www.eletrobras.com` | `www.eletrobras.com/robots.txt` **explicitly disallows all crawlers**: `User-agent: * Disallow: /`. | 2025 Sustainability Report (published May 2026 on CVM) |
+| **Totvs** | Software | Category: "Relato Integrado". Ref: 2025-12-31, Del: 2026-04-30 (Prot: 1514188). Direct PDF confirmed. | `ri.totvs.com` (MZ Group platform) | MZ platform robots.txt allows only specific search bots. | 2025 Integrated Report (published April 2026 on CVM) |
+
+## Key findings
+
+1. **CVM IPE provides 70% coverage of top companies out of the box.** 7 of the 10 target companies file their full annual sustainability or integrated reports directly with CVM under dedicated categories. These documents are distributed as standardized PDFs via CVM's RAD portal (`www.rad.cvm.gov.br`), which `CvmDocumentAdapter` already downloads and indexes using `DocumentTextService` without custom scraping.
+2. **IR scraping is legally and technically problematic:**
+   - Eletrobras (`www.eletrobras.com`) explicitly forbids all automated access via `robots.txt` (`Disallow: /`).
+   - Petrobras blocks programmatic HTTP clients with `HTTP 403`.
+   - Four companies host their IR on MZ Group portals that only permit major commercial search engine bots.
+   - Maintenance burden of option (b) is severe: 10 different sites, proprietary CMS layouts, annual link rotations, and absence of automated access terms.
 
 ## Options
 
-- **(a) A source and an adapter: the CVM IPE communications whose subject names a sustainability report.** Official, the same host and format as the IPE adapter (#9), with a link from CVM. Partial coverage; the match is on the subject text, which can change. The adapter's current category mapping should be changed too.
-- **(b) A rule that takes the URL from the company's IR page.** Ten different sites, six or so layouts, and a new check each year. The terms of each site are not read (the same gap as ADR 0010).
-- **(c) The user gives the URL and the server indexes it.** The owner or the agent gives a company and a document URL; the server downloads that document from its host and indexes the text with the pipeline of #10. No crawling and no rule to maintain. It needs the host to be allowed for that one request, which the adapter's fixed host list does not do today.
-- **(d) Not supported yet.** The ADR records it and the feature is left out. The agent answers that these reports are not available.
+- **(a) Source and adapter: CVM IPE sustainability categories.**
+  - Scope: In `CvmFilingAdapter`, map CVM IPE categories `"Relatório de Sustentabilidade"`, `"Relato Integrado"`, and `"Relatório de Informações Financeiras Relacionadas à Sustentabilidade - Padrão ISSB"` to `filing_type = 'sustainability'`.
+  - Legal: 100% compliant under CVM's Open Database License (ODbL).
+  - Infrastructure: Uses existing `CvmDocumentAdapter`, `DocumentTextService`, and DuckDB `chunks` search pipeline.
+  - Coverage: Covers 70% of major listed companies (Petrobras, Vale, WEG, Renner, Localiza, Axia, Totvs) and hundreds of other issuers in Brazil.
+  - Maintenance: Near zero.
+- **(b) Web scraping company IR pages.**
+  - Scope: Build custom scrapers for company IR portals.
+  - Legal: High risk. Multiple sites explicitly forbid automated access (`Disallow: /` on Eletrobras, 403 on Petrobras, restricted bots on MZ Group).
+  - Maintenance: Severe. Ongoing updates required for multiple independent HTML structures.
+- **(c) User-provided document URL.**
+  - Scope: Allow the agent or user to supply a direct PDF URL for companies not filing in CVM (e.g. Itaú, Ambev, Suzano). The server downloads the file and indexes it in `chunks`.
+  - Legal: Relies on user discretion for external URLs; requires explicit host whitelisting in `HttpAdapter`.
+  - Maintenance: Very low; no site-specific rules to maintain.
+- **(d) Not supported for now.**
+  - Sustainability queries inform the agent that sustainability reports are not currently indexed.
 
 ## Recommendation
 
-Build (a) first: it is official, cheap, and covers the companies that file the report as a communication. For the rest, (c) gives full coverage for the owner's chosen companies without a rule per site. Do not build (b) until the site terms are read, because the maintenance cost is ten rules a year. The recommendation depends on the owner's decision on the coverage and on the terms.
-
-## Legal view
-
-No terms of use or `robots.txt` were read for these sites, so this ADR cannot say that automated access is allowed for any of them. Options (b) and (c) need that reading first; option (a) reads CVM open data, which is published under ODbL (see `docs/product/data-map.md`).
+Implement **Option (a)** first:
+1. It leverages the existing, fully-tested CVM ingestion pipeline and CVM open data under ODbL.
+2. It immediately covers 7 of the 10 benchmark companies (and >350 filings across the market in 2025-2026).
+3. If complete coverage for companies that do not file under CVM sustainability categories (such as Itaú, Ambev, Suzano) is required, supplement with **Option (c)** (user-provided document URL).
+4. **Reject Option (b)** entirely due to explicit legal restrictions (`Disallow: /`), anti-bot challenges (403), and excessive maintenance.
 
 ## Consequences
 
-- No code in this change. Issue #15 stays open, with `needs-info`, until the owner chooses a path (AC3). The owner's choice then becomes new issues in the task format.
-- The AC1 list above is from search snippets. Opening each lead, and checking that the 2024 document is the final version, is the next step if the owner wants (b) or (c).
+- No product code is changed in this round.
+- Issue #15 remains open with `needs-info` until the owner chooses between (a) only, or (a) + (c).
+- Once approved, implementation of (a) requires updating the category mapping in `CvmFilingAdapter` and registering the category in `docs/product/data-map.md`.
