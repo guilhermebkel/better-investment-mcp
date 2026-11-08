@@ -1,5 +1,5 @@
-import { inflateRawSync } from "node:zlib";
-import type { ZipEntry } from "@/Protocols/ZipProtocol.ts";
+import { createInflateRaw, inflateRawSync } from "node:zlib";
+import type { LocatedEntry, ZipEntry } from "@/Protocols/ZipProtocol.ts";
 
 const EOCD_SIGNATURE = 0x06054b50;
 const CENTRAL_SIGNATURE = 0x02014b50;
@@ -27,6 +27,38 @@ const LOCAL_EXTRA_LENGTH_OFFSET = 28;
 
 export class ZipUtil {
   static readEntry(zip: Uint8Array, entryName: string): Uint8Array {
+    const { method, packed } = ZipUtil.findEntry(zip, entryName);
+    if (method === METHOD_STORED) {
+      return packed;
+    }
+    return new Uint8Array(inflateRawSync(packed, { maxOutputLength: MAX_UNPACKED_BYTES }));
+  }
+
+  static async* streamEntry(zip: Uint8Array, entryName: string): AsyncGenerator<Uint8Array> {
+    const { method, packed } = ZipUtil.findEntry(zip, entryName);
+    if (method === METHOD_STORED) {
+      yield packed;
+      return;
+    }
+    const inflater = createInflateRaw();
+    inflater.end(packed);
+    const chunks: AsyncIterable<Uint8Array> = inflater;
+    let total = 0;
+    // Why: the entry is inflated in chunks, so the caller reads it line by line and keeps only what it needs; the unpacked size is still capped.
+    try {
+      for await (const chunk of chunks) {
+        total += chunk.byteLength;
+        if (total > MAX_UNPACKED_BYTES) {
+          throw new Error(`the zip entry is larger than ${MAX_UNPACKED_BYTES} bytes`);
+        }
+        yield chunk;
+      }
+    } finally {
+      inflater.destroy();
+    }
+  }
+
+  private static findEntry(zip: Uint8Array, entryName: string): LocatedEntry {
     const view = new DataView(zip.buffer, zip.byteOffset, zip.byteLength);
     const endOfCentral = ZipUtil.findEndOfCentral(view);
     const entryCount = view.getUint16(endOfCentral + EOCD_ENTRY_COUNT_OFFSET, true);
@@ -64,7 +96,7 @@ export class ZipUtil {
     throw new Error("the file is not a zip archive");
   }
 
-  private static readData(zip: Uint8Array, view: DataView, entry: ZipEntry): Uint8Array {
+  private static readData(zip: Uint8Array, view: DataView, entry: ZipEntry): LocatedEntry {
     if (view.getUint32(entry.localOffset, true) !== LOCAL_SIGNATURE) {
       throw new Error("the zip local header is damaged");
     }
@@ -72,16 +104,12 @@ export class ZipUtil {
     if (entry.unpackedSize > MAX_UNPACKED_BYTES) {
       throw new Error(`the zip entry is larger than ${MAX_UNPACKED_BYTES} bytes`);
     }
+    if (entry.method !== METHOD_STORED && entry.method !== METHOD_DEFLATE) {
+      throw new Error(`the zip entry uses an unsupported method ${entry.method}`);
+    }
     const nameLength = view.getUint16(entry.localOffset + LOCAL_NAME_LENGTH_OFFSET, true);
     const extraLength = view.getUint16(entry.localOffset + LOCAL_EXTRA_LENGTH_OFFSET, true);
     const start = entry.localOffset + LOCAL_FIXED_LENGTH + nameLength + extraLength;
-    const packed = zip.subarray(start, start + entry.compressedSize);
-    if (entry.method === METHOD_STORED) {
-      return packed;
-    }
-    if (entry.method === METHOD_DEFLATE) {
-      return new Uint8Array(inflateRawSync(packed, { maxOutputLength: MAX_UNPACKED_BYTES }));
-    }
-    throw new Error(`the zip entry uses an unsupported method ${entry.method}`);
+    return { method: entry.method, packed: zip.subarray(start, start + entry.compressedSize) };
   }
 }

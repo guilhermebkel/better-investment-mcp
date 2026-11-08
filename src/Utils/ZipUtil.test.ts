@@ -57,3 +57,28 @@ describe("ZipUtil.readEntry()", () => {
     expect(() => ZipUtil.readEntry(notAZip, "x.csv")).toThrow("not a zip archive");
   });
 });
+
+describe("ZipUtil.streamEntry()", () => {
+  it("yields the inflated entry in chunks, with the same bytes as readEntry", async () => {
+    const content = new TextEncoder().encode("linha;de;teste\n".repeat(20_000));
+    const zip = buildZip("big.csv", content, 8);
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of ZipUtil.streamEntry(zip, "big.csv")) {
+      chunks.push(chunk);
+    }
+    expect(chunks.length).toBeGreaterThan(1);
+    const whole = Buffer.from(ZipUtil.readEntry(zip, "big.csv"));
+    expect(Buffer.concat(chunks).equals(whole)).toBe(true);
+  });
+
+  it("yields a stored entry as it is", async () => {
+    const content = new TextEncoder().encode("stored text");
+    const zip = buildZip("plain.csv", content, 0);
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of ZipUtil.streamEntry(zip, "plain.csv")) {
+      chunks.push(chunk);
+    }
+    const text = Buffer.concat(chunks).toString();
+    expect(text).toBe("stored text");
+  });
+});

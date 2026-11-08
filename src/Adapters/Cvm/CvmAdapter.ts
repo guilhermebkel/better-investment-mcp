@@ -14,6 +14,7 @@ const FILING_ID_LENGTH = 32;
 const SEPARATOR = ";";
 const LOCAL_TIME_OFFSET = "T00:00:00-03:00";
 const CNPJ_NON_DIGITS = /\D/gu;
+const LINE_BREAK = /\r?\n/u;
 const COLUMNS = [
   "CNPJ_Companhia", "Nome_Companhia", "Codigo_CVM", "Data_Referencia", "Categoria", "Tipo", "Especie",
   "Assunto", "Data_Entrega", "Tipo_Apresentacao", "Protocolo_Entrega", "Versao", "Link_Download",
@@ -66,36 +67,84 @@ export class CvmAdapter implements ProviderPort<"filings"> {
     const key: CvmKey = { market: request.market, ticker: request.ticker, asset_type: request.assetType };
     const filingIdToRow = new Map<string, ProviderRow>();
     for (const year of this.resolveYears()) {
-      const text = await this.fetchYear(year);
-      if (text === undefined) {
+      const zip = await this.fetchYear(year);
+      if (zip === undefined) {
         continue;
       }
-      for (const row of CvmAdapter.readRows(text, digits, key)) {
+      const lines = CvmAdapter.readLines(ZipUtil.streamEntry(zip, `ipe_cia_aberta_${year}.csv`));
+      for (const row of await CvmAdapter.readRows(lines, digits, key)) {
         CvmAdapter.keep(filingIdToRow, row);
       }
     }
     return { source: CvmAdapter.VENDOR, tables: { filings: [...filingIdToRow.values()] } };
   }
 
-  static readRows(text: string, cnpjDigits: string, key: CvmKey): ProviderRow[] {
-    const [header = "", ...body] = text.split(/\r?\n/u).filter((line) => line !== "");
-    if (header !== COLUMNS.join(SEPARATOR)) {
-      throw new Error("the response format changed: the IPE header is not the one the adapter reads; no row was written");
+  static async* readLines(chunks: AsyncIterable<Uint8Array>): AsyncGenerator<string> {
+    // Why: the file is decoded in chunks and yielded as whole lines, so the decoded file is never held in memory as one string.
+    const decoder = new TextDecoder("windows-1252");
+    let carry = "";
+    for await (const chunk of chunks) {
+      const parts = (carry + decoder.decode(chunk, { stream: true })).split(LINE_BREAK);
+      carry = parts.pop() ?? "";
+      for (const part of parts) {
+        if (part !== "") {
+          yield part;
+        }
+      }
     }
+    const last = carry + decoder.decode();
+    if (last !== "") {
+      yield last;
+    }
+  }
+
+  static async readRows(
+    lines: AsyncIterable<string> | Iterable<string>,
+    cnpjDigits: string,
+    key: CvmKey,
+  ): Promise<ProviderRow[]> {
+    let isHeader = true;
+    let isEmpty = true;
     const rows: ProviderRow[] = [];
-    // Why: the file is read line by line and only the lines of the one company become rows, so other companies' rows are never kept.
-    for (const line of body) {
-      const fields = line.split(SEPARATOR);
-      if (fields.length !== COLUMNS.length) {
-        throw new Error("the response format changed: an IPE line has another number of fields; no row was written");
+    for await (const line of lines) {
+      if (isHeader) {
+        CvmAdapter.checkHeader(line);
+        isHeader = false;
+      } else {
+        // Why: only the lines of the one company become rows, so other companies' rows are never kept.
+        const row = CvmAdapter.readLine(line, cnpjDigits, key);
+        if (row !== undefined) {
+          rows.push(row);
+        }
       }
-      const pairs = COLUMNS.map((column, index) => [column, fields[index] ?? ""] as const);
-      const columnToValue = Object.fromEntries(pairs);
-      if (CvmAdapter.readDigits(columnToValue.CNPJ_Companhia ?? "") === cnpjDigits) {
-        rows.push(CvmAdapter.buildRow(columnToValue, key));
-      }
+      isEmpty = false;
+    }
+    if (isEmpty) {
+      throw new Error("the response format changed: the IPE file is empty; no row was written");
     }
     return rows;
+  }
+
+  private static checkHeader(line: string): void {
+    if (line !== COLUMNS.join(SEPARATOR)) {
+      throw new Error("the response format changed: the IPE header is not the one the adapter reads; no row was written");
+    }
+  }
+
+  private static readLine(line: string, cnpjDigits: string, key: CvmKey): ProviderRow | undefined {
+    if (line === "") {
+      return undefined;
+    }
+    const fields = line.split(SEPARATOR);
+    if (fields.length !== COLUMNS.length) {
+      throw new Error("the response format changed: an IPE line has another number of fields; no row was written");
+    }
+    const pairs = COLUMNS.map((column, index) => [column, fields[index] ?? ""] as const);
+    const columnToValue = Object.fromEntries(pairs);
+    if (CvmAdapter.readDigits(columnToValue.CNPJ_Companhia ?? "") !== cnpjDigits) {
+      return undefined;
+    }
+    return CvmAdapter.buildRow(columnToValue, key);
   }
 
   static readFilingKind(category: string): CvmFilingKind {
@@ -122,12 +171,10 @@ export class CvmAdapter implements ProviderPort<"filings"> {
     return Array.from({ length: last - first + 1 }, (_, index) => first + index);
   }
 
-  private async fetchYear(year: number): Promise<string | undefined> {
+  private async fetchYear(year: number): Promise<Uint8Array | undefined> {
     const url = `${this.baseUrl}/dados/CIA_ABERTA/DOC/IPE/DADOS/ipe_cia_aberta_${year}.zip`;
     try {
-      const zip = await this.http.getBytes(url);
-      const entry = ZipUtil.readEntry(zip, `ipe_cia_aberta_${year}.csv`);
-      return new TextDecoder("windows-1252").decode(entry);
+      return await this.http.getBytes(url);
     } catch (error) {
       // Why: a year without a file (the current year, early in the year) is skipped; any other failure stops the load.
       if (error instanceof HttpFailureError && error.status === NOT_FOUND_STATUS) {

@@ -4,3 +4,8 @@ export type ZipEntry = {
   unpackedSize: number;
   localOffset: number;
 };
+
+export type LocatedEntry = {
+  method: number;
+  packed: Uint8Array;
+};

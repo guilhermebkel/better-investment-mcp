@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { Readable } from "node:stream";
 import { join } from "node:path";
 import { deflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
@@ -12,6 +13,14 @@ const PETROBRAS = "33.000.167/0001-01";
 const key = { market: "BR", ticker: "PETR4", assetType: "stock" };
 const rowKey = { market: "BR", ticker: "PETR4", asset_type: "stock" };
 const CURRENT_YEAR = 2025;
+const splitLines = (text: string): string[] => text.split(/\r?\n/u);
+const collectLines = async (lines: AsyncIterable<string>): Promise<string[]> => {
+  const collected: string[] = [];
+  for await (const line of lines) {
+    collected.push(line);
+  }
+  return collected;
+};
 
 const buildZipOf = (name: string, text: string): Uint8Array => {
   // Why: a small zip with one entry, built here, so the test never needs the 2 MB yearly file.
@@ -61,8 +70,8 @@ const buildHttpServing = (pathToFile: Readonly<Record<string, Uint8Array>>): {
 const resolveKnownCompany = () => Promise.resolve(PETROBRAS);
 
 describe("CvmAdapter.readRows()", () => {
-  it("keeps the lines of the company with the filing type and the original category (AC1, AC2)", () => {
-    const rows = CvmAdapter.readRows(SAMPLE, "33000167000101", rowKey);
+  it("keeps the lines of the company with the filing type and the original category (AC1, AC2)", async () => {
+    const rows = await CvmAdapter.readRows(splitLines(SAMPLE), "33000167000101", rowKey);
     expect(rows).toHaveLength(6);
     expect(rows.every((row) => row.source === "cvm" && row.market === "BR" && row.ticker === "PETR4")).toBe(true);
     expect(rows.filter((row) => row.category === "Assembleia").every((row) => row.filing_type === "other")).toBe(true);
@@ -71,34 +80,45 @@ describe("CvmAdapter.readRows()", () => {
     expect(rows[0]?.url).toContain("rad.cvm.gov.br");
   });
 
-  it("keeps both deliveries of the same document, each with its own delivery date and a unique id (AC5)", () => {
+  it("keeps both deliveries of the same document, each with its own delivery date and a unique id (AC5)", async () => {
     const [first = ""] = SAMPLE.split("\n").slice(1).filter((line) => line.startsWith(PETROBRAS));
     const redelivery = first.replace(";2024-03-22;AP", ";2024-05-02;AP").replace("IPE250420240104537305-83", "IPE020520240104999999-01");
     const text = `${SAMPLE.split("\n")[0]}\n${first}\n${redelivery}\n`;
-    const rows = CvmAdapter.readRows(text, "33000167000101", rowKey);
+    const rows = await CvmAdapter.readRows(splitLines(text), "33000167000101", rowKey);
     expect(rows).toHaveLength(2);
     expect(new Set(rows.map((row) => row.filing_id)).size).toBe(2);
     expect(rows.map((row) => row.delivered_at)).toStrictEqual(["2024-03-22T00:00:00-03:00", "2024-05-02T00:00:00-03:00"]);
   });
 
-  it("does not keep the lines of other companies", () => {
-    const rows = CvmAdapter.readRows(SAMPLE, "99999999999999", rowKey);
+  it("does not keep the lines of other companies", async () => {
+    const rows = await CvmAdapter.readRows(splitLines(SAMPLE), "99999999999999", rowKey);
     expect(rows).toStrictEqual([]);
   });
 
-  it("maps a sustainability report to sustainability", () => {
+  it("maps a sustainability report to sustainability", async () => {
     const text = `${SAMPLE.split("\n")[0]}\n${PETROBRAS};X;1;2024-01-01;Relatório de Sustentabilidade;;;Relato;2024-01-02;AP;PROTO-1;1;https://example.org/doc\n`;
-    const [row] = CvmAdapter.readRows(text, "33000167000101", rowKey);
+    const [row] = await CvmAdapter.readRows(splitLines(text), "33000167000101", rowKey);
     expect(row?.filing_type).toBe("sustainability");
   });
 
-  it("fails with a format-changed message when the header differs (AC5 format)", () => {
-    expect(() => CvmAdapter.readRows("a;b;c\n1;2;3\n", "33000167000101", rowKey)).toThrow("the response format changed");
+  it("fails with a format-changed message when the header differs (AC5 format)", async () => {
+    const attempt = CvmAdapter.readRows(splitLines("a;b;c\n1;2;3\n"), "33000167000101", rowKey);
+    await expect(attempt).rejects.toThrow("the response format changed");
   });
 
-  it("fails when a line has another number of fields", () => {
+  it("fails when a line has another number of fields", async () => {
     const text = `${SAMPLE.split("\n")[0]}\n${PETROBRAS};only;three\n`;
-    expect(() => CvmAdapter.readRows(text, "33000167000101", rowKey)).toThrow("another number of fields");
+    const attempt = CvmAdapter.readRows(splitLines(text), "33000167000101", rowKey);
+    await expect(attempt).rejects.toThrow("another number of fields");
+  });
+
+  it("reads lines across chunk boundaries, with CRLF and a last line without a break (streaming)", () => {
+    const bytes = new TextEncoder().encode("a;b\r\nc;d\r\nlast;line");
+    const chunks = [bytes.slice(0, 3), bytes.slice(3, 4), bytes.slice(4, 9), bytes.slice(9)];
+    const decoded = CvmAdapter.readLines(Readable.from(chunks));
+    return collectLines(decoded).then((lines) => {
+      expect(lines).toStrictEqual(["a;b", "c;d", "last;line"]);
+    });
   });
 });
 
