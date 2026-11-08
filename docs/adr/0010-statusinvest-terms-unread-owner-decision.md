@@ -1,1 +1,3 @@
-implementação parcial
+# StatusInvest
+
+Partially implemented.
