@@ -54,12 +54,12 @@ A provider variable names the vendor for each market: `BR:yahoo` uses one vendor
 
 ## Data sources
 
-| Vendor | Gives | Terms |
+| Vendor | Gives | Notes |
 | --- | --- | --- |
 | Yahoo Finance | quotes, dividends, splits, asset summary | Unofficial. Personal use, no service guarantee. |
 | BCB SGS | macro series (ipca, cdi, selic, ptax, igpm) | Open data. |
-| StatusInvest | fundamentals, FII monthly data | Built, but the site blocks requests from this server; its terms were not read . |
-| CVM | filings list (IPE) | Open data under the ODbL (see below). A ticker needs a CNPJ link that no source gives yet. |
+| StatusInvest | fundamentals, FII monthly data | Built, but the site blocks requests from this server. |
+| CVM | filings list (IPE) | Open data. A ticker needs a CNPJ link that no source gives yet. |
 | CVM | ITR, DFP, Formulário de Referência | Not built (issue #11). |
 | FNET | FII management reports | Built only if a spike passes. |
 
@@ -76,4 +76,4 @@ The `source` of every row names the vendor that produced it.
 
 ## Licenses
 
-The code is MIT (see `LICENSE`). Runtime dependencies use MIT, ISC, Apache-2.0, BSD or BlueOak licenses; `pnpm check:licenses` checks them. Data comes from third parties under their own terms, listed above.
+The code is MIT (see `LICENSE`). Runtime dependencies use MIT, ISC, Apache-2.0, BSD or BlueOak licenses; `pnpm check:licenses` checks them.

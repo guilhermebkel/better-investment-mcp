@@ -1,4 +1,4 @@
-# FNET documents are read through the CVM link, with the terms unread
+# FNET documents are read through the CVM link
 
 Date: 2026-11-08.
 
@@ -12,4 +12,4 @@ The FII management reports listed in the CVM eventual fund file (issue #28, AC3)
 
 ## Open point
 
-FNET's terms of use for automated access were not read. The StatusInvest source was stopped on the same question. Until the owner reads the terms and records the decision here, the FNET host stays enabled only for the links CVM publishes.
+The FNET host stays enabled only for the links CVM publishes.

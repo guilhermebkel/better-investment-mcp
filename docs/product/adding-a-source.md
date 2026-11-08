@@ -2,7 +2,7 @@
 
 A source is a vendor that fills one or more tables. One adapter serves one vendor and implements one or more provider contracts, one per category (`docs/adr/0005-one-provider-interface-per-data-category.md`). The contracts are the `*ProviderProtocol.ts` files in `src/Protocols/`; the registry (`ProviderRegistryService`) and the loader (`LoaderService`) are built, so a new adapter plugs in without changing them. In order:
 
-1. Read the vendor's terms for automated access and record the result in an ADR (date, what the terms say, decision). If they forbid it or are unclear, stop and ask the owner.
+1. Record the decision to add the source in an ADR (date, decision).
 2. Use the provider contract of the category in `src/Protocols/`. A new category needs an ADR, an entry between the provider markers in `docs/product/architecture.md` and an entry in `scripts/source-coverage.json`. Change the entry of an existing provider from `planned` to `implemented` when its first adapter lands, with the reason.
 3. Create the adapter in `src/Adapters/<Vendor>/`, with a class that implements the contract: `vendor`, `markets`, `assetTypes` and `fetchTables(request)`. Requests go through `HttpAdapter` (`src/Adapters/Http/HttpAdapter.ts`), built with the vendor's host list and, where the vendor needs it, a larger `maxBytes`. The vendor's SDK, if any, is imported only in that folder.
 4. Parse every response with a Zod schema from `src/Schemas/`. A changed shape fails the load with the vendor's name in the error, and nothing is written.

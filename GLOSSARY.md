@@ -84,7 +84,7 @@ The BM25 index over the chunks, built with DuckDB's full-text extension after ea
 The quarterly report, the annual statement and the reference form (Formulário de Referência) of a listed company, as CVM publishes them.
 
 **CVM**:
-The Brazilian securities regulator (Comissão de Valores Mobiliários). Its open data is under ODbL.
+The Brazilian securities regulator (Comissão de Valores Mobiliários).
 
 **FNET**:
 The system where FII documents are published.

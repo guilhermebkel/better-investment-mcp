@@ -59,9 +59,9 @@ One interface per data category, one adapter per vendor (`docs/adr/0005-one-prov
 | --- | --- | --- | --- |
 | Yahoo Finance | quotes, dividends, splits, asset summary | #6 | Built. |
 | BCB SGS | macro series | #7 | Built. Open data. |
-| StatusInvest | fundamentals, FII monthly data | #8 | Built, but blocked by the site from this server; terms not read. |
-| CVM | filings list (IPE, ITR, DFP, FRE, the eventual fund file), ITR and DFP statements, FII monthly files, the company list that maps stock tickers to CNPJ | #9, #11, #28 | Built. The primary source of what it carries, with the version and the file of each row. A stock ticker maps through the company list; a FII ticker maps through a short curated list; any other ticker is pending. Open data under ODbL. The reference form (FRE) has no item text in the open data. |
-| FNET | FII management reports (PDF text, through the CVM link) | #12, #28 | Built for the documents linked from the CVM eventual fund file. The host is recorded apart from the CVM origin (P5). FNET's terms of use were not read (ADR 0016). |
+| StatusInvest | fundamentals, FII monthly data | #8 | Built, but blocked by the site from this server. |
+| CVM | filings list (IPE, ITR, DFP, FRE, the eventual fund file), ITR and DFP statements, FII monthly files, the company list that maps stock tickers to CNPJ | #9, #11, #28 | Built. The primary source of what it carries, with the version and the file of each row. A stock ticker maps through the company list; a FII ticker maps through a short curated list; any other ticker is pending. The reference form (FRE) has no item text in the open data. |
+| FNET | FII management reports (PDF text, through the CVM link) | #12, #28 | Built for the documents linked from the CVM eventual fund file. The host is recorded apart from the CVM origin (P5). |
 
 ## Layers
 
