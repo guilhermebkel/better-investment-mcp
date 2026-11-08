@@ -88,3 +88,17 @@ The system where FII documents are published.
 
 **Usage notice**:
 The statement in `get_overview` that the output describes and locates information and is not investment advice.
+
+## Data quality
+
+**Stale**:
+A quote row whose close repeats the day before with zero volume. The row is flagged, never removed.
+_Avoid_: missing, empty
+
+**Suspect tick**:
+A quote row that moved more than 25% in one day and came back within 5% the next day. The row is flagged, never removed.
+_Avoid_: error, outlier (the row is kept)
+
+**Series**:
+A macro series such as `ipca`, `cdi`, `selic` or `ptax`. It has no market; its registry market is `SERIES`.
+_Avoid_: indicator, index

@@ -7,10 +7,7 @@ const PATH_PATTERN = /\b((?:src|scripts|docs)\/[\w./-]+)/gu;
 const WILDCARD = /[*<>{}]/u;
 const TRAILING_PUNCTUATION = /[.,;:)]$/u;
 // Why: these are named in the rules and in the plan before the issue that creates them lands; each entry is removed when its file or folder exists.
-const PLANNED_PATHS = new Set([
-  "src/Adapters/Yahoo/",
-  "src/Testing/fixtures/",
-]);
+const PLANNED_PATHS = new Set([]);
 const ROOT_FILES = ["AGENTS.md", "README.md", "GLOSSARY.md", "knip.json", ".jscpd.json", "tsup.config.ts", ".oxlintrc.json"];
 
 const listMarkdown = (dir) => readdirSync(join(ROOT, dir), { withFileTypes: true }).flatMap((entry) => {

@@ -10,7 +10,7 @@ import type {
   VendorSettings,
 } from "@/Protocols/ProviderProtocol.ts";
 
-const SETTING_ENTRY_PATTERN = /^([A-Z]{2}):([a-z0-9_]+)(?:>([a-z0-9_]+))?$/;
+const SETTING_ENTRY_PATTERN = /^([A-Z]{2,6}):([a-z0-9_]+)(?:>([a-z0-9_]+))?$/;
 
 export class ProviderRegistryService {
   static readonly CATEGORY_TO_SETTING: Record<CacheCategory, ProviderSettingName> = {

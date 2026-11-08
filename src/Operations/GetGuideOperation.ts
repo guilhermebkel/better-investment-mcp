@@ -1,6 +1,7 @@
 import type { GetGuideInput } from "@/Protocols/GetGuideProtocol.ts";
 import type { OperationPort, OperationResult } from "@/Protocols/OperationProtocol.ts";
 import { GetGuideInputSchema } from "@/Schemas/GetGuideSchema.ts";
+import { GuideTexts } from "@/Guides/GuideTexts.ts";
 
 export class GetGuideOperation implements OperationPort<GetGuideInput> {
   static readonly NAME = "getGuide";
@@ -10,6 +11,6 @@ export class GetGuideOperation implements OperationPort<GetGuideInput> {
   readonly inputSchema = GetGuideInputSchema;
 
   execute(input: GetGuideInput): Promise<OperationResult> {
-    return Promise.resolve({ isError: false, message: `The guide for "${input.topic}" has no text yet.` });
+    return Promise.resolve({ isError: false, message: GuideTexts.topicToText[input.topic] });
   }
 }

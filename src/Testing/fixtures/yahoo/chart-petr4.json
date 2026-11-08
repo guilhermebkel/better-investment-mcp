@@ -1,0 +1,27 @@
+{
+  "chart": {
+    "result": [
+      {
+        "meta": { "symbol": "PETR4.SA", "currency": "BRL", "shortName": "PETROBRAS PN", "longName": "Petroleo Brasileiro S.A. - Petrobras" },
+        "timestamp": [1700000000, 1700086400, 1700172800, 1700259200, 1700345600, 1700432000],
+        "indicators": {
+          "quote": [
+            {
+              "open": [10.0, 10.1, 10.1, 10.2, 10.2, 5.1],
+              "high": [10.2, 10.3, 13.1, 10.4, 10.3, 5.2],
+              "low": [9.9, 10.0, 10.0, 10.1, 10.1, 5.0],
+              "close": [10.1, 10.1, 13.0, 10.2, 5.1, 5.1],
+              "volume": [1000, 0, 2000, 3000, 4000, 0]
+            }
+          ],
+          "adjclose": [{ "adjclose": [5.05, 5.05, 6.5, 5.1, 5.1, 5.1] }]
+        },
+        "events": {
+          "dividends": { "1700172800": { "amount": 0.25, "date": 1700172800 } },
+          "splits": { "1700345600": { "date": 1700345600, "numerator": 2, "denominator": 1 } }
+        }
+      }
+    ],
+    "error": null
+  }
+}

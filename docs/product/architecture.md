@@ -57,10 +57,10 @@ One interface per data category, one adapter per vendor (`docs/adr/0005-one-prov
 
 | Vendor | Gives | Issue | Notes |
 | --- | --- | --- | --- |
-| Yahoo Finance | quotes, dividends, splits, asset summary | #6 | Unofficial, personal use, no SLA. |
-| BCB SGS | macro series | #7 | Open data. |
-| StatusInvest | fundamentals, FII monthly data | #8 | Terms are read first; the adapter is built only if they allow it. |
-| CVM | filings list, ITR, DFP, Formulário de Referência | #9, #11 | Open data under ODbL. |
+| Yahoo Finance | quotes, dividends, splits, asset summary | #6 | Built. Unofficial, personal use, no SLA. |
+| BCB SGS | macro series | #7 | Built. Open data. |
+| StatusInvest | fundamentals, FII monthly data | #8 | Built, but blocked by the site from this server; terms not read (ADR 0010). |
+| CVM | filings list (IPE), then ITR, DFP, Formulário de Referência | #9, #11 | IPE built; a ticker needs a CNPJ link that no source gives yet. Open data under ODbL. |
 | FNET | FII management reports | #12 | Built only if a spike passes. |
 
 ## Layers

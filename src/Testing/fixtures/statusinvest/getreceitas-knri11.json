@@ -1,0 +1,4 @@
+{ "listMonth": [
+  { "month": 1, "year": 2024, "receitalaluguel": 10, "receitavendaimovel": 0, "receitaoutras": 1, "receitatotal": 11 },
+  { "month": 2, "year": 2024, "receitalaluguel": 10, "receitavendaimovel": 2, "receitaoutras": 0, "receitatotal": 12 }
+] }

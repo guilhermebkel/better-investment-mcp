@@ -48,7 +48,7 @@ Every setting is an environment variable. The server reads them once at start an
 | `INVESTMENT_MCP_FUND_DATA_PROVIDER` | unset | FII monthly data source per market. Same rule. |
 | `INVESTMENT_MCP_FILINGS_PROVIDER` | unset | Filings list source per market. Same rule. |
 | `INVESTMENT_MCP_DOCUMENTS_PROVIDER` | unset | Document download source per market. Same rule. |
-| `INVESTMENT_MCP_MACRO_PROVIDER` | unset | Macro series source. Same rule. |
+| `INVESTMENT_MCP_MACRO_PROVIDER` | unset | Macro series source. The series have no market, so the value is `SERIES:bcb`. |
 
 A provider variable names the vendor for each market: `BR:yahoo` uses one vendor, and `BR:yahoo>statusinvest` uses a second vendor only when the first fails. The vendors are added with their adapters.
 
@@ -57,9 +57,10 @@ A provider variable names the vendor for each market: `BR:yahoo` uses one vendor
 | Vendor | Gives | Terms |
 | --- | --- | --- |
 | Yahoo Finance | quotes, dividends, splits, asset summary | Unofficial. Personal use, no service guarantee. |
-| BCB SGS | macro series | Open data. |
-| StatusInvest | fundamentals, FII monthly data | Terms are read before the adapter is built. |
-| CVM | filings list, ITR, DFP, Formulário de Referência | Open data under the ODbL (see below). |
+| BCB SGS | macro series (ipca, cdi, selic, ptax) | Open data. |
+| StatusInvest | fundamentals, FII monthly data | Built, but the site blocks requests from this server; its terms were not read (see `docs/adr/0010-statusinvest-terms-unread-owner-decision.md`). |
+| CVM | filings list (IPE) | Open data under the ODbL (see below). A ticker needs a CNPJ link that no source gives yet. |
+| CVM | ITR, DFP, Formulário de Referência | Not built (issue #11). |
 | FNET | FII management reports | Built only if a spike passes. |
 
 The `source` of every row names the vendor that produced it.

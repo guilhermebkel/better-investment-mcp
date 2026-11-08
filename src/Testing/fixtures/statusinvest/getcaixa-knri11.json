@@ -1,0 +1,4 @@
+{ "listMonth": [
+  { "month": 1, "year": 2024, "totalnecessidadeliquidez": 5, "disponibilidades": 2, "titulospublicos": 1, "titulosprivados": 1, "fundosrendafixa": 1 },
+  { "month": 2, "year": 2024, "totalnecessidadeliquidez": 6, "disponibilidades": 2, "titulospublicos": 2, "titulosprivados": 1, "fundosrendafixa": 1 }
+] }

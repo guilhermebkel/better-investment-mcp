@@ -18,6 +18,8 @@ A prompt asset is read alone, at a different moment, often by a model that has n
 - **A guide topic does not point to another topic or to an ADR.** It may list related topics by name under "See also".
 - **The instructions name operations, never their parameters.** The parameters and their values are in the schema descriptions.
 
+**(test)** A guide topic is at most 4,000 characters (`GuideTexts.MAX_CHARS`), and every SQL example in a guide is accepted by the SQL guard and runs on the store.
+
 **(test)** A test checks that every operation named in an asset exists, that a description names no guide topic or file, and that a guide topic names no ADR.
 
 ## One home for each rule
