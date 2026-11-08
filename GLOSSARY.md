@@ -1,0 +1,90 @@
+# better-investment-analysis-mcp
+
+An MCP server that gives AI agents data on Brazilian assets through one read-only SQL tool. Unofficial; not investment advice.
+
+Terms marked *planned* have no code yet; they are the vocabulary the docs already use.
+
+## Language
+
+**Asset**:
+A thing with a price or a report: a stock, an FII, a fund, an ETF or a BDR. It is identified by `market:ticker` and has an asset type.
+_Avoid_: security, instrument, position (a position is what a person holds, which is out of scope)
+
+**Market**:
+The country exchange of an asset, such as `BR` or `US`. Only `BR` has providers today.
+_Avoid_: exchange, country
+
+**Asset type**:
+One of `stock`, `fii`, `fund`, `etf`, `bdr`.
+_Avoid_: class, category (category means a data category)
+
+**FII**:
+A Brazilian real estate investment fund (fundo de investimento imobiliário) listed on B3.
+
+**Tool**:
+What the client sees: `get_overview`, `get_guide` or `query_sql`. A tool is exposed by one operation.
+_Avoid_: endpoint, command
+
+**Operation**:
+A class in `src/Operations/` that implements a tool. It has a name, a strict input schema and a description. All operations are read-only.
+_Avoid_: action, handler
+
+**Manifest** (*planned*):
+The single list of operations, `src/Surfaces/OperationManifestSurface.ts`. The surface reads it.
+_Avoid_: catalog, registry
+
+**Surface**:
+The code that exposes the operations over MCP.
+
+**Provider**:
+An interface for one category of data, such as `QuoteProvider`. It declares which markets and asset types it serves.
+_Avoid_: source (a source is the vendor), client
+
+**Adapter**:
+The code that talks to one vendor, such as Yahoo Finance, and implements one or more providers. It is the only code that reaches the network.
+
+**Vendor**:
+An outside service that has data: Yahoo Finance, StatusInvest, CVM, FNET or BCB.
+
+**Source**:
+The `source` column on every row: the vendor that produced it.
+
+**Data category**:
+A kind of data with its own provider: quotes and splits, dividends, fundamentals, financial statements, periodic fund data, filing list, document text, macro.
+
+**Cache**:
+The temporary DuckDB file the server fills on demand. It can be deleted without loss. Its location is `INVESTMENT_MCP_CACHE_DIR` and its time to live is `INVESTMENT_MCP_CACHE_TTL_SECONDS`.
+_Avoid_: database, store (the store is the code that manages the cache)
+
+**Load**:
+Downloading data from a vendor and writing it into the cache before a query runs.
+
+**Run**:
+One load of one category for one asset, recorded in `cache_runs` with its start, end, expiry, rows and error.
+
+**Freshness**:
+Whether a run has not expired yet. A fresh run is not loaded again.
+
+**SQL guard**:
+The code that reads a query before it runs, checks the filters and refuses what it cannot understand.
+
+**Loaded report**:
+The `loaded` part of a `query_sql` answer: per category and asset, the source, the rows, the period and the error if any.
+
+**Filing**:
+A document a company or fund delivers to the regulator: a quarterly report (ITR), an annual statement (DFP), a reference form (FRE), a material fact, an FII management report.
+
+**Chunk**:
+A piece of the text of a filing with its section and page, searchable by full text.
+
+**ITR**, **DFP**, **FRE**:
+The quarterly report, the annual statement and the reference form (Formulário de Referência) of a listed company, as CVM publishes them.
+
+**CVM**:
+The Brazilian securities regulator (Comissão de Valores Mobiliários). Its open data is under ODbL.
+
+**FNET**:
+The system where FII documents are published.
+
+**Usage notice**:
+The statement in `get_overview` that the output describes and locates information and is not investment advice.
