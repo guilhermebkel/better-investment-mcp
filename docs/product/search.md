@@ -61,4 +61,4 @@ The quality set (issue #10, S8) is not measured yet. It needs three real filings
 
 - OCR is not done; a scanned page has no text.
 - Only the chunks of the filing type or the filing id asked for are searched. A search over all filings of a company needs a load of each of them.
-- Structured financial statements are issue #11; FNET documents are issue #12.
+- Structured financial statements are in `financial_statements` (issue #11), not in the search; FNET documents are issue #12.
