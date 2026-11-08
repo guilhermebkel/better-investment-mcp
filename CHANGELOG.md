@@ -6,6 +6,7 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Added
 
+- The IGP-M monthly change (BCB SGS 189) is a macro series: `series = 'igpm'` in `macro_series`.
 - CVM open data as the primary source (issue #28): a period-aware load of `financial_statements`, `fii_monthly` and `filings`. A period filter in `query_sql` (`period_end`, `period`, `reference_date`) loads the years of the period; without one, the last three years load.
 - A ticker maps to its CNPJ through the CVM company list (stocks); FIIs map through a short curated list with CVM's own names, and an unmapped ticker is reported as pending, never guessed.
 - The CVM eventual fund file: FII management reports and material facts in `filings`, with their official link and CNPJ.

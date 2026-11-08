@@ -17,7 +17,7 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 | `fundamentals` | **market**, **ticker**, **year**, **metric**, asset_type, value, source | StatusInvest | #8 |
 | `financial_statements` | market, ticker, asset_type, period_end, period_type, statement, line_item, value, currency, version, source_file, source | CVM ITR, DFP | #11, #28 |
 | `fii_monthly` | market, ticker, asset_type, period, distribution_per_unit, rental_revenue, property_sales_revenue, other_revenue, total_revenue, distributable_income, management_fee, performance_fee, property_acquisitions, other_expenses, total_expenses, liquidity_requirement, cash_available, government_bonds, corporate_bonds, fixed_income_funds, net_worth, version, source_file, source | CVM monthly fund files (`fii-doc-inf_mensal`); StatusInvest for the columns CVM does not carry is blocked (ADR 0010) | #8, #28 |
-| `macro_series` | **series**, **date**, value, source | BCB SGS | #7 |
+| `macro_series` | **series**, **date**, value, source | BCB SGS (ipca 433, cdi 12, selic 432, ptax 1, igpm 189) | #7 |
 | `cache_runs` | run_id, category, market, ticker, source, started_at, finished_at, expires_at, rows_read, error, filing_id, period_from, period_to | the loader (`filing_id` set for a document; the period columns set for a period load) | #3, #5, #10, #28 |
 | `cvm_files` | **url**, **sha256**, dataset, reference_year, size_bytes, fetched_at, is_current | the loader: one record per downloaded CVM file and version | #28 |
 | `schema_version` | version | the store (one row, the schema version of the file) | #3 |
@@ -71,7 +71,7 @@ The map of the CVM open data that serves the tables above. CVM is the primary so
 
 ## Values and units
 
-- `macro_series.value`: `ipca` is percent change per month (SGS 433), `cdi` is percent per day (SGS 12), `selic` is the Copom target rate in percent per year (SGS 432), `ptax` is the sell rate in BRL per USD (SGS 1). The units were checked against the service's answers.
+- `macro_series.value`: `ipca` is percent change per month (SGS 433), `cdi` is percent per day (SGS 12), `selic` is the Copom target rate in percent per year (SGS 432), `ptax` is the sell rate in BRL per USD (SGS 1), `igpm` is the monthly percent change of the IGP-M (SGS 189). The units of the first four were checked against the service's answers; `igpm`'s unit was checked against three recent answers (-0.22, 1.57, 1.47), not against the series metadata.
 - `macro_series` has no market: its rows use the market `SERIES` in the registry, so the setting is `INVESTMENT_MCP_MACRO_PROVIDER=SERIES:bcb`.
 - `splits.ratio` is the new shares per old share (a 2-for-1 split is 2).
 - `dividends.kind` is `dividend` for every Yahoo row; Yahoo does not tell a dividend from interest on equity.

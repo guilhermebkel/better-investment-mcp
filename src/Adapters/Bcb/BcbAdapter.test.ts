@@ -34,10 +34,20 @@ const buildHttpFailing = (error: Error): HttpPort => ({
 });
 
 describe("BcbAdapter.fetchTables()", () => {
-  it("keeps the four series with their SGS codes", () => {
+  it("keeps the five series with their SGS codes", () => {
     expect(BcbAdapter.SERIES.map((definition) => [definition.name, definition.code])).toStrictEqual([
-      ["ipca", 433], ["cdi", 12], ["selic", 432], ["ptax", 1],
+      ["ipca", 433], ["cdi", 12], ["selic", 432], ["ptax", 1], ["igpm", 189],
     ]);
+  });
+
+  it("fills macro_series for igpm from SGS 189, a monthly percent change", async () => {
+    const answer = "[{\"data\":\"01/08/2026\",\"valor\":\"-0.22\"},{\"data\":\"01/09/2026\",\"valor\":\"1.57\"}]";
+    const { http } = buildHttpAnswering(() => answer);
+    const adapter = new BcbAdapter(http, BcbAdapter.BASE_URL, () => NOW);
+    const result = await adapter.fetchTables({ market: "SERIES", ticker: "igpm" });
+
+    expect(result.tables.macro_series).toContainEqual({ series: "igpm", date: "2026-09-01", value: 1.57, source: "bcb" });
+    expect(result.tables.macro_series).toContainEqual({ series: "igpm", date: "2026-08-01", value: -0.22, source: "bcb" });
   });
 
   it("fills macro_series with source bcb from the recorded IPCA answer (AC1)", async () => {
@@ -55,8 +65,8 @@ describe("BcbAdapter.fetchTables()", () => {
 
   it("refuses an unknown series and lists the known ones (AC2)", async () => {
     const { http } = buildHttpAnswering(() => "[]");
-    await expect(new BcbAdapter(http).fetchTables({ market: "SERIES", ticker: "igpm" }))
-      .rejects.toThrow("the known series are ipca, cdi, selic, ptax");
+    await expect(new BcbAdapter(http).fetchTables({ market: "SERIES", ticker: "ibov" }))
+      .rejects.toThrow("the known series are ipca, cdi, selic, ptax, igpm");
   });
 
   it("reads every window of a long period with no gap or duplicate date (AC3)", async () => {

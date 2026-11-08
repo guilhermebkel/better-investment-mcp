@@ -30,7 +30,7 @@
     },
     "MacroProvider": {
       "status": "implemented",
-      "reason": "Macro series from BCB SGS; the BCB adapter (#7) fills ipca, cdi, selic and ptax."
+      "reason": "Macro series from BCB SGS; the BCB adapter (#7) fills ipca, cdi, selic, ptax and igpm (SGS 189)."
     }
   }
 }

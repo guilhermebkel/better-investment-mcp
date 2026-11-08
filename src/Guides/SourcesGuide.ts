@@ -5,7 +5,7 @@ Each row keeps the source that produced it, in the source column. Each answer al
 ## Which vendor serves what
 
 - Yahoo Finance (source yahoo): quotes, splits, dividends and the asset summary (assets) for BR and US tickers. Unofficial, for personal use, no service guarantee.
-- BCB SGS (source bcb): macro_series for the series ipca, cdi, selic and ptax. Open data.
+- BCB SGS (source bcb): macro_series for the series ipca, cdi, selic, ptax and igpm. Open data.
 - StatusInvest (source statusinvest): fundamentals and fii_monthly. The site may block the requests; a blocked load says so and writes nothing.
 - CVM (source cvm): filings for a company, from the yearly IPE file. Open data under ODbL. Filing types: material_fact, sustainability and other. Not every ticker has a CVM company yet.
 
@@ -17,7 +17,7 @@ Each row keeps the source that produced it, in the source column. Each answer al
 
 ## Units
 
-- macro_series.value: ipca is percent per month, cdi is percent per day, selic is percent per year, ptax is BRL per USD.
+- macro_series.value: ipca is percent per month, cdi is percent per day, selic is percent per year, ptax is BRL per USD, igpm is percent per month.
 - Amounts are plain numbers in currency units.
 
 ## See also

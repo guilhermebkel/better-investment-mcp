@@ -47,7 +47,7 @@ export class GetOverviewOperation implements OperationPort<GetOverviewInput> {
       "fii_monthly: FII monthly revenue, expenses, cash and distributions. Filter: market, ticker, asset_type.",
       "filings: the filings of a company with type, date and url. Filter: market, ticker, asset_type.",
       "chunks: the text of filings by section and page. Filter: market, ticker, asset_type and filing_type or filing_id.",
-      "macro_series: monthly and daily macro series (ipca, cdi, selic, ptax). Filter: series.",
+      "macro_series: monthly and daily macro series (ipca, cdi, selic, ptax, igpm). Filter: series.",
       "asset_coverage, cache_runs: what is loaded, and the load runs. No filter.",
     ];
   }

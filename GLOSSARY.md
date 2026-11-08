@@ -103,7 +103,7 @@ A quote row that moved more than 25% in one day and came back within 5% the next
 _Avoid_: error, outlier (the row is kept)
 
 **Series**:
-A macro series such as `ipca`, `cdi`, `selic` or `ptax`. It has no market; its registry market is `SERIES`.
+A macro series such as `ipca`, `cdi`, `selic`, `ptax` or `igpm`. It has no market; its registry market is `SERIES`.
 _Avoid_: indicator, index
 
 ## CVM open data

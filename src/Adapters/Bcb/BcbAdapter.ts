@@ -20,6 +20,7 @@ export class BcbAdapter implements ProviderPort<"macro"> {
     { name: "cdi", code: 12, unit: "percent per day" },
     { name: "selic", code: 432, unit: "percent per year (Copom target rate)" },
     { name: "ptax", code: 1, unit: "BRL per USD, sell rate" },
+    { name: "igpm", code: 189, unit: "percent change per month" },
   ];
 
   readonly category = "macro";
