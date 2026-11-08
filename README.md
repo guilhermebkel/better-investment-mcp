@@ -58,7 +58,7 @@ A provider variable names the vendor for each market: `BR:yahoo` uses one vendor
 | --- | --- | --- |
 | Yahoo Finance | quotes, dividends, splits, asset summary | Unofficial. Personal use, no service guarantee. |
 | BCB SGS | macro series (ipca, cdi, selic, ptax, igpm) | Open data. |
-| StatusInvest | fundamentals, FII monthly data | Built, but the site blocks requests from this server; its terms were not read (ADR 0010 was removed from main). |
+| StatusInvest | fundamentals, FII monthly data | Built, but the site blocks requests from this server; its terms were not read . |
 | CVM | filings list (IPE) | Open data under the ODbL (see below). A ticker needs a CNPJ link that no source gives yet. |
 | CVM | ITR, DFP, Formulário de Referência | Not built (issue #11). |
 | FNET | FII management reports | Built only if a spike passes. |

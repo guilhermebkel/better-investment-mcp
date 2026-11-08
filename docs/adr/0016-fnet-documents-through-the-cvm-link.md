@@ -12,4 +12,4 @@ The FII management reports listed in the CVM eventual fund file (issue #28, AC3)
 
 ## Open point
 
-FNET's terms of use for automated access were not read. ADR 0010 stopped a source on the same question. Until the owner reads the terms and records the decision here, the FNET host stays enabled only for the links CVM publishes.
+FNET's terms of use for automated access were not read. The StatusInvest source was stopped on the same question. Until the owner reads the terms and records the decision here, the FNET host stays enabled only for the links CVM publishes.

@@ -23,5 +23,5 @@ Issue #28 makes CVM open data the primary source for stocks and FIIs. Other sour
 ## Consequences and deviations
 
 - **Versions are kept as records, not as rows.** AC5 asks that the new version of a changed file is kept alongside the old one. The old file stays on record in `cvm_files` (`is_current = false`), but the rows of a period hold only the current version, so a query never counts a restated value twice. Keeping the old rows beside the new ones would need a default selection that the SQL guard does not yet apply; that is a follow-up decision.
-- **FII monthly data is CVM-only.** Merging CVM and StatusInvest field by field (P1, P2) needs a column-level source; StatusInvest is blocked from this server (ADR 0010), so the columns CVM does not carry stay null. A field-level merge is a follow-up.
+- **FII monthly data is CVM-only.** Merging CVM and StatusInvest field by field (P1, P2) needs a column-level source; StatusInvest is blocked from this server, so the columns CVM does not carry stay null. A field-level merge is a follow-up.
 - **A FII ticker needs a curated pair.** Until the CVM datasets carry a ticker for funds, each new FII is added to the list by hand with its CVM name, as a reviewed change.

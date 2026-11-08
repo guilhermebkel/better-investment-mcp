@@ -18,7 +18,7 @@
     },
     "FundDataProvider": {
       "status": "implemented",
-      "reason": "Monthly FII data from the CVM monthly fund files (#28): net worth and the balance columns, one row per reference month, with the version and the files. StatusInvest (#8) is built, but the site blocks requests from this server (ADR 0010), so its columns that CVM does not carry stay null."
+      "reason": "Monthly FII data from the CVM monthly fund files (#28): net worth and the balance columns, one row per reference month, with the version and the files. StatusInvest (#8) is built, but the site blocks requests from this server, so its columns that CVM does not carry stay null."
     },
     "FilingProvider": {
       "status": "implemented",
