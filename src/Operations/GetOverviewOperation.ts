@@ -10,7 +10,7 @@ export class GetOverviewOperation implements OperationPort<GetOverviewInput> {
   readonly description = "Read-only. Describes the server and its usage notice. Call it first to see what the server does. It takes no input and returns a short text.";
   readonly inputSchema = GetOverviewInputSchema;
 
-  execute(): OperationResult {
-    return { isError: false, message: GetOverviewOperation.USAGE_NOTICE };
+  execute(): Promise<OperationResult> {
+    return Promise.resolve({ isError: false, message: GetOverviewOperation.USAGE_NOTICE });
   }
 }

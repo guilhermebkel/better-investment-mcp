@@ -29,11 +29,6 @@ export class StoreService {
     this.cache = cache;
   }
 
-  static async prepare(env: Env): Promise<void> {
-    const store = await StoreService.open(env);
-    store.close();
-  }
-
   static async open(env: Env, nowMs: () => number = () => Date.now()): Promise<StoreService> {
     const cacheDir = env.INVESTMENT_MCP_CACHE_DIR ?? tmpdir();
     await StoreService.ensureDirectory(cacheDir);

@@ -12,6 +12,11 @@ export type CacheRunOutcome = {
   errorMessage?: string;
 };
 
-export type CacheLoadResult = { rowsRead: number };
+export type CacheLoadResult = {
+  rowsWritten: number;
+  source?: string;
+  isFallback: boolean;
+  errorMessage?: string;
+};
 
 export type FreshRunRow = { freshRunCount: number };

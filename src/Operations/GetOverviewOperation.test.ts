@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { GetOverviewOperation } from "@/Operations/GetOverviewOperation.ts";
 
 describe("GetOverviewOperation.execute()", () => {
-  it("answers with the usage notice and no error", () => {
-    const result = new GetOverviewOperation().execute();
+  it("answers with the usage notice and no error", async () => {
+    const result = await new GetOverviewOperation().execute();
 
     expect(result).toStrictEqual({
       isError: false,

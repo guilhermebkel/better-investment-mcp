@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import type { OperationResult } from "@/Protocols/OperationProtocol.ts";
+import type { OperationDependencies, OperationResult } from "@/Protocols/OperationProtocol.ts";
 import { OperationOutputSchema } from "@/Schemas/OperationSchema.ts";
 import { OperationManifestSurface } from "@/Surfaces/OperationManifestSurface.ts";
 
@@ -15,12 +15,12 @@ export class McpServerSurface {
     "The output describes and locates information. It is not investment advice.",
   ].join("\n");
 
-  static build(): McpServer {
+  static build(dependencies: OperationDependencies): McpServer {
     const server = new McpServer(
       { name: McpServerSurface.NAME, version: __PACKAGE_VERSION__ },
       { instructions: McpServerSurface.INSTRUCTIONS },
     );
-    for (const operation of OperationManifestSurface.listOperations()) {
+    for (const operation of OperationManifestSurface.listOperations(dependencies)) {
       server.registerTool(
         OperationManifestSurface.formatToolName(operation.name),
         {
@@ -29,7 +29,7 @@ export class McpServerSurface {
           outputSchema: OperationOutputSchema,
           annotations: { readOnlyHint: true },
         },
-        (input) => McpServerSurface.buildCallResult(operation.execute(input)),
+        async (input) => McpServerSurface.buildCallResult(await operation.execute(input)),
       );
     }
     return server;
@@ -38,7 +38,9 @@ export class McpServerSurface {
   static buildCallResult(result: OperationResult): CallToolResult {
     return {
       content: [{ type: "text", text: result.message }],
-      structuredContent: { message: result.message },
+      structuredContent: result.structuredResult === undefined
+        ? { message: result.message }
+        : { message: result.message, structuredResult: result.structuredResult },
       isError: result.isError,
     };
   }

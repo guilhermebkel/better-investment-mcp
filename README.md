@@ -13,7 +13,7 @@ The server exposes <!-- tools:count -->3<!-- /tools:count --> tools. All of them
 <!-- tools:list -->
 - `get_overview`: the server's usage notice.
 - `get_guide`: the guide for one topic of `query_sql`. The guide texts come later.
-- `query_sql`: one `SELECT` over the data tables. The data store comes later, so it answers with an error for now.
+- `query_sql`: one `SELECT` over the data tables. Every data table needs filters on `market`, `ticker` and `asset_type`; a query without them is refused with the filter to add. The rules are in `docs/product/sql-guard.md`.
 <!-- /tools:list -->
 
 ## Install
@@ -50,7 +50,7 @@ Every setting is an environment variable. The server reads them once at start an
 | `INVESTMENT_MCP_DOCUMENTS_PROVIDER` | unset | Document download source per market. Same rule. |
 | `INVESTMENT_MCP_MACRO_PROVIDER` | unset | Macro series source. Same rule. |
 
-The provider variables take effect as their adapters arrive.
+A provider variable names the vendor for each market: `BR:yahoo` uses one vendor, and `BR:yahoo>statusinvest` uses a second vendor only when the first fails. The vendors are added with their adapters.
 
 ## Data sources
 
