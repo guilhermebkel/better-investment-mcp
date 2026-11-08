@@ -17,7 +17,7 @@ export class VendorCatalogService {
     const bcbHttp = new HttpAdapter({ allowedHosts: [BcbAdapter.HOST] });
     const cvmHttp = new HttpAdapter({ allowedHosts: [CvmAdapter.HOST], maxBytes: CvmAdapter.MAX_FILE_BYTES });
     const cvmDocumentHttp = new HttpAdapter({
-      allowedHosts: [CvmDocumentAdapter.HOST],
+      allowedHosts: CvmDocumentAdapter.HOSTS,
       maxBytes: CvmDocumentAdapter.MAX_DOCUMENT_BYTES,
       timeoutMs: CvmDocumentAdapter.TIMEOUT_MS,
     });

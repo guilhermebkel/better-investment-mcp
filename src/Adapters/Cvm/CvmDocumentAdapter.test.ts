@@ -34,16 +34,44 @@ describe("CvmDocumentAdapter.fetchDocument()", () => {
     expect(requested).toStrictEqual([DOCUMENT_URL]);
   });
 
+  it("returns the document as plain bytes, not as a Node Buffer, which the PDF reader refuses", async () => {
+    const pdf = new TextEncoder().encode("%PDF-1.4\n%%EOF\n");
+    const { http } = buildHttp(Buffer.from(pdf));
+
+    const bytes = await new CvmDocumentAdapter(http).fetchDocument(DOCUMENT_URL);
+
+    expect(Buffer.isBuffer(bytes)).toBe(false);
+    expect(bytes).toStrictEqual(pdf);
+  });
+
   it("refuses an answer that is an HTML page instead of a PDF", async () => {
     const { http } = buildHttp(new TextEncoder().encode("<!DOCTYPE html><html><body>Pagina de erro</body></html>"));
 
     await expect(new CvmDocumentAdapter(http).fetchDocument(DOCUMENT_URL)).rejects.toThrow("CVM answered with a page, not a PDF document");
   });
 
-  it("refuses a link that is not on the CVM document host, and asks for nothing", async () => {
+  it("downloads a report that CVM indexes through its FNET link, the same way (P5)", async () => {
+    const pdf = new TextEncoder().encode("%PDF-1.7\n%%EOF\n");
+    const { http, requested } = buildHttp(pdf);
+    const fnetUrl = "https://fnet.bmfbovespa.com.br/fnet/publico/downloadDocumento?id=1035283";
+
+    const bytes = await new CvmDocumentAdapter(http).fetchDocument(fnetUrl);
+
+    expect(bytes).toStrictEqual(pdf);
+    expect(requested).toStrictEqual([fnetUrl]);
+  });
+
+  it("refuses a link to an FNET address without https, and asks for nothing", async () => {
     const { http, requested } = buildHttp(new Uint8Array());
 
-    await expect(new CvmDocumentAdapter(http).fetchDocument("https://example.org/doc.pdf")).rejects.toThrow("not a CVM document link");
+    await expect(new CvmDocumentAdapter(http).fetchDocument("http://fnet.bmfbovespa.com.br/x.pdf")).rejects.toThrow("not a CVM or FNET document link");
+    expect(requested).toStrictEqual([]);
+  });
+
+  it("refuses a link that is not on the CVM or FNET document host, and asks for nothing", async () => {
+    const { http, requested } = buildHttp(new Uint8Array());
+
+    await expect(new CvmDocumentAdapter(http).fetchDocument("https://example.org/doc.pdf")).rejects.toThrow("not a CVM or FNET document link");
     expect(requested).toStrictEqual([]);
   });
 });

@@ -12,6 +12,7 @@ All notable changes to this project are in this file. The format follows [Keep a
 - The CVM monthly FII files: net worth and the balance columns in `fii_monthly`, with each row's version and file (`version`, `source_file`).
 - A record of every CVM file downloaded (`cvm_files`: URL, year, hash, size, time), so a changed file is told apart from the one stored before.
 - A CVM failure is reported with its class (HTTP error, blocked request, file that could not be read, unmapped ticker) and never falls back to another source.
+- FII management reports are read from their FNET link (the CVM index is the origin): the text is indexed and searched with `search_chunks`, as the CVM documents are. The FNET terms of use were not read (ADR 0016).
 - A live contract check against the CVM open data (`pnpm test:integration`) for the PETR4 statements, the IRDM11 monthly data and report, and the company list.
 - Yahoo Finance adapter: quotes, dividends, splits and the asset summary for `BR` and `US` tickers, with the `is_stale` and `suspect_tick` flags.
 - BCB SGS adapter: the macro series `ipca`, `cdi`, `selic` and `ptax`, read in ten-year windows.
