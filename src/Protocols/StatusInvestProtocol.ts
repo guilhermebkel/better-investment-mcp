@@ -17,6 +17,8 @@ export type FiiCashField
     | "titulosprivados"
     | "fundosrendafixa";
 
+export type FiiNetWorthField = "value";
+
 export type FundCategory = "fundamentals" | "fund_data";
 
 export type StatusInvestKey = {

@@ -4,6 +4,7 @@ import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type {
   FiiCashField,
   FiiExpenseField,
+  FiiNetWorthField,
   FiiRentField,
   FundCategory,
   Pause,
@@ -16,8 +17,12 @@ const FORBIDDEN_STATUS = 403;
 const NOT_FOUND_STATUS = 404;
 const RATE_LIMIT_STATUS = 429;
 const BLOCKED_STATUSES: readonly number[] = [FORBIDDEN_STATUS, RATE_LIMIT_STATUS];
+const NOT_A_STATUS = 0;
 const PAD_LENGTH = 2;
 const PAUSE_MS = 1000;
+// Why: the site answers 403 with a bot challenge that can pass on a later try; the Gbkel flow retries it after 5 seconds, so this adapter does the same, twice at most.
+const FORBIDDEN_RETRIES = 2;
+const FORBIDDEN_RETRY_PAUSE_MS = 5000;
 const INDICATOR_YEARS = "5";
 const BRAZILIAN_DATE = /^(\d{2})\/(\d{2})\/(\d{4})$/u;
 
@@ -54,6 +59,10 @@ export class StatusInvestAdapter<Category extends FundCategory> implements Provi
     titulospublicos: "government_bonds",
     titulosprivados: "corporate_bonds",
     fundosrendafixa: "fixed_income_funds",
+  };
+
+  static readonly NET_WORTH_FIELD_TO_COLUMN: Readonly<Record<FiiNetWorthField, string>> = {
+    value: "net_worth",
   };
 
   readonly category: Category;
@@ -129,6 +138,7 @@ export class StatusInvestAdapter<Category extends FundCategory> implements Provi
       await this.fetchSection("getreceitas", ticker, StatusInvestAdapter.RENT_FIELD_TO_COLUMN),
       await this.fetchSection("getdespesas", ticker, StatusInvestAdapter.EXPENSE_FIELD_TO_COLUMN),
       await this.fetchSection("getcaixa", ticker, StatusInvestAdapter.CASH_FIELD_TO_COLUMN),
+      await this.fetchSection("getpatrimonioliquido", ticker, StatusInvestAdapter.NET_WORTH_FIELD_TO_COLUMN),
     ];
     for (const section of sections) {
       for (const [period, values] of section) {
@@ -165,17 +175,24 @@ export class StatusInvestAdapter<Category extends FundCategory> implements Provi
 
   private async callSite(send: () => Promise<string>): Promise<string> {
     await this.pause(this.pauseMs);
-    try {
-      return await send();
-    } catch (error) {
-      if (error instanceof HttpFailureError && error.status !== undefined && BLOCKED_STATUSES.includes(error.status)) {
-        const reason = `StatusInvest blocks this client (status ${error.status}); the run is recorded and no row was written`;
-        throw new Error(reason, { cause: error });
+    for (let retry = 0; ; retry++) {
+      try {
+        return await send();
+      } catch (error) {
+        if (error instanceof HttpFailureError && error.status === FORBIDDEN_STATUS && retry < FORBIDDEN_RETRIES) {
+          await this.pause(FORBIDDEN_RETRY_PAUSE_MS);
+          continue;
+        }
+        if (error instanceof HttpFailureError && BLOCKED_STATUSES.includes(error.status ?? NOT_A_STATUS)) {
+          const reason = `StatusInvest blocks this client (status ${error.status}); `
+            + "the run is recorded and no row was written";
+          throw new Error(reason, { cause: error });
+        }
+        if (error instanceof HttpFailureError && error.status === NOT_FOUND_STATUS) {
+          throw new Error("StatusInvest did not find the asset; no row was written", { cause: error });
+        }
+        throw error;
       }
-      if (error instanceof HttpFailureError && error.status === NOT_FOUND_STATUS) {
-        throw new Error("StatusInvest did not find the asset; no row was written", { cause: error });
-      }
-      throw error;
     }
   }
 

@@ -53,7 +53,7 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 - `splits.ratio` is the new shares per old share (a 2-for-1 split is 2).
 - `dividends.kind` is `dividend` for every Yahoo row; Yahoo does not tell a dividend from interest on equity.
 - `assets.sector` and `assets.legal_id` are null from Yahoo: its chart endpoint gives neither.
-- `fundamentals` and `fii_monthly` keep a missing value as null, never zero. `fii_monthly.net_worth` is null: the StatusInvest endpoint for it gives one value without a month.
+- `fundamentals` and `fii_monthly` keep a missing value as null, never zero. `fii_monthly.net_worth` is read from the monthly net worth endpoint and stays null for a month that endpoint does not cover.
 - `filings.filing_type` is `material_fact`, `sustainability` or `other`, from the CVM IPE categories. The IPE file does not hold ITR, DFP or Formulário de Referência; those come from other CVM datasets (issue #11) and are not built.
 - `filings.filing_id` is a hash of the delivery protocol, version and document link, so a re-delivery keeps its own row.
 - `filings.delivered_at` is the date of delivery at Brasília time (`-03:00`).
