@@ -15,7 +15,7 @@ export const LIMITS_GUIDE = `# Limits guide
 
 - Data already loaded works offline until its time is over.
 - A load that needs a vendor fails when the vendor does not answer. The answer names the vendor and the cause, and the previous rows stay.
-- A vendor that blocks or limits requests is reported with its status. Wait before you retry; the server does not retry in a loop.
+- A vendor that blocks or limits requests is reported with its status. The StatusInvest adapter retries a 403 twice, five seconds apart, then stops. Wait before you retry the load; the server does not retry in a loop.
 
 ## See also
 

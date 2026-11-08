@@ -7,9 +7,9 @@ Issue #8 asks the agent to read the StatusInvest terms of use and `robots.txt` b
 ## Decision
 
 - The owner decided to build the adapter anyway (a message in the session, 2026-11-08). The terms stay unread: nothing in the repository says the use is allowed.
-- The adapter identifies itself with its own User-Agent (`HttpAdapter.USER_AGENT`) and waits one second between calls (`StatusInvestAdapter.PAUSE_MS`), as issue #8 asks.
+- The adapter identifies itself with its own User-Agent (`HttpAdapter.USER_AGENT`) and waits one second between calls (`PAUSE_MS` in `StatusInvestAdapter.ts`), as issue #8 asks.
 - The adapter does not copy the User-Agent of another client. The Gbkel flows the issue references send `PostmanRuntime` "to avoid blocks"; a block is an access control, and imitating another client to pass it is not built.
-- A 403 or 429 from the site stops the load with a message that names the block and the status (issue #8, AC5). Nothing is retried in a loop.
+- A 403 or 429 from the site stops the load with a message that names the block and the status (issue #8, AC5). Nothing is retried in a loop. _Superseded in part by ADR 0012: a 403 is retried twice before the load stops._
 - Fixtures are written from the field list of the issue, not recorded from the site. Their tests say so.
 
 ## Consequences
