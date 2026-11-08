@@ -34,17 +34,13 @@ The CVM open data (IPE, `ipe_cia_aberta_2025.zip`) has no category named "Relat√
 ## Options
 
 - **(a) A source and an adapter: the CVM IPE communications whose subject names a sustainability report.** Official, the same host and format as the IPE adapter (#9), with a link from CVM. Partial coverage; the match is on the subject text, which can change. The adapter's current category mapping should be changed too.
-- **(b) A rule that takes the URL from the company's IR page.** Ten different sites, six or so layouts, and a new check each year. The terms of each site are not read (the same gap as ADR 0010).
+- **(b) A rule that takes the URL from the company's IR page.** Ten different sites, six or so layouts, and a new check each year. The terms of each site are not read.
 - **(c) The user gives the URL and the server indexes it.** The owner or the agent gives a company and a document URL; the server downloads that document from its host and indexes the text with the pipeline of #10. No crawling and no rule to maintain. It needs the host to be allowed for that one request, which the adapter's fixed host list does not do today.
 - **(d) Not supported yet.** The ADR records it and the feature is left out. The agent answers that these reports are not available.
 
 ## Recommendation
 
 Build (a) first: it is official, cheap, and covers the companies that file the report as a communication. For the rest, (c) gives full coverage for the owner's chosen companies without a rule per site. Do not build (b) until the site terms are read, because the maintenance cost is ten rules a year. The recommendation depends on the owner's decision on the coverage and on the terms.
-
-## Legal view
-
-No terms of use or `robots.txt` were read for these sites, so this ADR cannot say that automated access is allowed for any of them. Options (b) and (c) need that reading first; option (a) reads CVM open data, which is published under ODbL (see `docs/product/data-map.md`).
 
 ## Consequences
 

@@ -68,10 +68,6 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 - `filings.filing_id` is a hash of the delivery protocol, version and document link, so a re-delivery keeps its own row.
 - `filings.delivered_at` is the date of delivery at Brasília time (`-03:00`).
 
-## Licenses of the data
-
-CVM open data is published under ODbL, so this repository never ships a cached database. Yahoo Finance data is for personal use, with no service guarantee. BCB SGS data is open data. StatusInvest's terms of use were not read, and the site blocks requests from this server (ADR 0010).
-
 ## Known gap: tickers and CNPJ
 
 CVM's files carry the CNPJ of a company, not its ticker. The CVM filings and statements adapters need a ticker-to-CNPJ link to answer a query for `BR:PETR4`. No source in the repository gives that link yet, so the load fails with a message that names the ticker, and `filings` and `financial_statements` stay empty until the link is chosen.

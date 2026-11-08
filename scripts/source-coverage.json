@@ -10,7 +10,7 @@
     },
     "FundamentalsProvider": {
       "status": "implemented",
-      "reason": "Yearly fundamentals from StatusInvest; the adapter is built (#8), but the site blocks requests from this server, so loads fail with the block message (ADR 0010)."
+      "reason": "Yearly fundamentals from StatusInvest; the adapter is built (#8)"
     },
     "StatementProvider": {
       "status": "implemented",
@@ -18,7 +18,7 @@
     },
     "FundDataProvider": {
       "status": "implemented",
-      "reason": "Monthly FII data from StatusInvest; the adapter is built (#8), but the site blocks requests from this server, so loads fail with the block message (ADR 0010)."
+      "reason": "Monthly FII data from StatusInvest; the adapter is built (#8)"
     },
     "FilingProvider": {
       "status": "implemented",
