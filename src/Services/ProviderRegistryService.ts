@@ -2,11 +2,13 @@ import { ProviderConfigError } from "@/Errors/ProviderConfigError.ts";
 import { ProviderUnavailableError } from "@/Errors/ProviderUnavailableError.ts";
 import type { CacheCategory } from "@/Protocols/CacheProtocol.ts";
 import type { Env } from "@/Protocols/EnvProtocol.ts";
+import type { DocumentProvider } from "@/Protocols/DocumentProviderProtocol.ts";
 import type {
   CategoryToVendors,
   ProviderPort,
   ProviderSettingName,
   ResolvedProviders,
+  ServedVendor,
   VendorSettings,
 } from "@/Protocols/ProviderProtocol.ts";
 
@@ -70,24 +72,51 @@ export class ProviderRegistryService {
     return { primary, fallback: this.findProvider(category, fallbackName, market, assetType) };
   }
 
+  resolveDocument(market: string, assetType: string | undefined): DocumentProvider {
+    const settings = this.categoryToSettings.documents;
+    if (!Object.hasOwn(settings.marketToPrimary, market)) {
+      const detail = `${ProviderRegistryService.CATEGORY_TO_SETTING.documents} names the markets each provider serves`;
+      throw new ProviderUnavailableError(`no provider serves ${market} documents; ${detail}`);
+    }
+    const vendor = settings.marketToPrimary[market] ?? "";
+    const vendorToProvider = this.catalog.documents;
+    const provider: DocumentProvider | undefined = vendorToProvider[vendor];
+    if (provider === undefined || !Object.hasOwn(vendorToProvider, vendor)) {
+      throw new ProviderUnavailableError(`${vendor} is not a known documents provider`);
+    }
+    ProviderRegistryService.assertServes("documents", vendor, provider, market, assetType);
+    return provider;
+  }
+
   private findProvider(
     category: CacheCategory,
     vendor: string,
     market: string,
     assetType: string | undefined,
   ): ProviderPort {
-    const vendorToProvider: Record<string, ProviderPort> = this.catalog[category];
-    if (!Object.hasOwn(vendorToProvider, vendor)) {
+    const categoryVendors: unknown = this.catalog[category];
+    const vendorToProvider = categoryVendors as Record<string, ProviderPort>;
+    const provider: ProviderPort | undefined = vendorToProvider[vendor];
+    if (provider === undefined || !Object.hasOwn(vendorToProvider, vendor)) {
       throw new ProviderUnavailableError(`${vendor} is not a known ${category} provider`);
     }
-    const provider = vendorToProvider[vendor];
-    if (!provider?.markets.includes(market)) {
+    ProviderRegistryService.assertServes(category, vendor, provider, market, assetType);
+    return provider;
+  }
+
+  private static assertServes(
+    category: CacheCategory,
+    vendor: string,
+    provider: ServedVendor,
+    market: string,
+    assetType: string | undefined,
+  ): void {
+    if (!provider.markets.includes(market)) {
       throw new ProviderUnavailableError(`${vendor} does not serve ${market} ${category}`);
     }
     if (assetType !== undefined && !provider.assetTypes.includes(assetType)) {
       throw new ProviderUnavailableError(`${vendor} does not serve ${assetType} assets in ${category}`);
     }
-    return provider;
   }
 
   private static parseSetting(env: Env, category: CacheCategory): VendorSettings {

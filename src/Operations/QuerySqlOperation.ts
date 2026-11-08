@@ -2,7 +2,10 @@ import type { OperationData, OperationPort, OperationResult } from "@/Protocols/
 import type { LoadedEntry } from "@/Protocols/LoaderProtocol.ts";
 import type { QuerySqlDependencies, QuerySqlInput } from "@/Protocols/QuerySqlProtocol.ts";
 import { QuerySqlInputSchema } from "@/Schemas/QuerySqlSchema.ts";
+import type { OutputLimitResult } from "@/Protocols/OutputLimitProtocol.ts";
 import { OutputLimitService } from "@/Services/OutputLimitService.ts";
+
+const USABLE_STATUSES: ReadonlySet<LoadedEntry["status"]> = new Set<LoadedEntry["status"]>(["loaded", "fresh"]);
 
 const convertValue = (value: unknown): unknown => {
   // Why: the agent's JSON cannot hold a bigint, so counts that DuckDB returns as bigint become numbers.
@@ -52,15 +55,6 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
   private static answer(rows: Record<string, unknown>[], loaded: LoadedEntry[]): OperationResult {
     const plainRows = rows.map(convertRow);
     const limited = new OutputLimitService().limit(plainRows.map((row) => JSON.stringify(row)));
-    const unloaded = loaded.filter((entry) => entry.status === "failed");
-    // Why: an empty answer for an asset that failed to load says so, so the agent does not read it as "no data".
-    const causes = unloaded.map((entry) => entry.error ?? "unknown error").join("; ");
-    const emptyMessage = rows.length === 0 && unloaded.length > 0
-      ? `No rows. Some assets were not loaded: ${causes}. Check loaded for each asset.`
-      : `${limited.returnedRows} rows.`;
-    const cutMessage = limited.isTruncated
-      ? ` The answer was cut: ${limited.remainingRows} rows and ${limited.remainingChars} characters were left out. Narrow the query to get the rest.`
-      : "";
     const structuredResult: OperationData = {
       rows: plainRows.slice(0, limited.returnedRows),
       truncated: limited.isTruncated,
@@ -68,6 +62,48 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
       remainingChars: limited.remainingChars,
       loaded,
     };
-    return { isError: false, message: `${emptyMessage}${cutMessage}\n${limited.text}`, structuredResult };
+    const message = [
+      QuerySqlOperation.describeRows(rows.length, limited.returnedRows, loaded),
+      QuerySqlOperation.describeScans(loaded),
+      QuerySqlOperation.describeIndexFailures(loaded),
+      QuerySqlOperation.describeCut(limited),
+    ].join("");
+    return { isError: false, message: `${message}\n${limited.text}`, structuredResult };
+  }
+
+  private static describeRows(rowCount: number, returnedRows: number, loaded: LoadedEntry[]): string {
+    const unloaded = loaded.filter((entry) => entry.status === "failed");
+    if (rowCount > 0) {
+      return `${returnedRows} rows.`;
+    }
+    if (unloaded.length > 0) {
+      // Why: an empty answer for an asset that failed to load says so, so the agent does not read it as "no data".
+      const causes = unloaded.map((entry) => entry.error ?? "unknown error").join("; ");
+      return `No rows. Some assets were not loaded: ${causes}. Check loaded for each asset.`;
+    }
+    const isIndexed = loaded.some((entry) => entry.category === "documents" && QuerySqlOperation.isUsable(entry.status));
+    // Why: a document that was indexed and has no match is not the same as a document that was not loaded.
+    return isIndexed ? "0 rows. The filing was indexed, and no row matches the query." : "0 rows.";
+  }
+
+  private static isUsable(status: LoadedEntry["status"]): boolean {
+    return USABLE_STATUSES.has(status);
+  }
+
+  private static describeCut(limited: OutputLimitResult): string {
+    if (!limited.isTruncated) {
+      return "";
+    }
+    return ` The answer was cut: ${limited.remainingRows} rows and ${limited.remainingChars} characters were left out. Narrow the query to get the rest.`;
+  }
+
+  private static describeScans(loaded: LoadedEntry[]): string {
+    const pagesWithoutText = loaded.reduce((total, entry) => total + (entry.pagesWithoutText ?? 0), 0);
+    return pagesWithoutText > 0 ? ` ${pagesWithoutText} pages had no text (scanned images are not read; OCR is not available).` : "";
+  }
+
+  private static describeIndexFailures(loaded: LoadedEntry[]): string {
+    const [firstFailure] = loaded.flatMap((entry) => (entry.indexError === undefined ? [] : [entry.indexError]));
+    return firstFailure === undefined ? "" : ` The search index was not rebuilt, so search_chunks may be out of date: ${firstFailure}`;
   }
 }

@@ -1,3 +1,4 @@
+import type { ChunkRow } from "@/Protocols/DocumentTextProtocol.ts";
 import type { ProviderResult } from "@/Protocols/ProviderProtocol.ts";
 import type { Requirement } from "@/Protocols/SqlGuardProtocol.ts";
 
@@ -18,6 +19,19 @@ export type LoadedEntry = {
   rowsWritten: number;
   period?: Period;
   error?: string;
+  filingId?: string;
+  pagesWithoutText?: number;
+  indexError?: string;
+};
+
+export type FilingRow = {
+  filing_id: string;
+  market: string;
+  ticker: string;
+  asset_type: string;
+  filing_type: string;
+  url: string | null;
+  file_hash: string | null;
 };
 
 export type LoaderPort = { ensure(requirements: readonly Requirement[]): Promise<LoadedEntry[]> };
@@ -33,3 +47,10 @@ export type FetchOutcome = FetchAttempt & {
 };
 
 export type TableToColumns = Record<string, string[]>;
+
+export type DownloadOutcome = {
+  hash: string;
+  chunks: ChunkRow[];
+  pagesWithoutText: number;
+  errorMessage?: string;
+};

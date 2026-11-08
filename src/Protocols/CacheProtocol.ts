@@ -5,6 +5,7 @@ export type CacheRunStart = {
   market: string;
   ticker: string;
   source: string;
+  filingId?: string;
 };
 
 export type CacheRunOutcome = {
@@ -17,6 +18,8 @@ export type CacheLoadResult = {
   source?: string;
   isFallback: boolean;
   errorMessage?: string;
+  pagesWithoutText?: number;
+  indexError?: string;
 };
 
 export type FreshRunRow = { freshRunCount: number };

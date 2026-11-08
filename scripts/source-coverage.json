@@ -25,8 +25,8 @@
       "reason": "Filing list from the CVM IPE file (#9); a load of a ticker fails with a named error until a source maps tickers to CNPJ."
     },
     "DocumentProvider": {
-      "status": "planned",
-      "reason": "Document download and text for CVM and FNET filings; built in the document text issue."
+      "status": "implemented",
+      "reason": "Filing documents (PDF and HTML) from CVM through www.rad.cvm.gov.br; the CVM document adapter (#10) downloads them per filing, with a size limit and a host list. FNET documents come with #12."
     },
     "MacroProvider": {
       "status": "implemented",

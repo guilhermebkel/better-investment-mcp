@@ -12,6 +12,8 @@ const TTL_SECONDS = 60;
 const TEMP_PREFIX = join(tmpdir(), "cache-service-test-");
 const LOCK_TEMP_PREFIX = join(tmpdir(), "cache-lock-test-");
 
+const PETR4_KEY = "quotes:BR:PETR4";
+
 describe("CacheService.isFresh()", () => {
   let directory: string;
   let nowMs: number;
@@ -97,8 +99,8 @@ describe("CacheService.runOnce()", () => {
       };
 
       const results = await Promise.all([
-        store.cache.runOnce("quotes", "BR", "PETR4", load),
-        store.cache.runOnce("quotes", "BR", "PETR4", load),
+        store.cache.runOnce(PETR4_KEY, load),
+        store.cache.runOnce(PETR4_KEY, load),
       ]);
 
       expect([loads, results]).toStrictEqual([1, [{ rowsWritten: 5, source: "fake", isFallback: false }, { rowsWritten: 5, source: "fake", isFallback: false }]]);
@@ -113,8 +115,8 @@ describe("CacheService.runOnce()", () => {
         return Promise.resolve({ rowsWritten: loads, source: "fake", isFallback: false });
       };
 
-      await store.cache.runOnce("quotes", "BR", "PETR4", load);
-      const second = await store.cache.runOnce("quotes", "BR", "PETR4", load);
+      await store.cache.runOnce(PETR4_KEY, load);
+      const second = await store.cache.runOnce(PETR4_KEY, load);
 
       expect([loads, second]).toStrictEqual([2, { rowsWritten: 2, source: "fake", isFallback: false }]);
     });
@@ -130,8 +132,8 @@ describe("CacheService.runOnce()", () => {
       };
 
       await Promise.all([
-        store.cache.runOnce("quotes", "BR", "PETR4", load),
-        store.cache.runOnce("quotes", "BR", "VALE3", load),
+        store.cache.runOnce(PETR4_KEY, load),
+        store.cache.runOnce("quotes:BR:VALE3", load),
       ]);
 
       expect(loads).toBe(2);

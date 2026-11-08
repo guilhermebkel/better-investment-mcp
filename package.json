@@ -81,6 +81,8 @@
   },
   "dependencies": {
     "@duckdb/node-api": "2.0.0-r.1",
-    "@modelcontextprotocol/sdk": "1.32.2"
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "node-html-parser": "9.0.7",
+    "unpdf": "2.1.0"
   }
 }

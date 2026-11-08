@@ -18,8 +18,8 @@ export class CacheService {
   async startRun(run: CacheRunStart): Promise<string> {
     const runId = randomUUID();
     await this.writer.run(
-      "INSERT INTO cache_runs (run_id, category, market, ticker, source, started_at) VALUES (?, ?, ?, ?, ?, CAST(? AS TIMESTAMPTZ))",
-      [runId, run.category, run.market, run.ticker, run.source, this.formatIso(this.nowMs())],
+      "INSERT INTO cache_runs (run_id, category, market, ticker, source, started_at, filing_id) VALUES (?, ?, ?, ?, ?, CAST(? AS TIMESTAMPTZ), ?)",
+      [runId, run.category, run.market, run.ticker, run.source, this.formatIso(this.nowMs()), run.filingId ?? null],
     );
     return runId;
   }
@@ -41,13 +41,18 @@ export class CacheService {
     return CacheService.readFreshRunCount(rows) > 0;
   }
 
+  async isFreshFiling(filingId: string): Promise<boolean> {
+    const rows = await this.writer.readRows(
+      "SELECT CAST(count(*) AS INTEGER) AS freshRunCount FROM cache_runs WHERE category = 'documents' AND filing_id = ? AND error IS NULL AND expires_at > CAST(? AS TIMESTAMPTZ)",
+      [filingId, this.formatIso(this.nowMs())],
+    );
+    return CacheService.readFreshRunCount(rows) > 0;
+  }
+
   runOnce(
-    category: CacheCategory,
-    market: string,
-    ticker: string,
+    key: string,
     load: () => Promise<CacheLoadResult>,
   ): Promise<CacheLoadResult> {
-    const key = `${category}:${market}:${ticker}`;
     const inFlight = this.keyToInFlightLoad.get(key);
     // Why: two callers that ask for the same category, market and ticker at once share one load, so the vendor is called once.
     if (inFlight !== undefined) {

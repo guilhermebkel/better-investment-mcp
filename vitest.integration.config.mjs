@@ -8,7 +8,7 @@ export default defineConfig({
   ...baseConfig,
   test: {
     ...baseConfig.test,
-    include: ["scripts/**/*.integration.test.mjs"],
+    include: ["scripts/**/*.integration.test.{mjs,ts}"],
     exclude: ["**/node_modules/**", "dist/**"],
     testTimeout: SETUP_TIMEOUT_MS,
     hookTimeout: SETUP_TIMEOUT_MS,
