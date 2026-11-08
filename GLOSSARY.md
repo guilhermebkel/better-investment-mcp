@@ -105,3 +105,26 @@ _Avoid_: error, outlier (the row is kept)
 **Series**:
 A macro series such as `ipca`, `cdi`, `selic` or `ptax`. It has no market; its registry market is `SERIES`.
 _Avoid_: indicator, index
+
+## CVM open data
+
+**Reference period**:
+The period a row refers to: `period_end` for statements, `period` for FII monthly data, `reference_date` for filings. It is not the delivery date.
+_Avoid_: delivery date, filing date (`delivered_at` is the delivery date)
+
+**Version**:
+CVM's `VERSAO` of a row. A restated period comes in a later version; the row kept is the latest version of the period.
+_Avoid_: revision, draft
+
+**CNPJ**:
+The legal id of a company or a fund in CVM's files. A ticker reaches a CNPJ through the company list or the curated fund list, never through a name or an ISIN.
+_Avoid_: tax id, ISIN
+
+**Pending ticker**:
+A ticker with no CNPJ in the company list or the fund list. The load names it as pending and guesses no CNPJ.
+_Avoid_: unknown, missing (the ticker is known; its CNPJ is not)
+
+**Primary source**:
+The source a field is taken from first. CVM for what it carries. Another source only for a field CVM does not carry, and never after a CVM failure.
+_Avoid_: default, main
+

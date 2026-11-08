@@ -64,6 +64,8 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
     };
     const message = [
       QuerySqlOperation.describeRows(rows.length, limited.returnedRows, loaded),
+      QuerySqlOperation.describePeriodicity(rows.length, loaded),
+      QuerySqlOperation.describePeriods(loaded),
       QuerySqlOperation.describeScans(loaded),
       QuerySqlOperation.describeIndexFailures(loaded),
       QuerySqlOperation.describeCut(limited),
@@ -84,6 +86,22 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
     const isIndexed = loaded.some((entry) => entry.category === "documents" && QuerySqlOperation.isUsable(entry.status));
     // Why: a document that was indexed and has no match is not the same as a document that was not loaded.
     return isIndexed ? "0 rows. The filing was indexed, and no row matches the query." : "0 rows.";
+  }
+
+  private static describePeriodicity(rowCount: number, loaded: LoadedEntry[]): string {
+    const [periodicity] = loaded.flatMap((entry) => (entry.periodicity === undefined ? [] : [entry.periodicity]));
+    // Why: an empty month of a table published quarterly or yearly is explained with its periodicity, so it is not read as missing data (issue #28, AC9).
+    return rowCount === 0 && periodicity !== undefined ? ` Published periodicity: ${periodicity}.` : "";
+  }
+
+  private static describePeriods(loaded: LoadedEntry[]): string {
+    const windows = [...new Set(loaded.flatMap((entry) => {
+      return entry.requestedPeriod === undefined ? [] : [`${entry.requestedPeriod.from} to ${entry.requestedPeriod.to}`];
+    }))];
+    if (windows.length === 0) {
+      return "";
+    }
+    return ` Reference period loaded: ${windows.join(", ")}. Each row keeps its version (version) and its file (source_file); the latest version of each row is kept.`;
   }
 
   private static isUsable(status: LoadedEntry["status"]): boolean {

@@ -1,4 +1,5 @@
 import type { ChunkRow } from "@/Protocols/DocumentTextProtocol.ts";
+import type { PeriodWindow } from "@/Protocols/PeriodProtocol.ts";
 import type { ProviderResult } from "@/Protocols/ProviderProtocol.ts";
 import type { Requirement } from "@/Protocols/SqlGuardProtocol.ts";
 
@@ -22,6 +23,8 @@ export type LoadedEntry = {
   filingId?: string;
   pagesWithoutText?: number;
   indexError?: string;
+  requestedPeriod?: PeriodWindow;
+  periodicity?: string;
 };
 
 export type FilingRow = {
@@ -39,6 +42,7 @@ export type LoaderPort = { ensure(requirements: readonly Requirement[]): Promise
 export type FetchAttempt = {
   result: ProviderResult | undefined;
   errorMessage: string | undefined;
+  isFallbackBlocked: boolean;
 };
 
 export type FetchOutcome = FetchAttempt & {

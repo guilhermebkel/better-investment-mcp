@@ -1,4 +1,5 @@
 import type { CacheCategory } from "@/Protocols/CacheProtocol.ts";
+import type { PeriodBounds, PeriodConstraint } from "@/Protocols/PeriodProtocol.ts";
 
 export type DataTable
   = "quotes"
@@ -19,6 +20,7 @@ export type Requirement = {
   assetType?: string;
   filingId?: string;
   filingType?: string;
+  period?: PeriodBounds;
 };
 
 export type GuardAccepted = {
@@ -86,4 +88,15 @@ export type AssetKey = {
   market: string;
   ticker: string;
   assetType: string;
+};
+
+export type RefScope = {
+  isSingleRef: boolean;
+  constraints: Constraint[];
+  periodConstraints: PeriodConstraint[];
+};
+
+export type NodeShape = {
+  type: unknown;
+  children: unknown[];
 };

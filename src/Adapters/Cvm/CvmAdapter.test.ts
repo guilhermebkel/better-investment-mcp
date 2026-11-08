@@ -3,6 +3,7 @@ import { Readable } from "node:stream";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { CvmAdapter } from "@/Adapters/Cvm/CvmAdapter.ts";
+import { CvmUtil } from "@/Utils/CvmUtil.ts";
 import { FakeHttp } from "@/Testing/FakeHttp.ts";
 import { ZipFixture } from "@/Testing/ZipFixture.ts";
 
@@ -10,6 +11,7 @@ const FIXTURES = join(import.meta.dirname, "..", "..", "Testing", "fixtures", "c
 const SAMPLE = readFileSync(join(FIXTURES, "ipe-2024-petrobras-sample.csv"), "latin1");
 const PERIODIC_SAMPLE = readFileSync(join(FIXTURES, "periodic-sample.csv"), "latin1");
 const PETROBRAS = "33.000.167/0001-01";
+const PETROBRAS_DIGITS = "33000167000101";
 const SAMPLE_COMPANY = "12.345.678/0001-90";
 const key = { market: "BR", ticker: "PETR4", assetType: "stock" };
 const rowKey = { market: "BR", ticker: "PETR4", asset_type: "stock" };
@@ -77,7 +79,7 @@ describe("CvmAdapter.readRows()", () => {
   it("reads lines across chunk boundaries, with CRLF and a last line without a break (streaming)", () => {
     const bytes = new TextEncoder().encode("a;b\r\nc;d\r\nlast;line");
     const chunks = [bytes.slice(0, 3), bytes.slice(3, 4), bytes.slice(4, 9), bytes.slice(9)];
-    const decoded = CvmAdapter.readLines(Readable.from(chunks));
+    const decoded = CvmUtil.readLines(Readable.from(chunks));
     return collectLines(decoded).then((lines) => {
       expect(lines).toStrictEqual(["a;b", "c;d", "last;line"]);
     });
@@ -139,10 +141,11 @@ describe("CvmAdapter.fetchTables()", () => {
     expect(result.tables.filings).toHaveLength(7);
   });
 
-  it("names the ticker when it cannot be mapped to a company (AC3)", async () => {
-    const { http } = FakeHttp.buildServing({});
+  it("names the ticker as pending when it cannot be mapped to a company, and guesses nothing (AC8)", async () => {
+    const { http, urls } = FakeHttp.buildServing({});
     await expect(new CvmAdapter(http, () => Promise.resolve(undefined)).fetchTables(key))
-      .rejects.toThrow("cannot map BR:PETR4 to a CVM company");
+      .rejects.toThrow("unmapped: BR:PETR4 is pending");
+    expect(urls).toStrictEqual([]);
   });
 
   it("stops the load when a file is damaged, and writes nothing", async () => {
@@ -153,11 +156,73 @@ describe("CvmAdapter.fetchTables()", () => {
     await expect(new CvmAdapter(http, resolveKnownCompany, CvmAdapter.BASE_URL, () => CURRENT_YEAR).fetchTables(key))
       .rejects.toThrow("not a zip archive");
   });
-});
 
-describe("CvmAdapter.resolveYears()", () => {
-  it("gives the current year and the two years before it, from the first IPE year", () => {
-    expect(CvmAdapter.resolveYears(2025)).toStrictEqual([2023, 2024, 2025]);
-    expect(CvmAdapter.resolveYears(2004)).toStrictEqual([2003, 2004]);
+  describe("with a period", () => {
+    it("loads only the years of the period, including a past year, and no other year (AC4)", async () => {
+      const { http, urls } = FakeHttp.buildServing({});
+      const window = { from: "2019-06-01", to: "2020-03-31" };
+      const adapter = new CvmAdapter(http, resolveKnownCompany, CvmAdapter.BASE_URL, () => CURRENT_YEAR);
+      await adapter.fetchTables({ ...key, period: window });
+      expect(urls.filter((url) => url.includes("_2018.zip") || url.includes("_2021.zip"))).toStrictEqual([]);
+      expect(urls.filter((url) => url.includes("_2019.zip"))).toHaveLength(4);
+      expect(urls.filter((url) => url.includes("_2020.zip"))).toHaveLength(4);
+    });
+
+    it("keeps only the filings whose reference date is inside the period, and a row with no reference date is left out", async () => {
+      const window = { from: "2025-01-01", to: "2025-12-31" };
+      const inside = `${PETROBRAS};X;1;2025-06-30;Relatório de Sustentabilidade;;;Relato;2025-07-01;AP;PROTO-IN;1;https://example.org/in`;
+      const outside = `${PETROBRAS};X;1;2024-06-30;Relatório de Sustentabilidade;;;Relato;2025-07-01;AP;PROTO-OUT;1;https://example.org/out`;
+      const undated = `${PETROBRAS};X;1;;Relatório de Sustentabilidade;;;Relato;2025-07-01;AP;PROTO-NONE;1;https://example.org/none`;
+      const header = splitLines(SAMPLE)[0] ?? "";
+      const rows = await CvmAdapter.readRows([header, inside, outside, undated], PETROBRAS_DIGITS, rowKey, window);
+      expect(rows.map((row) => row.reference_date)).toStrictEqual(["2025-06-30"]);
+    });
+
+    it("does not look at the reference date when no period is given", async () => {
+      const header = splitLines(SAMPLE)[0] ?? "";
+      const undated = `${PETROBRAS};X;1;;Relatório de Sustentabilidade;;;Relato;2025-07-01;AP;PROTO-NONE;1;https://example.org/none`;
+      const rows = await CvmAdapter.readRows([header, undated], PETROBRAS_DIGITS, rowKey);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]?.reference_date).toBeNull();
+    });
+  });
+
+  describe("failures", () => {
+    it("names a server error as an HTTP error and loads nothing after it (AC7)", async () => {
+      const { HttpFailureError } = await import("@/Errors/HttpFailureError.ts");
+      const http = {
+        getText: () => Promise.reject(new Error("not used")),
+        postForm: () => Promise.reject(new Error("not used")),
+        getCookies: () => Promise.reject(new Error("not used")),
+        getBytes: () => Promise.reject(new HttpFailureError("the vendor answered with status 500", 500)),
+      };
+      await expect(new CvmAdapter(http, resolveKnownCompany, CvmAdapter.BASE_URL, () => CURRENT_YEAR).fetchTables(key))
+        .rejects.toThrow("CVM: HTTP error:");
+    });
+
+    it("names a refused request as blocked, not as a missing file (AC7)", async () => {
+      const { HttpRefusedError } = await import("@/Errors/HttpRefusedError.ts");
+      const http = {
+        getText: () => Promise.reject(new Error("not used")),
+        postForm: () => Promise.reject(new Error("not used")),
+        getCookies: () => Promise.reject(new Error("not used")),
+        getBytes: () => Promise.reject(new HttpRefusedError("the vendor redirected the request, and redirects are not followed")),
+      };
+      await expect(new CvmAdapter(http, resolveKnownCompany, CvmAdapter.BASE_URL, () => CURRENT_YEAR).fetchTables(key))
+        .rejects.toThrow("CVM: blocked or refused request:");
+    });
+
+    it("records each downloaded file with its URL, year, size and hash, so a version can be told apart (S4)", async () => {
+      const ipe = ZipFixture.buildZipOf({ "ipe_cia_aberta_2024.csv": SAMPLE });
+      const { http } = FakeHttp.buildServing({ [`${BASE}/IPE/DADOS/ipe_cia_aberta_2024.zip`]: ipe });
+      const result = await new CvmAdapter(http, resolveKnownCompany, CvmAdapter.BASE_URL, () => CURRENT_YEAR).fetchTables({ ...key, period: { from: "2024-01-01", to: "2024-12-31" } });
+      expect(result.files).toStrictEqual([{
+        url: `${BASE}/IPE/DADOS/ipe_cia_aberta_2024.zip`,
+        dataset: "cia_aberta-doc-ipe",
+        referenceYear: 2024,
+        sha256: CvmUtil.buildFileRecord(`${BASE}/IPE/DADOS/ipe_cia_aberta_2024.zip`, "x", 2024, ipe).sha256,
+        sizeBytes: ipe.byteLength,
+      }]);
+    });
   });
 });

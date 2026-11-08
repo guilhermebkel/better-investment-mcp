@@ -9,22 +9,23 @@ const FII_COLUMNS = [
 ].map((column) => `${column} DOUBLE`).join(", ");
 
 export class DuckDbSchemaAdapter {
-  static readonly VERSION = 2;
+  static readonly VERSION = 3;
 
   static readonly STATEMENTS: readonly string[] = [
     "CREATE TABLE schema_version (version INTEGER NOT NULL);",
     `INSERT INTO schema_version (version) VALUES (${DuckDbSchemaAdapter.VERSION});`,
     `CREATE TABLE assets (${ASSET_KEY}, legal_id VARCHAR, name VARCHAR, sector VARCHAR, currency VARCHAR, PRIMARY KEY (market, ticker));`,
-    `CREATE TABLE filings (filing_id VARCHAR PRIMARY KEY, ${ASSET_KEY}, filing_type VARCHAR, category VARCHAR, delivered_at TIMESTAMPTZ, subject VARCHAR, url VARCHAR, file_hash VARCHAR, source VARCHAR NOT NULL);`,
+    `CREATE TABLE filings (filing_id VARCHAR PRIMARY KEY, ${ASSET_KEY}, filing_type VARCHAR, category VARCHAR, reference_date DATE, delivered_at TIMESTAMPTZ, subject VARCHAR, url VARCHAR, file_hash VARCHAR, source VARCHAR NOT NULL);`,
     `CREATE TABLE chunks (filing_id VARCHAR NOT NULL, ${ASSET_KEY}, filing_type VARCHAR NOT NULL, section VARCHAR, page INTEGER, seq INTEGER NOT NULL, text VARCHAR NOT NULL, PRIMARY KEY (filing_id, seq));`,
     `CREATE TABLE quotes (${ASSET_KEY}, date DATE NOT NULL, open DOUBLE, high DOUBLE, low DOUBLE, close DOUBLE, adj_close DOUBLE, volume DOUBLE, is_stale BOOLEAN, suspect_tick BOOLEAN, source VARCHAR NOT NULL, PRIMARY KEY (market, ticker, date));`,
     `CREATE TABLE dividends (${ASSET_KEY}, ex_date DATE NOT NULL, pay_date DATE, amount DOUBLE, kind VARCHAR NOT NULL, source VARCHAR NOT NULL, PRIMARY KEY (market, ticker, ex_date, kind));`,
     `CREATE TABLE splits (${ASSET_KEY}, date DATE NOT NULL, ratio DOUBLE, source VARCHAR NOT NULL);`,
     `CREATE TABLE fundamentals (${ASSET_KEY}, year INTEGER NOT NULL, metric VARCHAR NOT NULL, value DOUBLE, source VARCHAR NOT NULL, PRIMARY KEY (market, ticker, year, metric));`,
-    `CREATE TABLE financial_statements (${ASSET_KEY}, period_end DATE NOT NULL, period_type VARCHAR NOT NULL, statement VARCHAR NOT NULL, line_item VARCHAR NOT NULL, value DOUBLE, currency VARCHAR, source VARCHAR NOT NULL);`,
-    `CREATE TABLE fii_monthly (${ASSET_KEY}, period DATE NOT NULL, ${FII_COLUMNS}, source VARCHAR NOT NULL, PRIMARY KEY (market, ticker, period));`,
+    `CREATE TABLE financial_statements (${ASSET_KEY}, period_end DATE NOT NULL, period_type VARCHAR NOT NULL, statement VARCHAR NOT NULL, line_item VARCHAR NOT NULL, value DOUBLE, currency VARCHAR, source VARCHAR NOT NULL, version INTEGER, source_file VARCHAR);`,
+    `CREATE TABLE fii_monthly (${ASSET_KEY}, period DATE NOT NULL, ${FII_COLUMNS}, source VARCHAR NOT NULL, version INTEGER, source_file VARCHAR, PRIMARY KEY (market, ticker, period));`,
     "CREATE TABLE macro_series (series VARCHAR NOT NULL, date DATE NOT NULL, value DOUBLE, source VARCHAR NOT NULL, PRIMARY KEY (series, date));",
-    "CREATE TABLE cache_runs (run_id VARCHAR PRIMARY KEY, category VARCHAR NOT NULL, market VARCHAR NOT NULL, ticker VARCHAR NOT NULL, source VARCHAR NOT NULL, started_at TIMESTAMPTZ NOT NULL, finished_at TIMESTAMPTZ, expires_at TIMESTAMPTZ, rows_read BIGINT, error VARCHAR, filing_id VARCHAR);",
+    "CREATE TABLE cache_runs (run_id VARCHAR PRIMARY KEY, category VARCHAR NOT NULL, market VARCHAR NOT NULL, ticker VARCHAR NOT NULL, source VARCHAR NOT NULL, started_at TIMESTAMPTZ NOT NULL, finished_at TIMESTAMPTZ, expires_at TIMESTAMPTZ, rows_read BIGINT, error VARCHAR, filing_id VARCHAR, period_from DATE, period_to DATE);",
+    "CREATE TABLE cvm_files (url VARCHAR NOT NULL, dataset VARCHAR NOT NULL, reference_year INTEGER NOT NULL, sha256 VARCHAR NOT NULL, size_bytes BIGINT NOT NULL, fetched_at TIMESTAMPTZ NOT NULL, is_current BOOLEAN NOT NULL, PRIMARY KEY (url, sha256));",
     "CREATE VIEW document_text AS SELECT filing_id, seq, section, page, text FROM chunks ORDER BY filing_id, seq;",
     [
       "CREATE VIEW asset_coverage AS",

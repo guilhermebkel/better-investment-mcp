@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { CacheCategory, CacheLoadResult, CacheRunOutcome, CacheRunStart } from "@/Protocols/CacheProtocol.ts";
 import type { DatabasePort } from "@/Protocols/DatabaseProtocol.ts";
+import type { PeriodWindow } from "@/Protocols/PeriodProtocol.ts";
 import { FreshRunRowsSchema, SourceRowsSchema } from "@/Schemas/CacheSchema.ts";
 
 export class CacheService {
@@ -18,8 +19,11 @@ export class CacheService {
   async startRun(run: CacheRunStart): Promise<string> {
     const runId = randomUUID();
     await this.writer.run(
-      "INSERT INTO cache_runs (run_id, category, market, ticker, source, started_at, filing_id) VALUES (?, ?, ?, ?, ?, CAST(? AS TIMESTAMPTZ), ?)",
-      [runId, run.category, run.market, run.ticker, run.source, this.formatIso(this.nowMs()), run.filingId ?? null],
+      "INSERT INTO cache_runs (run_id, category, market, ticker, source, started_at, filing_id, period_from, period_to) VALUES (?, ?, ?, ?, ?, CAST(? AS TIMESTAMPTZ), ?, CAST(? AS DATE), CAST(? AS DATE))",
+      [
+        runId, run.category, run.market, run.ticker, run.source, this.formatIso(this.nowMs()), run.filingId ?? null,
+        run.period?.from ?? null, run.period?.to ?? null,
+      ],
     );
     return runId;
   }
@@ -33,10 +37,13 @@ export class CacheService {
     );
   }
 
-  async isFresh(category: CacheCategory, market: string, ticker: string): Promise<boolean> {
+  async isFresh(category: CacheCategory, market: string, ticker: string, window?: PeriodWindow): Promise<boolean> {
+    // Why: a run of a period covers a window only when the run's own period contains it, so a load of 2024 does not answer for 2019.
+    const periodCondition = window === undefined ? "" : " AND period_from <= CAST(? AS DATE) AND period_to >= CAST(? AS DATE)";
+    const periodValues = window === undefined ? [] : [window.from, window.to];
     const rows = await this.writer.readRows(
-      "SELECT CAST(count(*) AS INTEGER) AS freshRunCount FROM cache_runs WHERE category = ? AND market = ? AND ticker = ? AND error IS NULL AND expires_at > CAST(? AS TIMESTAMPTZ)",
-      [category, market, ticker, this.formatIso(this.nowMs())],
+      `SELECT CAST(count(*) AS INTEGER) AS freshRunCount FROM cache_runs WHERE category = ? AND market = ? AND ticker = ? AND error IS NULL AND expires_at > CAST(? AS TIMESTAMPTZ)${periodCondition}`,
+      [category, market, ticker, this.formatIso(this.nowMs()), ...periodValues],
     );
     return CacheService.readFreshRunCount(rows) > 0;
   }

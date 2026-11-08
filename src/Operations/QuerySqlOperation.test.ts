@@ -2,6 +2,8 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const QUERY_NOW_MS = Date.parse("2026-11-08T12:00:00Z");
 import { QuerySqlOperation } from "@/Operations/QuerySqlOperation.ts";
 import { LoaderService } from "@/Services/LoaderService.ts";
 import { ProviderRegistryService } from "@/Services/ProviderRegistryService.ts";
@@ -37,6 +39,9 @@ describe("QuerySqlOperation.execute()", () => {
   let operation: QuerySqlOperation;
 
   beforeEach(async () => {
+    // Why: the default period follows the current year, so the clock is fixed for the whole test.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(QUERY_NOW_MS);
     directory = mkdtempSync(TEMP_PREFIX);
     vi.spyOn(process.stderr, "write").mockReturnValue(true);
     store = await StoreService.open(
@@ -63,6 +68,7 @@ describe("QuerySqlOperation.execute()", () => {
 
   afterEach(() => {
     store.close();
+    vi.useRealTimers();
     vi.restoreAllMocks();
     rmSync(directory, { recursive: true, force: true });
   });
@@ -185,6 +191,7 @@ describe("QuerySqlOperation.execute()", () => {
               asset_type: "stock",
               filing_type: "material_fact",
               category: "Fato Relevante",
+              reference_date: "2026-03-01",
               delivered_at: "2026-03-01T00:00:00-03:00",
               subject: "Fato relevante",
               url: "https://www.rad.cvm.gov.br/ENET/doc-material-fact",
@@ -234,6 +241,46 @@ describe("QuerySqlOperation.execute()", () => {
 
       expect(result.message).toContain("1 pages had no text");
       expect(result.structuredResult?.loaded).toStrictEqual([expect.objectContaining({ category: "documents", pagesWithoutText: 1 })]);
+    });
+  });
+
+  describe("for a month with no row", () => {
+    const MONTH_START = "2024-05-01";
+    const MONTH_END = "2024-05-31";
+    const MONTH_SQL = `SELECT value FROM financial_statements WHERE ${FILTER} AND period_end BETWEEN '${MONTH_START}' AND '${MONTH_END}'`;
+    const PERIODICITY = "quarterly (ITR: three months and year to date) and yearly (DFP); a month has no value of its own";
+
+    it("states the published periodicity and the period loaded, so an empty month is not read as missing data (AC9)", async () => {
+      const directory = mkdtempSync(TEMP_PREFIX);
+      vi.spyOn(process.stderr, "write").mockReturnValue(true);
+      const store = await StoreService.open(
+        { INVESTMENT_MCP_LOG_LEVEL: "error", INVESTMENT_MCP_CACHE_DIR: directory, INVESTMENT_MCP_CACHE_TTL_SECONDS: 60 },
+        () => START_MS,
+      );
+      const loader = {
+        ensure: () => Promise.resolve([{
+          market: BR_MARKET,
+          ticker: PETR4_TICKER,
+          category: "statements" as const,
+          status: "loaded" as const,
+          isFallback: false,
+          rowsWritten: 0,
+          requestedPeriod: { from: MONTH_START, to: MONTH_END },
+          periodicity: PERIODICITY,
+        }]),
+      };
+      const operation = new QuerySqlOperation({
+        loader,
+        guard: new SqlGuardService(store.writer),
+        openReader: () => store.openReader(),
+      });
+      const answer = await operation.execute({ sql: MONTH_SQL });
+      store.close();
+      rmSync(directory, { recursive: true, force: true });
+      expect(answer.isError).toBe(false);
+      expect(answer.message).toContain("0 rows.");
+      expect(answer.message).toContain(`Published periodicity: ${PERIODICITY}.`);
+      expect(answer.message).toContain(`Reference period loaded: ${MONTH_START} to ${MONTH_END}.`);
     });
   });
 });

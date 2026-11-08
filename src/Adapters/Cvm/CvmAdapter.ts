@@ -1,20 +1,20 @@
 import { createHash } from "node:crypto";
-import { HttpFailureError } from "@/Errors/HttpFailureError.ts";
-import type { CvmFilingKind, CvmKey, CvmPeriodicKind, KnownCvmCategory, LegalIdLookup } from "@/Protocols/CvmProtocol.ts";
+import { CvmBaseAdapter } from "@/Adapters/Cvm/CvmBaseAdapter.ts";
+import { CvmFundFilingAdapter } from "@/Adapters/Cvm/CvmFundFilingAdapter.ts";
+import type { CvmCollection, CvmFilingKind, CvmKey, CvmPeriodicKind, KnownCvmCategory, LegalIdLookup } from "@/Protocols/CvmProtocol.ts";
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
-import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
+import type { PeriodWindow } from "@/Protocols/PeriodProtocol.ts";
+import type { ProviderFile, ProviderPort, ProviderRequest, ProviderResult, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
+import { PeriodService } from "@/Services/PeriodService.ts";
+import { CvmUtil } from "@/Utils/CvmUtil.ts";
 import { ZipUtil } from "@/Utils/ZipUtil.ts";
 
-const NOT_FOUND_STATUS = 404;
 const FIRST_IPE_YEAR = 2003;
-const LOOKBACK_YEARS = 2;
 const BYTES_PER_MIB = 1_048_576;
 const MAX_FILE_MIB = 64;
 const FILING_ID_LENGTH = 32;
 const SEPARATOR = ";";
 const LOCAL_TIME_OFFSET = "T00:00:00-03:00";
-const CNPJ_NON_DIGITS = /\D/gu;
-const LINE_BREAK = /\r?\n/u;
 const COLUMNS = [
   "CNPJ_Companhia", "Nome_Companhia", "Codigo_CVM", "Data_Referencia", "Categoria", "Tipo", "Especie",
   "Assunto", "Data_Entrega", "Tipo_Apresentacao", "Protocolo_Entrega", "Versao", "Link_Download",
@@ -24,29 +24,27 @@ const PERIODIC_COLUMNS = [
 ] as const;
 const PERIODIC_KINDS: readonly CvmPeriodicKind[] = ["itr", "dfp", "fre"];
 const PERIODIC_FORMAT_ERROR = "the response format changed: an ITR, DFP or FRE file is not the one the adapter reads; no row was written";
+const FUND_ASSET_TYPE = "fii" as const;
 const CATEGORY_TO_KIND: ReadonlyMap<KnownCvmCategory, CvmFilingKind> = new Map<KnownCvmCategory, CvmFilingKind>([
   ["Fato Relevante", "material_fact"],
   ["Relatório de Sustentabilidade", "sustainability"],
 ]);
 
-export class CvmAdapter implements ProviderPort<"filings"> {
+export class CvmAdapter extends CvmBaseAdapter implements ProviderPort<"filings"> {
   static readonly VENDOR = "cvm";
-  static readonly HOST = "dados.cvm.gov.br";
-  static readonly BASE_URL = `https://${CvmAdapter.HOST}`;
+  static readonly HOST = CvmUtil.HOST;
+  static readonly BASE_URL = CvmUtil.BASE_URL;
   // Why: the yearly ITR zip is about 32 MB and the IPE zip about 2 MB; the catalog gives the HTTP port this limit, for CVM files only.
   static readonly MAX_FILE_BYTES = MAX_FILE_MIB * BYTES_PER_MIB;
   static readonly MARKETS: readonly "BR"[] = ["BR"];
   static readonly ASSET_TYPES: readonly ("stock" | "fii" | "etf")[] = ["stock", "fii", "etf"];
 
   readonly category = "filings";
-  readonly vendor = CvmAdapter.VENDOR;
+  readonly vendor = CvmUtil.VENDOR;
   readonly markets = CvmAdapter.MARKETS;
   readonly assetTypes = CvmAdapter.ASSET_TYPES;
 
-  private readonly http: HttpPort;
-  private readonly lookup: LegalIdLookup;
-  private readonly baseUrl: string;
-  private readonly currentYear: () => number;
+  private readonly fundFilings: CvmFundFilingAdapter;
 
   constructor(
     http: HttpPort,
@@ -54,80 +52,44 @@ export class CvmAdapter implements ProviderPort<"filings"> {
     baseUrl: string = CvmAdapter.BASE_URL,
     currentYear: () => number = () => new Date().getUTCFullYear(),
   ) {
-    this.http = http;
-    this.lookup = lookup;
-    this.baseUrl = baseUrl;
-    this.currentYear = currentYear;
+    super(http, lookup, baseUrl, currentYear);
+    this.fundFilings = new CvmFundFilingAdapter(http, baseUrl);
   }
 
-  async fetchTables(request: ProviderRequest): Promise<ProviderResult> {
-    if (request.assetType === undefined) {
-      throw new Error("CVM needs the asset type of the asset");
+  fetchTables(request: ProviderRequest): Promise<ProviderResult> {
+    return super.fetchTables(request);
+  }
+
+  protected async collectTables(request: ProviderRequest): Promise<ProviderResult> {
+    const defaultWindow = PeriodService.buildDefaultWindow(this.currentYear());
+    const { key, cnpjDigits, window } = await CvmUtil.resolveSubject(this.lookup, request, defaultWindow);
+    if (request.assetType === FUND_ASSET_TYPE) {
+      const files: ProviderFile[] = [];
+      const rows = await this.fundFilings.fetchFilings({ cnpjDigits, key, window, files });
+      return { source: CvmUtil.VENDOR, tables: { filings: rows }, files };
     }
-    const cnpj = await this.lookup(request.market, request.ticker);
-    if (cnpj === undefined) {
-      throw new Error(CvmAdapter.buildUnmappedMessage(request.market, request.ticker));
-    }
-    const digits = CvmAdapter.readDigits(cnpj);
-    const key: CvmKey = { market: request.market, ticker: request.ticker, asset_type: request.assetType };
-    const filingIdToRow = new Map<string, ProviderRow>();
-    for (const year of CvmAdapter.resolveYears(this.currentYear())) {
-      await this.collectIpeYear(year, digits, key, filingIdToRow);
+    const collection: CvmCollection = {
+      key,
+      window,
+      cnpjDigits,
+      files: [],
+      filingIdToRow: new Map<string, ProviderRow>(),
+    };
+    for (const year of PeriodService.readYears(window)) {
+      await this.collectIpeYear(year, collection);
       for (const kind of PERIODIC_KINDS) {
-        await this.collectPeriodicYear(kind, year, digits, key, filingIdToRow);
+        await this.collectPeriodicYear(kind, year, collection);
       }
     }
-    return { source: CvmAdapter.VENDOR, tables: { filings: [...filingIdToRow.values()] } };
-  }
-
-  static buildUnmappedMessage(market: string, ticker: string): string {
-    return `cannot map ${market}:${ticker} to a CVM company; no CNPJ is known for it`;
-  }
-
-  static resolveYears(currentYear: number): number[] {
-    const first = Math.max(FIRST_IPE_YEAR, currentYear - LOOKBACK_YEARS);
-    return Array.from({ length: currentYear - first + 1 }, (_, index) => first + index);
-  }
-
-  static buildZipUrl(baseUrl: string, folder: string, stem: string, year: number): string {
-    return `${baseUrl}/dados/CIA_ABERTA/DOC/${folder}/DADOS/${stem}_cia_aberta_${year}.zip`;
-  }
-
-  static async fetchZip(http: HttpPort, url: string): Promise<Uint8Array | undefined> {
-    try {
-      return await http.getBytes(url);
-    } catch (error) {
-      // Why: a year without a file (the current year, early in the year) is skipped; any other failure stops the load.
-      if (error instanceof HttpFailureError && error.status === NOT_FOUND_STATUS) {
-        return undefined;
-      }
-      throw error;
-    }
-  }
-
-  static async* readLines(chunks: AsyncIterable<Uint8Array>): AsyncGenerator<string> {
-    // Why: the file is decoded in chunks and yielded as whole lines, so the decoded file is never held in memory as one string.
-    const decoder = new TextDecoder("windows-1252");
-    let carry = "";
-    for await (const chunk of chunks) {
-      const parts = (carry + decoder.decode(chunk, { stream: true })).split(LINE_BREAK);
-      carry = parts.pop() ?? "";
-      for (const part of parts) {
-        if (part !== "") {
-          yield part;
-        }
-      }
-    }
-    const last = carry + decoder.decode();
-    if (last !== "") {
-      yield last;
-    }
+    const filings = [...collection.filingIdToRow.values()];
+    return { source: CvmUtil.VENDOR, tables: { filings }, files: collection.files };
   }
 
   static async readRows(
     lines: AsyncIterable<string> | Iterable<string>,
     cnpjDigits: string,
     key: CvmKey,
+    window?: PeriodWindow,
   ): Promise<ProviderRow[]> {
     let isHeader = true;
     let isEmpty = true;
@@ -138,7 +100,7 @@ export class CvmAdapter implements ProviderPort<"filings"> {
         isHeader = false;
       } else {
         // Why: only the lines of the one company become rows, so other companies' rows are never kept.
-        const row = CvmAdapter.readLine(line, cnpjDigits, key);
+        const row = CvmAdapter.readLine(line, cnpjDigits, key, window);
         if (row !== undefined) {
           rows.push(row);
         }
@@ -157,7 +119,12 @@ export class CvmAdapter implements ProviderPort<"filings"> {
     }
   }
 
-  private static readLine(line: string, cnpjDigits: string, key: CvmKey): ProviderRow | undefined {
+  private static readLine(
+    line: string,
+    cnpjDigits: string,
+    key: CvmKey,
+    window: PeriodWindow | undefined,
+  ): ProviderRow | undefined {
     if (line === "") {
       return undefined;
     }
@@ -167,7 +134,10 @@ export class CvmAdapter implements ProviderPort<"filings"> {
     }
     const pairs = COLUMNS.map((column, index) => [column, fields[index] ?? ""] as const);
     const columnToValue = Object.fromEntries(pairs);
-    if (CvmAdapter.readDigits(columnToValue.CNPJ_Companhia ?? "") !== cnpjDigits) {
+    if (CvmUtil.readDigits(columnToValue.CNPJ_Companhia ?? "") !== cnpjDigits) {
+      return undefined;
+    }
+    if (!PeriodService.isDateInWindow(window, columnToValue.Data_Referencia ?? "")) {
       return undefined;
     }
     return CvmAdapter.buildRow(columnToValue, key);
@@ -179,50 +149,38 @@ export class CvmAdapter implements ProviderPort<"filings"> {
     return entry?.[1] ?? "other";
   }
 
-  private static keep(filingIdToRow: Map<string, ProviderRow>, row: ProviderRow): void {
-    const id = String(row.filing_id);
-    const known = filingIdToRow.get(id);
-    if (known === undefined) {
-      filingIdToRow.set(id, row);
+  private async collectIpeYear(year: number, collection: CvmCollection): Promise<void> {
+    if (year < FIRST_IPE_YEAR) {
       return;
     }
-    if (JSON.stringify(known) !== JSON.stringify(row)) {
-      throw new Error(`the CVM file repeats the filing ${id} with other content; no row was written`);
-    }
-  }
-
-  private async collectIpeYear(
-    year: number,
-    digits: string,
-    key: CvmKey,
-    filingIdToRow: Map<string, ProviderRow>,
-  ): Promise<void> {
-    const url = CvmAdapter.buildZipUrl(this.baseUrl, "IPE", "ipe", year);
-    const zip = await CvmAdapter.fetchZip(this.http, url);
+    const url = CvmUtil.buildZipUrl(this.baseUrl, "IPE", "ipe", year);
+    const zip = await CvmUtil.loadFile(this.http, url, "cia_aberta-doc-ipe", year, collection.files);
     if (zip === undefined) {
       return;
     }
-    const lines = CvmAdapter.readLines(ZipUtil.streamEntry(zip, `ipe_cia_aberta_${year}.csv`));
-    for (const row of await CvmAdapter.readRows(lines, digits, key)) {
-      CvmAdapter.keep(filingIdToRow, row);
+    const lines = CvmUtil.readLines(ZipUtil.streamEntry(zip, `ipe_cia_aberta_${year}.csv`));
+    for (const row of await CvmAdapter.readRows(lines, collection.cnpjDigits, collection.key, collection.window)) {
+      CvmUtil.keep(collection.filingIdToRow, row);
     }
   }
 
-  private async collectPeriodicYear(
-    kind: CvmPeriodicKind,
-    year: number,
-    digits: string,
-    key: CvmKey,
-    filingIdToRow: Map<string, ProviderRow>,
-  ): Promise<void> {
-    const url = CvmAdapter.buildZipUrl(this.baseUrl, kind.toUpperCase(), kind, year);
-    const zip = await CvmAdapter.fetchZip(this.http, url);
+  private async collectPeriodicYear(kind: CvmPeriodicKind, year: number, collection: CvmCollection): Promise<void> {
+    const url = CvmUtil.buildZipUrl(this.baseUrl, kind.toUpperCase(), kind, year);
+    const dataset = `cia_aberta-doc-${kind}`;
+    const zip = await CvmUtil.loadFile(this.http, url, dataset, year, collection.files);
     if (zip === undefined) {
       return;
     }
-    const lines = CvmAdapter.readLines(ZipUtil.streamEntry(zip, `${kind}_cia_aberta_${year}.csv`));
-    for (const row of await CvmAdapter.readPeriodicRows(lines, digits, key, kind)) {
-      CvmAdapter.keep(filingIdToRow, row);
+    const lines = CvmUtil.readLines(ZipUtil.streamEntry(zip, `${kind}_cia_aberta_${year}.csv`));
+    const rows = await CvmAdapter.readPeriodicRows(
+      lines,
+      collection.cnpjDigits,
+      collection.key,
+      kind,
+      collection.window,
+    );
+    for (const row of rows) {
+      CvmUtil.keep(collection.filingIdToRow, row);
     }
   }
 
@@ -231,6 +189,7 @@ export class CvmAdapter implements ProviderPort<"filings"> {
     cnpjDigits: string,
     key: CvmKey,
     kind: CvmPeriodicKind,
+    window?: PeriodWindow,
   ): Promise<ProviderRow[]> {
     const rows: ProviderRow[] = [];
     let isHeader = true;
@@ -239,7 +198,7 @@ export class CvmAdapter implements ProviderPort<"filings"> {
         CvmAdapter.checkPeriodicHeader(line);
         isHeader = false;
       } else {
-        const row = CvmAdapter.readPeriodicLine(line, cnpjDigits, key, kind);
+        const row = CvmAdapter.readPeriodicLine(line, cnpjDigits, key, kind, window);
         if (row !== undefined) {
           rows.push(row);
         }
@@ -259,6 +218,7 @@ export class CvmAdapter implements ProviderPort<"filings"> {
     cnpjDigits: string,
     key: CvmKey,
     kind: CvmPeriodicKind,
+    window: PeriodWindow | undefined,
   ): ProviderRow | undefined {
     if (line === "") {
       return undefined;
@@ -270,7 +230,10 @@ export class CvmAdapter implements ProviderPort<"filings"> {
     const columnToValue: Readonly<Record<string, string>> = Object.fromEntries(
       PERIODIC_COLUMNS.map((column, index) => [column, fields[index] ?? ""] as const),
     );
-    if (CvmAdapter.readDigits(columnToValue.CNPJ_CIA ?? "") !== cnpjDigits) {
+    if (CvmUtil.readDigits(columnToValue.CNPJ_CIA ?? "") !== cnpjDigits) {
+      return undefined;
+    }
+    if (!PeriodService.isDateInWindow(window, columnToValue.DT_REFER ?? "")) {
       return undefined;
     }
     // Why: a document id is unique per delivery, so the id, the version and the link identify one filing.
@@ -281,11 +244,12 @@ export class CvmAdapter implements ProviderPort<"filings"> {
       filing_id: createHash("sha256").update(identity).digest("hex").slice(0, FILING_ID_LENGTH),
       filing_type: kind,
       category: columnToValue.CATEG_DOC ?? "",
+      reference_date: CvmUtil.readOrNull(columnToValue.DT_REFER),
       delivered_at: deliveredOn ? `${deliveredOn}${LOCAL_TIME_OFFSET}` : null,
       subject: null,
-      url: CvmAdapter.readOrNull(columnToValue.LINK_DOC),
+      url: CvmUtil.readOrNull(columnToValue.LINK_DOC),
       file_hash: null,
-      source: CvmAdapter.VENDOR,
+      source: CvmUtil.VENDOR,
     };
   }
 
@@ -300,19 +264,12 @@ export class CvmAdapter implements ProviderPort<"filings"> {
       filing_id: createHash("sha256").update(identity).digest("hex").slice(0, FILING_ID_LENGTH),
       filing_type: CvmAdapter.readFilingKind(category),
       category,
+      reference_date: CvmUtil.readOrNull(columnToValue.Data_Referencia),
       delivered_at: deliveredOn ? `${deliveredOn}${LOCAL_TIME_OFFSET}` : null,
-      subject: CvmAdapter.readOrNull(columnToValue.Assunto),
-      url: CvmAdapter.readOrNull(columnToValue.Link_Download),
+      subject: CvmUtil.readOrNull(columnToValue.Assunto),
+      url: CvmUtil.readOrNull(columnToValue.Link_Download),
       file_hash: null,
-      source: CvmAdapter.VENDOR,
+      source: CvmUtil.VENDOR,
     };
-  }
-
-  private static readOrNull(value: string | undefined): string | null {
-    return value === undefined || value === "" ? null : value;
-  }
-
-  static readDigits(cnpj: string): string {
-    return cnpj.replace(CNPJ_NON_DIGITS, "");
   }
 }

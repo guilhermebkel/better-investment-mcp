@@ -12,7 +12,7 @@
 - `chunks` filtered by `market`, `ticker`, `asset_type` and `filing_type` or `filing_id`.
 - `search_chunks(query, market, ticker, asset_type, filing_type, section)`: a table function that searches the chunks. Its arguments are the filters; `market`, `ticker`, `asset_type` and `filing_type` must be literal strings, and `section` may be NULL (`docs/product/search.md`).
 - Catalog tables without filters: `assets`, `cache_runs`, `asset_coverage` and `schema_version`.
-- At most 50 assets in one query.
+- A period filter on `financial_statements.period_end`, `fii_monthly.period` or `filings.reference_date`: a comparison with a date literal (`=`, `>=`, `>`, `<=`, `<`, `BETWEEN`, `IN`), with the column on either side. The loader loads the years of the period (`docs/product/data-map.md`, Filters).
 
 ## What is refused
 
@@ -29,7 +29,7 @@ The connection is read-only (`docs/adr/0004-no-tool-writes-to-the-outside-world.
 
 ## Not yet done
 
-- The date range of a query is not read; the loader loads the whole asset.
+- A period inside an `OR`, a period compared with a function or a column, and a period that is not a date literal are not read as bounds; the loader then loads the default period (the last three years).
 
 ## Measured result
 

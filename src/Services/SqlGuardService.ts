@@ -1,6 +1,8 @@
 import type { CacheCategory } from "@/Protocols/CacheProtocol.ts";
 import type { DatabasePort } from "@/Protocols/DatabaseProtocol.ts";
+import type { ComparisonSides, PeriodBounds, PeriodConstraint, PeriodNodeType, PeriodReader } from "@/Protocols/PeriodProtocol.ts";
 import type {
+  NodeShape,
   AssetKey,
   ColumnRef,
   ConditionReader,
@@ -11,6 +13,7 @@ import type {
   FromReading,
   GuardVerdict,
   MacroReading,
+  RefScope,
   Requirement,
   SelectCheck,
   SqlGuardPort,
@@ -19,14 +22,17 @@ import type {
 } from "@/Protocols/SqlGuardProtocol.ts";
 import {
   BaseTableSchema,
+  BetweenNodeSchema,
   ColumnRefSchema,
   ConstantExpressionSchema,
   EqualityNodeSchema,
   JoinSchema,
+  OperatorCastSchema,
   ParsedSqlSchema,
   StringConstantSchema,
   TableFunctionSchema,
 } from "@/Schemas/SqlGuardSchema.ts";
+import { PeriodService } from "@/Services/PeriodService.ts";
 
 const SELECT_TYPES: readonly ("SELECT_NODE" | "SET_OPERATION_NODE")[] = ["SELECT_NODE", "SET_OPERATION_NODE"];
 
@@ -69,6 +75,24 @@ export class SqlGuardService implements SqlGuardPort {
     ["COMPARE_EQUAL", (node) => SqlGuardService.readEqualityOf(node)],
     ["COMPARE_IN", (_node, children) => SqlGuardService.readInList(children)],
   ]);
+
+  // Why: a strict bound is read as inclusive, which only loads more and never less; the SQL itself still filters the exact rows.
+  static readonly BOTH_SIDES: ComparisonSides = { whenColumnLeft: ["from", "to"], whenColumnRight: ["from", "to"] };
+  static readonly LOWER_BOUND: ComparisonSides = { whenColumnLeft: ["from"], whenColumnRight: ["to"] };
+  static readonly UPPER_BOUND: ComparisonSides = { whenColumnLeft: ["to"], whenColumnRight: ["from"] };
+
+  // Why: a period bound is read from a comparison with the column on either side.
+  static readonly PERIOD_NODE_TO_READER: ReadonlyMap<PeriodNodeType, PeriodReader>
+    = new Map<PeriodNodeType, PeriodReader>([
+      ["CONJUNCTION_AND", (_node, children) => children.flatMap((child) => SqlGuardService.readPeriodConstraints(child))],
+      ["COMPARE_BETWEEN", (node) => SqlGuardService.readPeriodBetween(node)],
+      ["COMPARE_IN", (_node, children) => SqlGuardService.readPeriodIn(children)],
+      ["COMPARE_EQUAL", (node) => SqlGuardService.readPeriodComparison(node, SqlGuardService.BOTH_SIDES)],
+      ["COMPARE_GREATERTHANOREQUALTO", (node) => SqlGuardService.readPeriodComparison(node, SqlGuardService.LOWER_BOUND)],
+      ["COMPARE_GREATERTHAN", (node) => SqlGuardService.readPeriodComparison(node, SqlGuardService.LOWER_BOUND)],
+      ["COMPARE_LESSTHANOREQUALTO", (node) => SqlGuardService.readPeriodComparison(node, SqlGuardService.UPPER_BOUND)],
+      ["COMPARE_LESSTHAN", (node) => SqlGuardService.readPeriodComparison(node, SqlGuardService.UPPER_BOUND)],
+    ]);
 
   static readonly MAX_ASSETS = 50;
 
@@ -159,10 +183,15 @@ export class SqlGuardService implements SqlGuardPort {
       ...conditions.flatMap((condition) => SqlGuardService.readConstraints(condition)),
       ...from.constraints,
     ];
+    const periodConstraints = conditions.flatMap((condition) => SqlGuardService.readPeriodConstraints(condition));
     const dataRefs = from.refs.filter((ref) => {
       return !cteNames.includes(ref.name.toLowerCase()) && SqlGuardService.isDataTable(ref.table);
     });
-    const checks = dataRefs.map((ref) => SqlGuardService.checkRef(ref, dataRefs.length === 1, constraints));
+    const checks = dataRefs.map((ref) => SqlGuardService.checkRef(ref, {
+      isSingleRef: dataRefs.length === 1,
+      constraints,
+      periodConstraints,
+    }));
     return {
       problems: [...from.problems, ...documentProblems, ...checks.flatMap((check) => check.problems)],
       requirements: checks.flatMap((check) => check.requirements),
@@ -241,12 +270,12 @@ export class SqlGuardService implements SqlGuardPort {
     return isNull ? null : literal.text;
   }
 
-  private static checkRef(ref: TableRef, isSingleRef: boolean, constraints: Constraint[]): SelectCheck {
+  private static checkRef(ref: TableRef, scope: RefScope): SelectCheck {
     const table = ref.table as DataTable;
     const alias = ref.name.toLowerCase();
     const filters = SqlGuardService.TABLE_TO_FILTERS[table];
     const readValues = (column: string): string[] | undefined => {
-      return SqlGuardService.readValues(constraints, column, alias, isSingleRef);
+      return SqlGuardService.readValues(scope.constraints, column, alias, scope.isSingleRef);
     };
     const missing = filters.columns.filter((column) => readValues(column) === undefined);
     const hasAnyOf = filters.anyOf.length === 0 || filters.anyOf.some((column) => readValues(column) !== undefined);
@@ -261,7 +290,113 @@ export class SqlGuardService implements SqlGuardPort {
       return { problems: [], requirements };
     }
     const requirements = SqlGuardService.buildRequirements(table, category, readValues);
-    return { problems: [], requirements };
+    const periodColumn = PeriodService.TABLE_TO_PERIOD_COLUMN[table];
+    if (periodColumn === undefined) {
+      return { problems: [], requirements };
+    }
+    const period = SqlGuardService.readPeriodBounds(scope, periodColumn, alias);
+    if (period.from !== undefined && period.to !== undefined && period.from > period.to) {
+      return { problems: [SqlGuardService.describeEmptyPeriod(ref, period)], requirements: [] };
+    }
+    return { problems: [], requirements: requirements.map((requirement) => ({ ...requirement, period })) };
+  }
+
+  private static readPeriodBounds(scope: RefScope, periodColumn: string, alias: string): PeriodBounds {
+    const matching = scope.periodConstraints.filter((constraint) => {
+      const isForThisRef = constraint.qualifier === undefined ? scope.isSingleRef : constraint.qualifier === alias;
+      return isForThisRef && constraint.column === periodColumn;
+    });
+    // Why: each bound of a period is the narrowest one the query states, so the window covers every row the query can keep.
+    const froms = matching.filter((constraint) => constraint.side === "from").map((constraint) => constraint.date);
+    const tos = matching.filter((constraint) => constraint.side === "to").map((constraint) => constraint.date);
+    const from = froms.toSorted().at(-1);
+    const to = tos.toSorted().at(0);
+    return {
+      ...(from === undefined ? {} : { from }),
+      ...(to === undefined ? {} : { to }),
+    };
+  }
+
+  private static describeEmptyPeriod(ref: TableRef, period: PeriodBounds): string {
+    return `The period of ${ref.table} starts after it ends (${period.from ?? ""} to ${period.to ?? ""}). `
+      + "Give the period as from <= to, for example period_end BETWEEN '2024-01-01' AND '2024-12-31'.";
+  }
+
+  private static readPeriodConstraints(node: unknown): PeriodConstraint[] {
+    const shape = SqlGuardService.readNodeShape(node);
+    if (shape === undefined) {
+      return [];
+    }
+    const reader = SqlGuardService.PERIOD_NODE_TO_READER.get(shape.type as PeriodNodeType);
+    return reader === undefined ? [] : reader(node, shape.children);
+  }
+
+  private static readNodeShape(node: unknown): NodeShape | undefined {
+    if (typeof node !== "object" || node === null) {
+      return undefined;
+    }
+    // Why: both condition walkers read the same two fields of a node, so the shape is read in one place.
+    const children: unknown = Reflect.get(node, "children");
+    return { type: Reflect.get(node, "type"), children: Array.isArray(children) ? children : [] };
+  }
+
+  private static readPeriodComparison(node: unknown, sides: ComparisonSides): PeriodConstraint[] {
+    const equality = EqualityNodeSchema.safeParse(node);
+    if (!equality.success) {
+      return [];
+    }
+    const { left, right } = equality.data;
+    const columnLeft = SqlGuardService.readColumn(left);
+    const dateRight = SqlGuardService.readDate(right);
+    if (columnLeft !== undefined && dateRight !== undefined) {
+      return sides.whenColumnLeft.map((side) => ({ ...columnLeft, side, date: dateRight }));
+    }
+    const columnRight = SqlGuardService.readColumn(right);
+    const dateLeft = SqlGuardService.readDate(left);
+    if (columnRight !== undefined && dateLeft !== undefined) {
+      return sides.whenColumnRight.map((side) => ({ ...columnRight, side, date: dateLeft }));
+    }
+    return [];
+  }
+
+  private static readPeriodBetween(node: unknown): PeriodConstraint[] {
+    const between = BetweenNodeSchema.safeParse(node);
+    if (!between.success) {
+      return [];
+    }
+    const column = SqlGuardService.readColumn(between.data.input);
+    const lower = SqlGuardService.readDate(between.data.lower);
+    const upper = SqlGuardService.readDate(between.data.upper);
+    if (column === undefined || lower === undefined || upper === undefined) {
+      return [];
+    }
+    return [{ ...column, side: "from", date: lower }, { ...column, side: "to", date: upper }];
+  }
+
+  private static readPeriodIn(children: unknown[]): PeriodConstraint[] {
+    const [subject, ...values] = children;
+    const column = SqlGuardService.readColumn(subject);
+    const dates = values.flatMap((value) => {
+      const date = SqlGuardService.readDate(value);
+      return date === undefined ? [] : [date];
+    });
+    if (column === undefined || dates.length === 0 || dates.length !== values.length) {
+      return [];
+    }
+    const [first = "", ...rest] = dates.toSorted();
+    const last = rest.at(-1) ?? first;
+    return [{ ...column, side: "from", date: first }, { ...column, side: "to", date: last }];
+  }
+
+  private static readDate(node: unknown): string | undefined {
+    const cast = OperatorCastSchema.safeParse(node);
+    const literalNode = cast.success ? cast.data.child : node;
+    const literal = StringConstantSchema.safeParse(literalNode);
+    if (!literal.success) {
+      return undefined;
+    }
+    const text = literal.data.literal.text;
+    return PeriodService.isDate(text) ? text : undefined;
   }
 
   private static buildRequirements(
@@ -331,16 +466,15 @@ export class SqlGuardService implements SqlGuardPort {
   }
 
   private static readConstraints(node: unknown): Constraint[] {
-    if (typeof node !== "object" || node === null) {
+    const shape = SqlGuardService.readNodeShape(node);
+    if (shape === undefined) {
       return [];
     }
-    const type: unknown = Reflect.get(node, "type");
-    const children: unknown = Reflect.get(node, "children");
-    const reader = SqlGuardService.findConditionReader(type);
+    const reader = SqlGuardService.findConditionReader(shape.type);
     if (reader === undefined) {
       return [];
     }
-    return reader(node, Array.isArray(children) ? children : []);
+    return reader(node, shape.children);
   }
 
   private static findConditionReader(type: unknown): ConditionReader | undefined {

@@ -1,3 +1,5 @@
+import type { PeriodWindow } from "@/Protocols/PeriodProtocol.ts";
+
 export type CacheCategory = "quotes" | "dividends" | "fundamentals" | "statements" | "fund_data" | "filings" | "documents" | "macro";
 
 export type CacheRunStart = {
@@ -6,6 +8,7 @@ export type CacheRunStart = {
   ticker: string;
   source: string;
   filingId?: string;
+  period?: PeriodWindow;
 };
 
 export type CacheRunOutcome = {

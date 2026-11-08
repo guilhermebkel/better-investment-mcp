@@ -7,6 +7,7 @@ import { SqlGuardService } from "@/Services/SqlGuardService.ts";
 import { StoreService } from "@/Services/StoreService.ts";
 
 const TEMP_PREFIX = join(tmpdir(), "sql-guard-test-");
+const SEPTEMBER_2024 = "2024-09-30";
 const ONLY_SELECT = "Only a SELECT statement runs";
 const QUOTES_NEEDS_TICKER = "quotes needs a WHERE filter on ticker";
 
@@ -37,6 +38,36 @@ const ACCEPTED: [string, string, Requirement[]][] = [
   ["a window function", "SELECT ticker, close, avg(close) OVER (ORDER BY date ROWS 5 PRECEDING) FROM quotes WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock'", [
     { table: "quotes", category: "quotes", market: "BR", ticker: "PETR4", assetType: "stock" },
   ]],
+  ["financial_statements with a BETWEEN period", "SELECT line_item, value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND period_end BETWEEN '2024-01-01' AND '2024-12-31'", [
+    { table: "financial_statements", category: "statements", market: "BR", ticker: "PETR4", assetType: "stock", period: { from: "2024-01-01", to: "2024-12-31" } },
+  ]],
+  ["financial_statements with a >= bound given as a DATE literal", "SELECT value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND period_end >= DATE '2024-07-01'", [
+    { table: "financial_statements", category: "statements", market: "BR", ticker: "PETR4", assetType: "stock", period: { from: "2024-07-01" } },
+  ]],
+  ["a period bound with the column on the right", "SELECT value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND '2024-06-30' >= period_end", [
+    { table: "financial_statements", category: "statements", market: "BR", ticker: "PETR4", assetType: "stock", period: { to: "2024-06-30" } },
+  ]],
+  ["a period equal to one date", "SELECT value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND period_end = '2024-09-30'", [
+    { table: "financial_statements", category: "statements", market: "BR", ticker: "PETR4", assetType: "stock", period: { from: SEPTEMBER_2024, to: SEPTEMBER_2024 } },
+  ]],
+  ["a period IN list of dates gives the window of the list", "SELECT value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND period_end IN ('2024-09-30', '2024-03-31')", [
+    { table: "financial_statements", category: "statements", market: "BR", ticker: "PETR4", assetType: "stock", period: { from: "2024-03-31", to: "2024-09-30" } },
+  ]],
+  ["two bounds on one column keep the narrowest", "SELECT value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND period_end >= '2023-01-01' AND period_end >= '2024-01-01' AND period_end <= '2025-12-31' AND period_end <= '2024-12-31'", [
+    { table: "financial_statements", category: "statements", market: "BR", ticker: "PETR4", assetType: "stock", period: { from: "2024-01-01", to: "2024-12-31" } },
+  ]],
+  ["a period inside an OR is not read as a bound", "SELECT value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND (period_end = '2024-03-31' OR period_end = '2024-06-30')", [
+    { table: "financial_statements", category: "statements", market: "BR", ticker: "PETR4", assetType: "stock", period: {} },
+  ]],
+  ["a period that is not a date is not read as a bound", "SELECT value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND period_end >= 'abc'", [
+    { table: "financial_statements", category: "statements", market: "BR", ticker: "PETR4", assetType: "stock", period: {} },
+  ]],
+  ["fii_monthly with a month range", "SELECT net_worth FROM fii_monthly WHERE market = 'BR' AND ticker = 'IRDM11' AND asset_type = 'fii' AND period >= '2025-01-01' AND period <= '2025-06-30'", [
+    { table: "fii_monthly", category: "fund_data", market: "BR", ticker: "IRDM11", assetType: "fii", period: { from: "2025-01-01", to: "2025-06-30" } },
+  ]],
+  ["filings by the reference date", "SELECT filing_type FROM filings WHERE market = 'BR' AND ticker = 'IRDM11' AND asset_type = 'fii' AND reference_date = '2025-10-31'", [
+    { table: "filings", category: "filings", market: "BR", ticker: "IRDM11", assetType: "fii", period: { from: "2025-10-31", to: "2025-10-31" } },
+  ]],
   ["a catalog table without filters", "SELECT name FROM assets", []],
   ["asset_coverage without filters", "SELECT * FROM asset_coverage", []],
   ["macro_series with its series", "SELECT value FROM macro_series WHERE series = 'SELIC'", [
@@ -52,7 +83,7 @@ const ACCEPTED: [string, string, Requirement[]][] = [
     { table: "chunks", category: "documents", market: "BR", ticker: "PETR4", assetType: "stock", filingType: "material_fact" },
   ]],
   ["FII monthly data", "SELECT net_worth FROM fii_monthly WHERE market = 'BR' AND ticker = 'KNRI11' AND asset_type = 'fii'", [
-    { table: "fii_monthly", category: "fund_data", market: "BR", ticker: "KNRI11", assetType: "fii" },
+    { table: "fii_monthly", category: "fund_data", market: "BR", ticker: "KNRI11", assetType: "fii", period: {} },
   ]],
   ["a UNION of two filtered selects", "SELECT close FROM quotes WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' "
   + "UNION ALL SELECT close FROM quotes WHERE market = 'BR' AND ticker = 'VALE3' AND asset_type = 'stock'", [
@@ -73,6 +104,7 @@ const ACCEPTED: [string, string, Requirement[]][] = [
 ];
 
 const REFUSED: [string, string, string][] = [
+  ["a period that starts after it ends", "SELECT value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND period_end >= '2025-01-01' AND period_end <= '2024-01-01'", "starts after it ends"],
   ["no filter at all", "SELECT close FROM quotes", "quotes needs a WHERE filter on market, ticker, asset_type"],
   ["asset_type missing", "SELECT close FROM quotes WHERE market = 'BR' AND ticker = 'PETR4'", "quotes needs a WHERE filter on asset_type"],
   ["a join with one side filtered", "SELECT q.close FROM quotes q JOIN dividends d ON d.ticker = q.ticker "

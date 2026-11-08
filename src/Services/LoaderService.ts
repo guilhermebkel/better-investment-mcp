@@ -3,14 +3,18 @@ import type { CacheLoadResult } from "@/Protocols/CacheProtocol.ts";
 import type { DatabasePort } from "@/Protocols/DatabaseProtocol.ts";
 import type { DocumentProvider } from "@/Protocols/DocumentProviderProtocol.ts";
 import type { ChunkRow } from "@/Protocols/DocumentTextProtocol.ts";
-import type { Requirement } from "@/Protocols/SqlGuardProtocol.ts";
+import type { DataTable, Requirement } from "@/Protocols/SqlGuardProtocol.ts";
 import type { DownloadOutcome, FetchAttempt, FetchOutcome, FilingRow, LoadedEntry, LoaderPort, TableToColumns } from "@/Protocols/LoaderProtocol.ts";
-import type { ProviderPort, ProviderRequest, ProviderRow, ProviderResult, ResolvedProviders, TableToRows } from "@/Protocols/ProviderProtocol.ts";
+import type { PeriodWindow } from "@/Protocols/PeriodProtocol.ts";
+import type { ProviderPort, ProviderRequest, ProviderRow, ProviderResult, ResolvedProviders } from "@/Protocols/ProviderProtocol.ts";
 import { PeriodRowsSchema } from "@/Schemas/CacheSchema.ts";
 import { ProviderResultSchema } from "@/Schemas/ProviderSchema.ts";
 import { ChunkService } from "@/Services/ChunkService.ts";
+import { CvmFailureError } from "@/Errors/CvmFailureError.ts";
+import { FileVersionService } from "@/Services/FileVersionService.ts";
 import { DocumentTextService } from "@/Services/DocumentTextService.ts";
 import { FullTextIndexService } from "@/Services/FullTextIndexService.ts";
+import { PeriodService } from "@/Services/PeriodService.ts";
 import type { ProviderRegistryService } from "@/Services/ProviderRegistryService.ts";
 import { SqlGuardService } from "@/Services/SqlGuardService.ts";
 import type { StoreService } from "@/Services/StoreService.ts";
@@ -28,17 +32,21 @@ export class LoaderService implements LoaderPort {
   private readonly store: StoreService;
   private readonly registry: ProviderRegistryService;
   private readonly rebuildIndex: (writer: DatabasePort) => Promise<void>;
+  private readonly clock: () => Date;
   private writeQueue: Promise<unknown> = Promise.resolve();
 
   constructor(
     store: StoreService,
     registry: ProviderRegistryService,
     rebuildIndex: (writer: DatabasePort) => Promise<void> = (writer) => FullTextIndexService.buildIndex(writer),
+    clock: () => Date = () => new Date(),
   ) {
     this.store = store;
     this.registry = registry;
     // Why: the index build is a parameter so unit tests run without the full-text extension; the default installs it.
     this.rebuildIndex = rebuildIndex;
+    // Why: the clock is a parameter, so the default period and the expiry of a load are the same in every test that sets it.
+    this.clock = clock;
   }
 
   async ensure(requirements: readonly Requirement[]): Promise<LoadedEntry[]> {
@@ -55,7 +63,7 @@ export class LoaderService implements LoaderPort {
 
   private static dedupe(requirements: readonly Requirement[]): Requirement[] {
     const buildKey = (requirement: Requirement): string => {
-      const parts = [requirement.category, requirement.market, requirement.ticker, requirement.assetType ?? "", requirement.filingId ?? "", requirement.filingType ?? ""];
+      const parts = [requirement.category, requirement.market, requirement.ticker, requirement.assetType ?? "", requirement.filingId ?? "", requirement.filingType ?? "", JSON.stringify(requirement.period ?? {})];
       return parts.join("|");
     };
     return [...new Map(requirements.map((requirement) => [buildKey(requirement), requirement])).values()];
@@ -63,20 +71,31 @@ export class LoaderService implements LoaderPort {
 
   private async ensureOne(requirement: Requirement): Promise<LoadedEntry> {
     const { cache } = this.store;
+    const window = this.resolveWindow(requirement);
     const base = {
       category: requirement.category,
       market: requirement.market,
       ticker: requirement.ticker,
       isFallback: false,
       rowsWritten: 0,
+      ...(window === undefined ? {} : { requestedPeriod: window }),
+      ...LoaderService.readPeriodicity(requirement),
     };
-    if (await cache.isFresh(requirement.category, requirement.market, requirement.ticker)) {
+    if (window !== undefined && PeriodService.isEmpty(window)) {
+      return { ...base, status: "failed", error: `the period ${window.from} to ${window.to} is empty` };
+    }
+    if (window !== undefined && PeriodService.readYears(window).length > PeriodService.MAX_YEARS_PER_LOAD) {
+      const error = `the period ${window.from} to ${window.to} is longer than ${PeriodService.MAX_YEARS_PER_LOAD} years; narrow it to load it`;
+      return { ...base, status: "failed", error };
+    }
+    if (await cache.isFresh(requirement.category, requirement.market, requirement.ticker, window)) {
       const source = await cache.readLastSource(requirement.category, requirement.market, requirement.ticker);
       const period = await this.readPeriod(requirement);
       return { ...base, status: "fresh", ...(source === undefined ? {} : { source }), ...(period === undefined ? {} : { period }) };
     }
     const { category, market, ticker } = requirement;
-    const result = await cache.runOnce(`${category}:${market}:${ticker}`, () => this.load(requirement));
+    const windowKey = window === undefined ? "" : `:${window.from}:${window.to}`;
+    const result = await cache.runOnce(`${category}:${market}:${ticker}${windowKey}`, () => this.load(requirement, window));
     const error = result.errorMessage === undefined ? {} : { error: result.errorMessage };
     const period = await this.readPeriod(requirement);
     return {
@@ -90,7 +109,19 @@ export class LoaderService implements LoaderPort {
     };
   }
 
-  private async load(requirement: Requirement): Promise<CacheLoadResult> {
+  private resolveWindow(requirement: Requirement): PeriodWindow | undefined {
+    if (PeriodService.TABLE_TO_PERIOD_COLUMN[requirement.table] === undefined) {
+      return undefined;
+    }
+    return PeriodService.resolve(requirement.period, this.clock().getUTCFullYear());
+  }
+
+  private static readPeriodicity(requirement: Requirement): { periodicity?: string } {
+    const periodicity = PeriodService.TABLE_TO_PERIODICITY[requirement.table];
+    return periodicity === undefined ? {} : { periodicity };
+  }
+
+  private async load(requirement: Requirement, window: PeriodWindow | undefined): Promise<CacheLoadResult> {
     let resolved: ResolvedProviders;
     try {
       // Why: the provider is called before anything is written, so a failed call leaves the rows of the previous load in place.
@@ -98,12 +129,13 @@ export class LoaderService implements LoaderPort {
     } catch (error) {
       return { rowsWritten: 0, isFallback: false, errorMessage: LoaderService.describe(error) };
     }
-    const fetched = await this.fetchWithFallback(resolved, requirement);
+    const fetched = await this.fetchWithFallback(resolved, requirement, window);
     const runId = await this.store.cache.startRun({
       category: requirement.category,
       market: requirement.market,
       ticker: requirement.ticker,
       source: fetched.vendor,
+      ...(window === undefined ? {} : { period: window }),
     });
     if (fetched.result === undefined) {
       await this.store.cache.finishRun(runId, { rowsRead: 0, errorMessage: fetched.errorMessage });
@@ -115,7 +147,7 @@ export class LoaderService implements LoaderPort {
       };
     }
     try {
-      const rowsWritten = await this.writeInTransaction(requirement, fetched.result.tables);
+      const rowsWritten = await this.writeInTransaction(requirement, fetched.result, window);
       await this.store.cache.finishRun(runId, { rowsRead: rowsWritten });
       return { rowsWritten, source: fetched.vendor, isFallback: fetched.isFallback };
     } catch (error) {
@@ -297,38 +329,58 @@ export class LoaderService implements LoaderPort {
     }));
   }
 
-  private async fetchWithFallback(resolved: ResolvedProviders, requirement: Requirement): Promise<FetchOutcome> {
+  private async fetchWithFallback(
+    resolved: ResolvedProviders,
+    requirement: Requirement,
+    window: PeriodWindow | undefined,
+  ): Promise<FetchOutcome> {
     const request: ProviderRequest = {
       market: requirement.market,
       ticker: requirement.ticker,
       assetType: requirement.assetType,
+      ...(window === undefined ? {} : { period: window }),
     };
     const primaryAttempt = await LoaderService.fetchOnce(resolved.primary, request);
-    if (primaryAttempt.result !== undefined || resolved.fallback === undefined) {
+    const fallback = resolved.fallback;
+    // Why: a CVM failure is reported as it is and never replaced by another source (issue #28, P3, AC7); only a failure of another vendor may fall back.
+    const isFallbackAllowed = !primaryAttempt.isFallbackBlocked && fallback !== undefined;
+    if (primaryAttempt.result !== undefined || !isFallbackAllowed) {
       return { ...primaryAttempt, vendor: resolved.primary.vendor, isFallback: false };
     }
-    const fallbackAttempt = await LoaderService.fetchOnce(resolved.fallback, request);
-    return { ...fallbackAttempt, vendor: resolved.fallback.vendor, isFallback: true };
+    const fallbackAttempt = await LoaderService.fetchOnce(fallback, request);
+    return { ...fallbackAttempt, vendor: fallback.vendor, isFallback: true };
   }
 
   private static async fetchOnce(provider: ProviderPort, request: ProviderRequest): Promise<FetchAttempt> {
     try {
       const result: ProviderResult = ProviderResultSchema.parse(await provider.fetchTables(request));
-      return { result, errorMessage: undefined };
+      return { result, errorMessage: undefined, isFallbackBlocked: false };
     } catch (error) {
-      return { result: undefined, errorMessage: `${provider.vendor} failed: ${LoaderService.describe(error)}` };
+      return {
+        result: undefined,
+        errorMessage: `${provider.vendor} failed: ${LoaderService.describe(error)}`,
+        isFallbackBlocked: error instanceof CvmFailureError,
+      };
     }
   }
 
-  private writeInTransaction(requirement: Requirement, tables: TableToRows): Promise<number> {
+  private writeInTransaction(
+    requirement: Requirement,
+    result: ProviderResult,
+    window: PeriodWindow | undefined,
+  ): Promise<number> {
     // Why: DuckDB has one writer connection, so writes run one at a time, and each run is one transaction.
-    return this.enqueue(() => this.writeNow(requirement, tables));
+    return this.enqueue(() => this.writeNow(requirement, result, window));
   }
 
-  private async writeNow(requirement: Requirement, tables: TableToRows): Promise<number> {
+  private async writeNow(
+    requirement: Requirement,
+    result: ProviderResult,
+    window: PeriodWindow | undefined,
+  ): Promise<number> {
     const { writer } = this.store;
     const tableToColumns = await this.readColumns();
-    for (const table of Object.keys(tables)) {
+    for (const table of Object.keys(result.tables)) {
       if (!LoaderService.isWritable(table) || !Object.hasOwn(tableToColumns, table)) {
         throw new Error(`the provider wrote to ${table}, which is not a data table`);
       }
@@ -336,10 +388,11 @@ export class LoaderService implements LoaderPort {
     await writer.run("BEGIN TRANSACTION");
     try {
       let written = 0;
-      for (const [table, rows] of Object.entries(tables)) {
+      for (const [table, rows] of Object.entries(result.tables)) {
         const columns = tableToColumns[table] ?? [];
-        written += await this.replaceTable(requirement, table, rows, columns);
+        written += await this.replaceTable(requirement, table, rows, columns, window);
       }
+      await FileVersionService.record(writer, result.files ?? [], this.clock().toISOString());
       await writer.run("COMMIT");
       return written;
     } catch (error) {
@@ -353,17 +406,23 @@ export class LoaderService implements LoaderPort {
     table: string,
     rows: ProviderRow[],
     columns: readonly string[],
+    window: PeriodWindow | undefined,
   ): Promise<number> {
     const { writer } = this.store;
     const isSeries = table === MACRO_TABLE;
     const keyColumns = isSeries ? SERIES_KEY_COLUMNS : ASSET_KEY_COLUMNS;
     const keyValues = isSeries ? [requirement.ticker] : [requirement.market, requirement.ticker];
+    const periodColumn = window === undefined ? undefined : PeriodService.TABLE_TO_PERIOD_COLUMN[table as DataTable];
     const deleteWhere = keyColumns.map((column) => `${column} = ?`).join(" AND ");
+    // Why: a period load replaces only the rows of its own window, so the rows of another period stay in the store.
+    const periodWhere = periodColumn === undefined ? "" : ` AND ${periodColumn} BETWEEN ? AND ?`;
+    const periodValues = window === undefined ? [] : [window.from, window.to];
     // Why: a filing list reload keeps the hash of each document already stored, so an unchanged document is not downloaded again into the chunks.
     const filingIdToHash = await this.readStoredHashes(table, requirement);
-    await writer.run(`DELETE FROM ${table} WHERE ${deleteWhere}`, keyValues);
+    await writer.run(`DELETE FROM ${table} WHERE ${deleteWhere}${periodWhere}`, [...keyValues, ...periodValues]);
     for (const original of rows) {
       LoaderService.checkRow(requirement, table, original, columns);
+      LoaderService.checkPeriod(table, original, window);
       const row = LoaderService.keepStoredHash(original, filingIdToHash);
       const names = Object.keys(row);
       const placeholders = names.map(() => "?").join(", ");
@@ -391,6 +450,18 @@ export class LoaderService implements LoaderPort {
     }
     const storedHash = filingIdToHash.get(filingId);
     return storedHash === undefined ? row : { ...row, file_hash: storedHash };
+  }
+
+  private static checkPeriod(table: string, row: ProviderRow, window: PeriodWindow | undefined): void {
+    const periodColumn = PeriodService.TABLE_TO_PERIOD_COLUMN[table as DataTable];
+    if (window === undefined || periodColumn === undefined) {
+      return;
+    }
+    const date = row[periodColumn];
+    const isInWindow = typeof date === "string" && PeriodService.isWithin(window, date);
+    if (!isInWindow) {
+      throw new Error(`the provider sent a row of ${table} outside the requested period ${window.from} to ${window.to}`);
+    }
   }
 
   private static checkRow(requirement: Requirement, table: string, row: ProviderRow, columns: readonly string[]): void {

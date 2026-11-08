@@ -14,15 +14,15 @@
     },
     "StatementProvider": {
       "status": "implemented",
-      "reason": "Financial statements from CVM ITR and DFP; the CVM statements adapter (#11) fills them per company, with the consolidated and individual versions. A load needs a CNPJ for the ticker, which no source gives yet."
+      "reason": "Financial statements from CVM ITR and DFP; the CVM statements adapter (#11) fills them per company, with the consolidated and individual versions, and the period-aware load (#28) reads only the years of the period. A stock ticker maps to its CNPJ through the CVM company list (#28)."
     },
     "FundDataProvider": {
       "status": "implemented",
-      "reason": "Monthly FII data from StatusInvest; the adapter is built (#8), but the site blocks requests from this server, so loads fail with the block message (ADR 0010)."
+      "reason": "Monthly FII data from the CVM monthly fund files (#28): net worth and the balance columns, one row per reference month, with the version and the files. StatusInvest (#8) is built, but the site blocks requests from this server (ADR 0010), so its columns that CVM does not carry stay null."
     },
     "FilingProvider": {
       "status": "implemented",
-      "reason": "Filing list from the CVM IPE file (#9); a load of a ticker fails with a named error until a source maps tickers to CNPJ."
+      "reason": "Filing list from the CVM IPE file (#9), the ITR, DFP and FRE datasets (#11) and the CVM eventual fund file for FIIs (#28). A stock ticker maps to its CNPJ through the CVM company list; a FII ticker maps through the curated list, and any other ticker fails with a named pending error."
     },
     "DocumentProvider": {
       "status": "implemented",

@@ -1,6 +1,5 @@
-import { CvmAdapter } from "@/Adapters/Cvm/CvmAdapter.ts";
+import { CvmBaseAdapter } from "@/Adapters/Cvm/CvmBaseAdapter.ts";
 import type {
-  CvmKey,
   CvmPeriodicKind,
   CvmPeriodType,
   CvmScale,
@@ -8,10 +7,11 @@ import type {
   CvmStatementColumns,
   CvmStatementEntry,
   CvmStatementScan,
-  LegalIdLookup,
+  StatementSource,
 } from "@/Protocols/CvmProtocol.ts";
-import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type { ProviderPort, ProviderRequest, ProviderResult } from "@/Protocols/ProviderProtocol.ts";
+import { PeriodService } from "@/Services/PeriodService.ts";
+import { CvmUtil } from "@/Utils/CvmUtil.ts";
 import { ZipUtil } from "@/Utils/ZipUtil.ts";
 
 const THOUSAND = 1000;
@@ -35,80 +35,69 @@ const STATEMENT_ENTRIES: readonly CvmStatementEntry[] = [
 ];
 const SCALE_TO_FACTOR: Readonly<Record<CvmScale, number>> = { MIL: THOUSAND, UNIDADE: ONE };
 const FORMAT_ERROR = "the response format changed: a CVM statement file is not the one the adapter reads; no row was written";
+const DATASET_PREFIX = "cia_aberta-doc-";
 
-export class CvmStatementAdapter implements ProviderPort<"statements"> {
+export class CvmStatementAdapter extends CvmBaseAdapter implements ProviderPort<"statements"> {
   static readonly VENDOR = "cvm";
   static readonly MARKETS: readonly "BR"[] = ["BR"];
-  static readonly ASSET_TYPES: readonly ("stock" | "fii" | "etf")[] = ["stock", "fii", "etf"];
+  // Why: the statements come from the company datasets only; a fund has no ITR or DFP here, so a fund request is refused by the registry.
+  static readonly ASSET_TYPES: readonly "stock"[] = ["stock"];
 
   readonly category = "statements";
   readonly vendor = CvmStatementAdapter.VENDOR;
   readonly markets = CvmStatementAdapter.MARKETS;
   readonly assetTypes = CvmStatementAdapter.ASSET_TYPES;
 
-  private readonly http: HttpPort;
-  private readonly lookup: LegalIdLookup;
-  private readonly baseUrl: string;
-  private readonly currentYear: () => number;
-
-  constructor(
-    http: HttpPort,
-    lookup: LegalIdLookup,
-    baseUrl: string = CvmAdapter.BASE_URL,
-    currentYear: () => number = () => new Date().getUTCFullYear(),
-  ) {
-    this.http = http;
-    this.lookup = lookup;
-    this.baseUrl = baseUrl;
-    this.currentYear = currentYear;
+  fetchTables(request: ProviderRequest): Promise<ProviderResult> {
+    return super.fetchTables(request);
   }
 
-  async fetchTables(request: ProviderRequest): Promise<ProviderResult> {
-    if (request.assetType === undefined) {
-      throw new Error("CVM needs the asset type of the asset");
-    }
-    const cnpj = await this.lookup(request.market, request.ticker);
-    if (cnpj === undefined) {
-      throw new Error(CvmAdapter.buildUnmappedMessage(request.market, request.ticker));
-    }
-    const key: CvmKey = { market: request.market, ticker: request.ticker, asset_type: request.assetType };
-    const scan: CvmStatementScan = { key, cnpjDigits: CvmAdapter.readDigits(cnpj), keyToCandidate: new Map() };
-    for (const year of CvmAdapter.resolveYears(this.currentYear())) {
+  protected async collectTables(request: ProviderRequest): Promise<ProviderResult> {
+    const defaultWindow = PeriodService.buildDefaultWindow(this.currentYear());
+    const { key, cnpjDigits, window } = await CvmUtil.resolveSubject(this.lookup, request, defaultWindow);
+    const scan: CvmStatementScan = {
+      key,
+      window,
+      cnpjDigits,
+      keyToCandidate: new Map(),
+      files: [],
+    };
+    for (const year of PeriodService.readYears(window)) {
       for (const kind of STATEMENT_KINDS) {
         await this.collectKind(kind, year, scan);
       }
     }
     const rows = [...scan.keyToCandidate.values()].map((candidate) => candidate.row);
-    return { source: CvmStatementAdapter.VENDOR, tables: { financial_statements: rows } };
+    return { source: CvmStatementAdapter.VENDOR, tables: { financial_statements: rows }, files: scan.files };
   }
 
   private async collectKind(kind: CvmPeriodicKind, year: number, scan: CvmStatementScan): Promise<void> {
-    const url = CvmAdapter.buildZipUrl(this.baseUrl, kind.toUpperCase(), kind, year);
-    const zip = await CvmAdapter.fetchZip(this.http, url);
+    const url = CvmUtil.buildZipUrl(this.baseUrl, kind.toUpperCase(), kind, year);
+    const zip = await CvmUtil.loadFile(this.http, url, `${DATASET_PREFIX}${kind}`, year, scan.files);
     if (zip === undefined) {
       return;
     }
     for (const entry of STATEMENT_ENTRIES) {
-      const entryName = `${kind}_cia_aberta_${entry.code}_${entry.version}_${year}.csv`;
-      const lines = CvmAdapter.readLines(ZipUtil.streamEntry(zip, entryName));
-      await CvmStatementAdapter.scanLines(lines, entry, scan);
+      const sourceFile = `${kind}_cia_aberta_${entry.code}_${entry.version}_${year}.csv`;
+      const source: StatementSource = { statement: `${entry.code}_${entry.version}`, sourceFile };
+      const lines = CvmUtil.readLines(ZipUtil.streamEntry(zip, sourceFile));
+      await CvmStatementAdapter.scanLines(lines, source, scan);
     }
   }
 
   private static async scanLines(
     lines: AsyncIterable<string>,
-    entry: CvmStatementEntry,
+    source: StatementSource,
     scan: CvmStatementScan,
   ): Promise<void> {
-    const statement = `${entry.code}_${entry.version}`;
     let columns: CvmStatementColumns | undefined;
     for await (const line of lines) {
       if (columns === undefined) {
         columns = CvmStatementAdapter.readColumns(line);
         continue;
       }
-      const candidate = CvmStatementAdapter.readCandidate(line, columns, statement, scan);
-      if (candidate !== undefined) {
+      const candidate = CvmStatementAdapter.readCandidate(line, columns, source, scan);
+      if (candidate !== undefined && PeriodService.isWithin(scan.window, candidate.periodEnd)) {
         CvmStatementAdapter.keepLatest(scan.keyToCandidate, candidate);
       }
     }
@@ -141,15 +130,15 @@ export class CvmStatementAdapter implements ProviderPort<"statements"> {
   static readCandidate(
     line: string,
     columns: CvmStatementColumns,
-    statement: string,
-    scan: CvmStatementScan,
+    source: StatementSource,
+    scan: Pick<CvmStatementScan, "cnpjDigits" | "key">,
   ): CvmStatementCandidate | undefined {
     if (line === "") {
       return undefined;
     }
     const fields = line.split(SEPARATOR);
     const readField = (index: number): string => fields[index] ?? "";
-    if (CvmAdapter.readDigits(readField(columns.CNPJ_CIA)) !== scan.cnpjDigits) {
+    if (CvmUtil.readDigits(readField(columns.CNPJ_CIA)) !== scan.cnpjDigits) {
       return undefined;
     }
     const startDate = columns.DT_INI_EXERC === undefined ? "" : readField(columns.DT_INI_EXERC);
@@ -168,20 +157,24 @@ export class CvmStatementAdapter implements ProviderPort<"statements"> {
     const lineName = readField(columns.DS_CONTA);
     const periodType = CvmStatementAdapter.readPeriodType(startDate, endDate);
     const currency = CvmStatementAdapter.readCurrency(readField(columns.MOEDA));
+    const version = Number(readField(columns.VERSAO));
     const row = {
       ...scan.key,
       period_end: endDate,
       period_type: periodType,
-      statement,
+      statement: source.statement,
       line_item: `${lineCode} ${lineName}`,
       value: numericValue * factor,
       currency,
       source: CvmStatementAdapter.VENDOR,
+      version,
+      source_file: source.sourceFile,
     };
     return {
-      key: [statement, startDate, endDate, lineCode].join("|"),
+      key: [source.statement, startDate, endDate, lineCode].join("|"),
       referenceDate: readField(columns.DT_REFER),
-      version: Number(readField(columns.VERSAO)),
+      periodEnd: endDate,
+      version,
       row,
     };
   }

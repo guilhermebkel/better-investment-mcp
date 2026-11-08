@@ -6,6 +6,13 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Added
 
+- CVM open data as the primary source (issue #28): a period-aware load of `financial_statements`, `fii_monthly` and `filings`. A period filter in `query_sql` (`period_end`, `period`, `reference_date`) loads the years of the period; without one, the last three years load.
+- A ticker maps to its CNPJ through the CVM company list (stocks); FIIs map through a short curated list with CVM's own names, and an unmapped ticker is reported as pending, never guessed.
+- The CVM eventual fund file: FII management reports and material facts in `filings`, with their official link and CNPJ.
+- The CVM monthly FII files: net worth and the balance columns in `fii_monthly`, with each row's version and file (`version`, `source_file`).
+- A record of every CVM file downloaded (`cvm_files`: URL, year, hash, size, time), so a changed file is told apart from the one stored before.
+- A CVM failure is reported with its class (HTTP error, blocked request, file that could not be read, unmapped ticker) and never falls back to another source.
+- A live contract check against the CVM open data (`pnpm test:integration`) for the PETR4 statements, the IRDM11 monthly data and report, and the company list.
 - Yahoo Finance adapter: quotes, dividends, splits and the asset summary for `BR` and `US` tickers, with the `is_stale` and `suspect_tick` flags.
 - BCB SGS adapter: the macro series `ipca`, `cdi`, `selic` and `ptax`, read in ten-year windows.
 - CVM adapter: the filings list of a company from the yearly IPE file. A ticker needs a CNPJ link, which no source gives yet.

@@ -45,7 +45,7 @@ One interface per data category, one adapter per vendor (`docs/adr/0005-one-prov
 - `DividendProvider`: dividends. `INVESTMENT_MCP_DIVIDENDS_PROVIDER`. Yahoo Finance.
 - `FundamentalsProvider`: yearly fundamentals. `INVESTMENT_MCP_FUNDAMENTALS_PROVIDER`. StatusInvest.
 - `StatementProvider`: financial statements (ITR, DFP). `INVESTMENT_MCP_STATEMENTS_PROVIDER`. CVM.
-- `FundDataProvider`: periodic fund data (FII monthly). `INVESTMENT_MCP_FUND_DATA_PROVIDER`. StatusInvest.
+- `FundDataProvider`: periodic fund data (FII monthly). `INVESTMENT_MCP_FUND_DATA_PROVIDER`. CVM (StatusInvest is blocked).
 - `FilingProvider`: the list of filings. `INVESTMENT_MCP_FILINGS_PROVIDER`. CVM and FNET.
 - `DocumentProvider`: document download and text. `INVESTMENT_MCP_DOCUMENTS_PROVIDER`. CVM and FNET.
 - `MacroProvider`: macro series. `INVESTMENT_MCP_MACRO_PROVIDER`. BCB SGS.
@@ -60,7 +60,7 @@ One interface per data category, one adapter per vendor (`docs/adr/0005-one-prov
 | Yahoo Finance | quotes, dividends, splits, asset summary | #6 | Built. Unofficial, personal use, no SLA. |
 | BCB SGS | macro series | #7 | Built. Open data. |
 | StatusInvest | fundamentals, FII monthly data | #8 | Built, but blocked by the site from this server; terms not read (ADR 0010). |
-| CVM | filings list (IPE, ITR, DFP, FRE), ITR and DFP statements | #9, #11 | Built. A ticker needs a CNPJ link that no source gives yet. Open data under ODbL. The reference form (FRE) has no item text in the open data. |
+| CVM | filings list (IPE, ITR, DFP, FRE, the eventual fund file), ITR and DFP statements, FII monthly files, the company list that maps stock tickers to CNPJ | #9, #11, #28 | Built. The primary source of what it carries, with the version and the file of each row. A stock ticker maps through the company list; a FII ticker maps through a short curated list; any other ticker is pending. Open data under ODbL. The reference form (FRE) has no item text in the open data. |
 | FNET | FII management reports | #12 | Built only if a spike passes. |
 
 ## Layers

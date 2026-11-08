@@ -44,9 +44,9 @@ Every setting is an environment variable. The server reads them once at start an
 | `INVESTMENT_MCP_QUOTES_PROVIDER` | unset | Quote source per market, for example `BR:yahoo`. Unset, the category loads nothing. |
 | `INVESTMENT_MCP_DIVIDENDS_PROVIDER` | unset | Dividend source per market. Same rule. |
 | `INVESTMENT_MCP_FUNDAMENTALS_PROVIDER` | unset | Fundamentals source per market. Same rule. |
-| `INVESTMENT_MCP_STATEMENTS_PROVIDER` | unset | Financial statements source per market. Same rule. |
-| `INVESTMENT_MCP_FUND_DATA_PROVIDER` | unset | FII monthly data source per market. Same rule. |
-| `INVESTMENT_MCP_FILINGS_PROVIDER` | unset | Filings list source per market. Same rule. |
+| `INVESTMENT_MCP_STATEMENTS_PROVIDER` | unset | Financial statements source per market, for example `BR:cvm`. Same rule. |
+| `INVESTMENT_MCP_FUND_DATA_PROVIDER` | unset | FII monthly data source per market, for example `BR:cvm`. Same rule. |
+| `INVESTMENT_MCP_FILINGS_PROVIDER` | unset | Filings list source per market, for example `BR:cvm`. Same rule. |
 | `INVESTMENT_MCP_DOCUMENTS_PROVIDER` | unset | Document download source per market. Same rule. |
 | `INVESTMENT_MCP_MACRO_PROVIDER` | unset | Macro series source. The series have no market, so the value is `SERIES:bcb`. |
 

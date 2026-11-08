@@ -12,6 +12,8 @@ Every data table in the query needs WHERE filters that compare with = or IN and 
 
 A query without its filters is refused, and the answer names the filter to add.
 
+A period filter (\`period_end\` of financial_statements, \`period\` of fii_monthly, \`reference_date\` of filings) makes the loader load the years of that period. Without one, the last three years load.
+
 ## Examples
 
 Prices, last five days:
@@ -42,6 +44,16 @@ SELECT delivered_at, filing_type, subject, url FROM filings WHERE market = 'BR' 
 Macro series:
 \`\`\`sql
 SELECT date, value FROM macro_series WHERE series IN ('ipca', 'selic') ORDER BY date DESC LIMIT 24
+\`\`\`
+
+Financial statements of one quarter, with the version and the file of each row:
+\`\`\`sql
+SELECT line_item, value, version, source_file FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND period_end BETWEEN '2024-07-01' AND '2024-09-30' ORDER BY line_item
+\`\`\`
+
+FII monthly net worth from 2025, one row per reference month:
+\`\`\`sql
+SELECT period, net_worth, version FROM fii_monthly WHERE market = 'BR' AND ticker = 'IRDM11' AND asset_type = 'fii' AND period >= '2025-01-01' ORDER BY period
 \`\`\`
 
 Catalog of loaded assets:

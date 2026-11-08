@@ -6,6 +6,7 @@ import type { FilingProvider } from "@/Protocols/FilingProviderProtocol.ts";
 import type { FundDataProvider } from "@/Protocols/FundDataProviderProtocol.ts";
 import type { FundamentalsProvider } from "@/Protocols/FundamentalsProviderProtocol.ts";
 import type { MacroProvider } from "@/Protocols/MacroProviderProtocol.ts";
+import type { PeriodWindow } from "@/Protocols/PeriodProtocol.ts";
 import type { QuoteProvider } from "@/Protocols/QuoteProviderProtocol.ts";
 import type { StatementProvider } from "@/Protocols/StatementProviderProtocol.ts";
 
@@ -19,11 +20,21 @@ export type ProviderRequest = {
   market: string;
   ticker: string;
   assetType?: string;
+  period?: PeriodWindow;
+};
+
+export type ProviderFile = {
+  url: string;
+  dataset: string;
+  referenceYear: number;
+  sha256: string;
+  sizeBytes: number;
 };
 
 export type ProviderResult = {
   source: string;
   tables: TableToRows;
+  files?: ProviderFile[];
 };
 
 export type ProviderPort<Category extends CacheCategory = CacheCategory> = {
