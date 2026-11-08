@@ -15,6 +15,7 @@ Folders are created when the first file needs them.
 - `src/Services/`: business rules (SQL guard, cache, loader), dependencies through the constructor.
 - `src/Adapters/<Vendor>/`: one external service each (`DuckDb/`, `Yahoo/`, `Cvm/`, `StatusInvest/`, `Fnet/`, `Bcb/`).
 - `src/Operations/`: one class per tool, names in English; each implements `OperationPort`.
+- `src/Guides/`: the text of each `get_guide` topic, one file per topic, checked by a test for size and examples.
 - `src/Surfaces/`: the MCP surface that exposes the operations, the operation manifest and the builders of the MCP server.
 - `src/Setup/`: the entry points that start the program; `src/main.ts` calls them. They never import an adapter.
 - `src/Testing/`: test doubles and fixtures; only tests import it.

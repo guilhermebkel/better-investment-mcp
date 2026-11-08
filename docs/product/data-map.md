@@ -40,8 +40,28 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 
 ## Quality columns
 
-`quotes.is_stale` and `quotes.suspect_tick` are flags. A flagged row is never removed (issue #6 writes the exact rules and thresholds here).
+`quotes.is_stale` and `quotes.suspect_tick` are flags. A flagged row is never removed.
+
+- `is_stale`: the close equals the day before and the volume is zero (`QualityFlagService`).
+- `suspect_tick`: the close moved more than 25% from the day before, and the day after is within 5% of that day before. The thresholds are `QualityFlagService.SUSPECT_MOVE` and `QualityFlagService.REVERT_BAND`.
+- A day with no close from the vendor is skipped, never filled.
+
+## Values and units
+
+- `macro_series.value`: `ipca` is percent change per month (SGS 433), `cdi` is percent per day (SGS 12), `selic` is the Copom target rate in percent per year (SGS 432), `ptax` is the sell rate in BRL per USD (SGS 1). The units were checked against the service's answers.
+- `macro_series` has no market: its rows use the market `SERIES` in the registry, so the setting is `INVESTMENT_MCP_MACRO_PROVIDER=SERIES:bcb`.
+- `splits.ratio` is the new shares per old share (a 2-for-1 split is 2).
+- `dividends.kind` is `dividend` for every Yahoo row; Yahoo does not tell a dividend from interest on equity.
+- `assets.sector` and `assets.legal_id` are null from Yahoo: its chart endpoint gives neither.
+- `fundamentals` and `fii_monthly` keep a missing value as null, never zero. `fii_monthly.net_worth` is read from the monthly net worth endpoint and stays null for a month that endpoint does not cover.
+- `filings.filing_type` is `material_fact`, `sustainability` or `other`, from the CVM IPE categories. The IPE file does not hold ITR, DFP or Formulário de Referência; those come from other CVM datasets (issue #11) and are not built.
+- `filings.filing_id` is a hash of the delivery protocol, version and document link, so a re-delivery keeps its own row.
+- `filings.delivered_at` is the date of delivery at Brasília time (`-03:00`).
 
 ## Licenses of the data
 
-CVM open data is published under ODbL, so this repository never ships a cached database. Yahoo Finance data is for personal use. The terms of each vendor are in the issue that adds its adapter.
+CVM open data is published under ODbL, so this repository never ships a cached database. Yahoo Finance data is for personal use, with no service guarantee. BCB SGS data is open data. StatusInvest's terms of use were not read, and the site blocks requests from this server (ADR 0010).
+
+## Known gap: tickers and CNPJ
+
+CVM's IPE file and its company registry carry the CNPJ of a company, not its ticker. The CVM filings adapter needs a ticker-to-CNPJ link to answer a query for `BR:PETR4`. No source in the repository gives that link yet, so the load fails with a message that names the ticker, and the filings table stays empty until the link is chosen.

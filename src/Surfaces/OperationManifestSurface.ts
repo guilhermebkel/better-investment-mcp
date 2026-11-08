@@ -7,7 +7,9 @@ const UPPER_CASE_LETTER = /[A-Z]/g;
 
 export class OperationManifestSurface {
   static listOperations(dependencies: OperationDependencies): readonly OperationPort<unknown>[] {
-    return [new GetOverviewOperation(), new GetGuideOperation(), new QuerySqlOperation(dependencies.querySql)];
+    const overview = new GetOverviewOperation(dependencies.overview);
+    const querySql = new QuerySqlOperation(dependencies.querySql);
+    return [overview, new GetGuideOperation(), querySql];
   }
 
   static formatToolName(operationName: string): string {

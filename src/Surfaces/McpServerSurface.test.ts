@@ -32,6 +32,7 @@ describe("McpServerSurface.build()", () => {
         )),
         openReader: () => store.openReader(),
       },
+      overview: { cacheTtlSeconds: 60, readLoaded: () => Promise.resolve([]) },
     };
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
     await McpServerSurface.build(dependencies).connect(serverTransport);
@@ -80,14 +81,13 @@ describe("McpServerSurface.build()", () => {
   });
 
   describe("when get_overview is called", () => {
-    it("answers with the usage notice", async () => {
+    it("answers with the tables, the guide topics and the usage notice", async () => {
       const result = await client.callTool({ name: "get_overview", arguments: {} });
 
-      expect(result).toStrictEqual({
-        content: [{ type: "text", text: USAGE_NOTICE }],
-        structuredContent: { message: USAGE_NOTICE },
-        isError: false,
-      });
+      expect(result.isError).toBe(false);
+      const text = JSON.stringify(result.content);
+      expect(text).toContain(USAGE_NOTICE);
+      expect(text).toContain("Guide topics for get_guide: sql, search, sources, limits.");
     });
 
     it("refuses an extra field", async () => {

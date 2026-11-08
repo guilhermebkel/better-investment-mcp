@@ -1,0 +1,4 @@
+{ "listMonth": [
+  { "month": 1, "year": 2024, "rendimentosdistribuir": 8, "taxaadministracao": 1, "taxaperformance": 0, "aquisicoesimoveis": 0, "outrasdespesas": 0.5, "totaldespesas": 1.5 },
+  { "month": 2, "year": 2024, "rendimentosdistribuir": 9, "taxaadministracao": 1, "taxaperformance": 0, "aquisicoesimoveis": 0, "outrasdespesas": 0, "totaldespesas": 1 }
+] }

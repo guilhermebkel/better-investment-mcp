@@ -1,12 +1,36 @@
 {
   "providers": {
-    "QuoteProvider": { "status": "planned", "reason": "Prices and splits from Yahoo Finance; built in the Yahoo adapter issue." },
-    "DividendProvider": { "status": "planned", "reason": "Dividends from Yahoo Finance; built in the Yahoo adapter issue." },
-    "FundamentalsProvider": { "status": "planned", "reason": "Yearly fundamentals from StatusInvest; built in the StatusInvest adapter issue, after its terms are read." },
-    "StatementProvider": { "status": "planned", "reason": "Financial statements from CVM ITR and DFP; built in the CVM statements issue." },
-    "FundDataProvider": { "status": "planned", "reason": "Monthly FII data from StatusInvest; built in the StatusInvest adapter issue." },
-    "FilingProvider": { "status": "planned", "reason": "Filing lists from CVM IPE and FNET; built in the CVM filings issue and the FNET issue." },
-    "DocumentProvider": { "status": "planned", "reason": "Document download and text for CVM and FNET filings; built in the document text issue." },
-    "MacroProvider": { "status": "planned", "reason": "Macro series from BCB SGS; built in the BCB adapter issue." }
+    "QuoteProvider": {
+      "status": "implemented",
+      "reason": "Prices and splits from Yahoo Finance; the Yahoo adapter (#6) fills quotes, splits, dividends and assets."
+    },
+    "DividendProvider": {
+      "status": "implemented",
+      "reason": "Dividends from Yahoo Finance; the Yahoo adapter (#6) fills them with the quotes."
+    },
+    "FundamentalsProvider": {
+      "status": "implemented",
+      "reason": "Yearly fundamentals from StatusInvest; the adapter is built (#8), but the site blocks requests from this server, so loads fail with the block message (ADR 0010)."
+    },
+    "StatementProvider": {
+      "status": "planned",
+      "reason": "Financial statements from CVM ITR and DFP; built in the CVM statements issue."
+    },
+    "FundDataProvider": {
+      "status": "implemented",
+      "reason": "Monthly FII data from StatusInvest; the adapter is built (#8), but the site blocks requests from this server, so loads fail with the block message (ADR 0010)."
+    },
+    "FilingProvider": {
+      "status": "implemented",
+      "reason": "Filing list from the CVM IPE file (#9); a load of a ticker fails with a named error until a source maps tickers to CNPJ."
+    },
+    "DocumentProvider": {
+      "status": "planned",
+      "reason": "Document download and text for CVM and FNET filings; built in the document text issue."
+    },
+    "MacroProvider": {
+      "status": "implemented",
+      "reason": "Macro series from BCB SGS; the BCB adapter (#7) fills ipca, cdi, selic and ptax."
+    }
   }
 }

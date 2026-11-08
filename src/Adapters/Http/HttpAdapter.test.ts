@@ -127,3 +127,56 @@ describe("HttpAdapter.getText()", () => {
     });
   });
 });
+
+describe("HttpAdapter.getCookies()", () => {
+  let server: Server;
+  let origin: string;
+
+  beforeEach(async () => {
+    server = createServer((request: IncomingMessage, response: ServerResponse) => {
+      if (request.url === "/cookie-404") {
+        response.writeHead(404, { "set-cookie": ["A3=abc; Path=/", "B=2; Path=/"] }).end();
+        return;
+      }
+      response.writeHead(200).end(JSON.stringify(request.headers));
+    });
+    await new Promise<void>((resolve) => {
+      server.listen(0, "127.0.0.1", () => {
+        resolve();
+      });
+    });
+    const { port } = server.address() as AddressInfo;
+    origin = `http://127.0.0.1:${port}`;
+  });
+
+  afterEach(async () => {
+    await new Promise<void>((resolve) => {
+      server.close(() => {
+        resolve();
+      });
+    });
+  });
+
+  it("sends the adapter headers with the client identity, and the request headers after them", async () => {
+    const adapter = new HttpAdapter({
+      allowedHosts: ["127.0.0.1"],
+      headers: { Accept: "application/json" },
+      retryDelayMs: 0,
+    });
+    const sent = JSON.parse(await adapter.getText(`${origin}/any`, "utf-8", { Cookie: "A3=abc" })) as Record<string, string>;
+
+    expect(sent["user-agent"]).toBe(HttpAdapter.USER_AGENT);
+    expect(sent.accept).toBe("application/json");
+    expect(sent.cookie).toBe("A3=abc");
+  });
+
+  it("returns the Set-Cookie values of an answer with a 404 status, without an error", async () => {
+    const cookies = await new HttpAdapter({ allowedHosts: ["127.0.0.1"], retryDelayMs: 0 }).getCookies(`${origin}/cookie-404`);
+
+    expect(cookies).toStrictEqual(["A3=abc; Path=/", "B=2; Path=/"]);
+  });
+
+  it("refuses a cookie request to a host outside the list", async () => {
+    await expect(new HttpAdapter({ allowedHosts: ["127.0.0.1"] }).getCookies("https://example.invalid/")).rejects.toThrow(HttpRefusedError);
+  });
+});

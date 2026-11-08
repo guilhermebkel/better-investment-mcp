@@ -8,6 +8,7 @@ const UNUSED_DEPENDENCIES: OperationDependencies = {
     loader: { ensure: () => Promise.resolve([]) },
     openReader: () => Promise.reject(new Error("not used by the manifest test")),
   },
+  overview: { cacheTtlSeconds: 60, readLoaded: () => Promise.resolve([]) },
 };
 
 describe("OperationManifestSurface.listOperations()", () => {
