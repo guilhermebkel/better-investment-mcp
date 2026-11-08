@@ -80,6 +80,7 @@
     "provenance": true
   },
   "dependencies": {
+    "@duckdb/node-api": "2.0.0-r.1",
     "@modelcontextprotocol/sdk": "1.32.2"
   }
 }

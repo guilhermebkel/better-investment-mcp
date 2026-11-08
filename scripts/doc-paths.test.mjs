@@ -8,8 +8,6 @@ const WILDCARD = /[*<>{}]/u;
 const TRAILING_PUNCTUATION = /[.,;:)]$/u;
 // Why: these are named in the rules and in the plan before the issue that creates them lands; each entry is removed when its file or folder exists.
 const PLANNED_PATHS = new Set([
-  "src/Adapters/",
-  "src/Adapters/DuckDb/",
   "src/Adapters/Yahoo/",
   "src/Testing/",
   "src/Testing/fixtures/",
