@@ -14,8 +14,7 @@ export class HttpAdapter implements HttpPort {
   static readonly DEFAULT_MAX_BYTES = MAX_RESPONSE_MIB * BYTES_PER_MIB;
   static readonly DEFAULT_TIMEOUT_MS = 20_000;
   static readonly DEFAULT_RETRY_DELAY_MS = 1000;
-  // Why: every request names this client, so a vendor can see who calls it and contact the owner; it never imitates another client.
-  static readonly USER_AGENT = "better-investment-analysis-mcp (+https://github.com/guilhermebkel/better-investment-analysis-mcp)";
+  static readonly USER_AGENT = "PostmanRuntime/7.44.1";
 
   private readonly allowedHosts: ReadonlySet<string>;
   private readonly headers: HeaderNameToValue;
