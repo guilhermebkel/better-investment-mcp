@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { InvalidEnvError } from "@/Errors/InvalidEnvError.ts";
+import { UnknownCommandError } from "@/Errors/UnknownCommandError.ts";
 import { StartupRunner } from "@/Setup/StartupRunner.ts";
 
 describe("StartupRunner.run()", () => {
@@ -8,21 +9,26 @@ describe("StartupRunner.run()", () => {
     vi.unstubAllEnvs();
   });
 
-  it("logs to stderr once when the environment is valid and writes nothing to stdout", () => {
+  it("logs the start-up event to stderr and writes the client configuration for init, never to stdout", async () => {
     const stderr = vi.spyOn(process.stderr, "write").mockReturnValue(true);
     const stdout = vi.spyOn(process.stdout, "write").mockReturnValue(true);
 
-    StartupRunner.run();
+    await StartupRunner.run(["init"]);
 
-    expect(stderr).toHaveBeenCalledExactlyOnceWith("{\"level\":\"info\",\"event\":\"environment_valid\"}\n");
+    expect(stderr).toHaveBeenNthCalledWith(1, "{\"level\":\"info\",\"event\":\"environment_valid\"}\n");
+    expect(stderr).toHaveBeenCalledTimes(2);
     expect(stdout).not.toHaveBeenCalled();
   });
 
-  it("throws when a variable is wrong", () => {
+  it("rejects with InvalidEnvError when a variable is wrong", async () => {
     vi.stubEnv("INVESTMENT_MCP_CACHE_TTL_SECONDS", "zero");
 
-    expect(() => {
-      StartupRunner.run();
-    }).toThrow(InvalidEnvError);
+    await expect(StartupRunner.run(["init"])).rejects.toThrow(InvalidEnvError);
+  });
+
+  it("rejects with UnknownCommandError for a command that does not exist", async () => {
+    vi.spyOn(process.stderr, "write").mockReturnValue(true);
+
+    await expect(StartupRunner.run(["serve"])).rejects.toThrow(UnknownCommandError);
   });
 });

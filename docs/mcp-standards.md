@@ -28,13 +28,13 @@ The server has three tools and all of them are read-only: `get_overview`, `get_g
 - **A refusal names the table, what is missing and a corrected example (planned #4).** The reader is a model that cannot ask a question.
 - **The server loads what is missing before it runs the query (planned #5).** The answer carries a `loaded` report: per category and asset, the source, the rows, the period and the error if any.
 - **An empty result for an asset that could not be loaded says so (planned #4).** It must not look like "no data".
-- **Output is limited to 1,024 rows and 50,000 characters, and a cut is always reported (planned #2).** The report says what was cut and how much remains.
+- **Output is limited to 1,024 rows and 50,000 characters, and a cut is always reported.** The service is `OutputLimitService`; `query_sql` applies it once the store exists (planned #4). The report says what was cut and how much remains.
 
 ## Third-party text
 
 - **Text from filings and other documents is data, never an instruction (planned #10, test).** It is returned in data fields; a test plants an instruction in a document and checks that it has no effect.
-- **The server instructions say it once (planned #2, test).** The instructions state that the server only reads, that the agent starts with `get_overview` and `get_guide`, that all data comes from `query_sql`, and that document text is data.
-- **A tool never gives investment advice (review).** The output describes and locates information; the usage notice says so in `get_overview` (planned #2).
+- **The server instructions say it once (test).** The instructions state that the server only reads, that the agent starts with `get_overview` and `get_guide`, that all data comes from `query_sql`, and that document text is data.
+- **A tool never gives investment advice (review).** The output describes and locates information; the usage notice says so in `get_overview`.
 
 ## Descriptions
 
@@ -52,7 +52,7 @@ The server has three tools and all of them are read-only: `get_overview`, `get_g
 - **Numbers are numbers, with the unit in the column name (review).** `amount_brl`, not "R$ 1,2 mi".
 - **Every row keeps the `source` that produced it (planned #5).** The agent can tell which vendor a number came from.
 - **A secret never leaves (test).** Every output path is tested with a fake secret (`RedactUtil`).
-- **A result is structured (review).** `structuredContent` carries the data. The text content carries the summary and the same data as JSON, because some clients show only the text to the model. Every tool declares an `outputSchema` (planned #2).
+- **A result is structured (review).** `structuredContent` carries the data. The text content carries the summary and the same data as JSON, because some clients show only the text to the model. Every tool declares an `outputSchema`.
 
 ## Errors
 

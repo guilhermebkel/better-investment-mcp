@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 const OPERATIONS_DIR = "src/Operations";
 const OPERATION_FILE = /Operation\.ts$/;
 const NAME_PATTERN = /static readonly NAME = "(\w+)"/;
+const UPPER_CASE_LETTER = /[A-Z]/g;
 const COUNT_PATTERN = /<!-- tools:count -->\s*(\d+)\s*<!-- \/tools:count -->/g;
 const LIST_PATTERN = /<!-- tools:list -->([\s\S]*?)<!-- \/tools:list -->/g;
 const LIST_ITEM = /^[-*] `(\w+)`/gm;
@@ -20,7 +21,8 @@ export const readToolNames = (sources) => {
     if (name === undefined) {
       throw new Error(`${path} has no static NAME to read.`);
     }
-    return name;
+    // Why: the client sees the snake_case name derived from the camelCase NAME, as src/Surfaces/OperationManifestSurface.ts does.
+    return name.replaceAll(UPPER_CASE_LETTER, (letter) => `_${letter.toLowerCase()}`);
   });
 };
 
