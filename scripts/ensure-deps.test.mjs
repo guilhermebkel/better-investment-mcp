@@ -69,7 +69,7 @@ describe("isDepsUpToDate()", () => {
 describe("ensureDeps()", () => {
   it("returns 0 without installing when dependencies are up to date", () => {
     const install = vi.fn();
-    const result = ensureDeps({ isUpToDate: () => true, install });
+    const result = ensureDeps({ isUpToDate: () => true, setupTools: () => 0, install });
 
     expect(result).toBe(0);
     expect(install).not.toHaveBeenCalled();
@@ -77,9 +77,25 @@ describe("ensureDeps()", () => {
 
   it("installs when dependencies are not up to date", () => {
     const install = vi.fn(() => 0);
-    const result = ensureDeps({ isUpToDate: () => false, install });
+    const result = ensureDeps({ isUpToDate: () => false, setupTools: () => 0, install });
 
     expect(result).toBe(0);
     expect(install).toHaveBeenCalledOnce();
+  });
+
+  it("sets up the Python and system tools after the install, and fails when they are missing", () => {
+    const setupTools = vi.fn(() => 1);
+    const result = ensureDeps({ isUpToDate: () => true, install: vi.fn(), setupTools });
+
+    expect(setupTools).toHaveBeenCalledOnce();
+    expect(result).toBe(1);
+  });
+
+  it("stops before the tools when the install fails", () => {
+    const setupTools = vi.fn(() => 0);
+    const result = ensureDeps({ isUpToDate: () => false, install: () => 2, setupTools });
+
+    expect(result).toBe(2);
+    expect(setupTools).not.toHaveBeenCalled();
   });
 });

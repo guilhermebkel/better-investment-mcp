@@ -9,9 +9,10 @@ RUN pnpm install --frozen-lockfile && pnpm build && pnpm pack --pack-destination
 # Why: the yfinance library runs under python3 (YfinanceAdapter); OCRmyPDF and PyMuPDF are the OCR and table tools (ADR 0027). Its stage keeps pip and the venv out of the final image.
 # The venv is copied as it is, so both stages must use the same base image tag (same Alpine packages and python3).
 FROM node:22-alpine AS pydeps
+COPY requirements-tools.txt /tmp/requirements-tools.txt
 RUN apk add --no-cache python3 py3-pip \
   && python3 -m venv /opt/yf \
-  && /opt/yf/bin/pip install --no-cache-dir "yfinance==1.8.0" "ocrmypdf==17.14.0" "pymupdf==2.1"
+  && /opt/yf/bin/pip install --no-cache-dir -r /tmp/requirements-tools.txt
 
 FROM node:22-alpine
 ENV NODE_ENV=production INVESTMENT_MCP_CACHE_DIR=/cache INVESTMENT_MCP_OCRMYPDF=/opt/yf/bin/ocrmypdf INVESTMENT_MCP_PYTHON=/opt/yf/bin/python3 PATH="/opt/yf/bin:${PATH}"
