@@ -15,7 +15,9 @@ A document is loaded only when a query asks for `asset_filing_chunks` with a `fi
 
 ## Text extraction
 
-- A PDF is read page by page (`unpdf`). A page with no text is counted and reported in the answer (`pagesWithoutText`); it is not read. OCR is not available.
+- A PDF is read page by page (`unpdf`). A page with no text is a scanned image: it is read by OCR (OCRmyPDF with Tesseract, the Portuguese and English languages), and the page is counted in the answer (`pagesWithoutText`) only if OCR could not read it.
+- The tables of each page are read from its native structure (PyMuPDF, `find_tables`). Each table is one chunk with section `table`, its cells separated by ` | ` and its rows by ` ; `. The text of the page is also kept, so a table's words can be found twice.
+- OCR and the table reader are optional tools: `INVESTMENT_MCP_OCRMYPDF` names the OCRmyPDF command and `INVESTMENT_MCP_PYTHON` the Python with PyMuPDF (ADR 0025). When a tool is missing, the document keeps the text it has.
 - An HTML page is read by block. A heading (`h1` to `h4`) starts a section; the text under it is one segment per paragraph. Scripts, styles and the head are dropped.
 - The format is read from the bytes, not from the content type. CVM sends PDFs with `text/html`.
 - A zip that holds PDF entries (the periodic report, ITR) is read as its PDFs, page by page; with one PDF the chunks have no section, with several each section is the file name.

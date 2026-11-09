@@ -35,6 +35,7 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Added
 
+- Scanned pages of a PDF are read by OCR (OCRmyPDF with Tesseract, Portuguese and English), and the tables of a PDF are read from its native structure (PyMuPDF); both are optional tools set by `INVESTMENT_MCP_OCRMYPDF` and `INVESTMENT_MCP_PYTHON` (ADR 0027).
 - A query that names a metric the catalog does not know says so, and lists the metrics of its group (for example `fii.dividend_yield`). The FII columns are checked against the adapters by a test.
 - The sql guide has the dollar sell rate example (`fx.sell_rate`).
 - `get_guide` (sql and search topics) has more examples: stock splits, ITR filings by date, ranked search by a vacancy passage and by a section. Every example is checked against the SQL guard and the schema by the test suite.

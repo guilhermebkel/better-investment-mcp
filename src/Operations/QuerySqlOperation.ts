@@ -200,7 +200,7 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
 
   private static describeScans(loaded: LoadedEntry[]): string {
     const pagesWithoutText = loaded.reduce((total, entry) => total + (entry.pagesWithoutText ?? 0), 0);
-    return pagesWithoutText > 0 ? ` ${pagesWithoutText} pages had no text (scanned images are not read; OCR is not available).` : "";
+    return pagesWithoutText > 0 ? ` ${pagesWithoutText} pages had no text, even after OCR (OCR needs ocrmypdf and tesseract with the por language).` : "";
   }
 
   private static describeIndexFailures(loaded: LoadedEntry[]): string {
