@@ -467,7 +467,8 @@ export class LoaderService implements LoaderPort {
     const periodColumn = window === undefined ? undefined : PeriodService.TABLE_TO_PERIOD_COLUMN[table as DataTable];
     // Why: a period load replaces only the rows of its own window, so the rows of another period stay in the store.
     const periodWhere = periodColumn === undefined ? "" : ` AND ${periodColumn} BETWEEN ? AND ?`;
-    const periodValues = window === undefined ? [] : [window.from, window.to];
+    // Why: the values are bound only when the WHERE clause has their placeholders; a table with no period column (asset_splits) has none.
+    const periodValues = periodWhere === "" || window === undefined ? [] : [window.from, window.to];
     // Why: a filing list reload keeps the hash of each document already stored, so an unchanged document is not downloaded again into the chunks.
     const filingIdToHash = await this.readStoredHashes(table, requirement);
     // Why: the asset row is merged, not replaced: each load fills the columns it knows and keeps the others, so a CVM load does not erase a name that Yahoo gave.

@@ -678,6 +678,21 @@ describe("LoaderService.ensure()", () => {
       });
     });
 
+    describe("when a period load also sends a table with no period column", () => {
+      it("stores the statement rows and does not fail the bind of the other table", async () => {
+        respond = () => Promise.resolve({
+          source: "primary",
+          tables: {
+            [CVM_STATEMENTS_TABLE]: [buildStatementRow(Q1_2024_END, Q1_2024_END)],
+            asset_splits: [{ asset_id: PETR4_ASSET_ID, ex_time: "2024-02-01", ratio: 2 }],
+          },
+        });
+        const [entry] = await buildLoader().ensure([buildStatementRequirement(PERIOD_2024Q1)]);
+        expect(entry?.status).toBe("loaded");
+        expect(entry?.error).toBeUndefined();
+      });
+    });
+
     describe("when the provider names an item it could not read", () => {
       it("stores the other rows and keeps the item errors on the entry", async () => {
         respond = () => Promise.resolve({
