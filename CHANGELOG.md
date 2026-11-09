@@ -15,6 +15,10 @@ All notable changes to this project are in this file. The format follows [Keep a
 - The `document_text` view is removed, because it had no `asset_id` filter; query `asset_filing_chunks` instead.
 - The data tables no longer have a `source` column; the vendor of a load is kept once, in `load_runs` (ADR 0020). The answer of `query_sql` and `get_overview` do not name the vendor, nor whether a fallback served a load. The store is at schema version 8.
 
+### Fixed
+
+- The Docker image installs `python3` and `yfinance` (pinned to 1.8.0) in a virtualenv, so the yfinance source works in the container. Before, the image had no Python, so the quotes and dividends fell back to the rate-limited Yahoo adapter. The Python tools stay out of the final image: pip and the build tools are in a build stage.
+
 ### Added
 
 - HTTP mode for Docker and for a server on your own machine (`INVESTMENT_MCP_TRANSPORT=http`): Streamable HTTP at `/mcp` and `GET /health` on `INVESTMENT_MCP_HTTP_HOST` and `INVESTMENT_MCP_HTTP_PORT` (`127.0.0.1:3100` by default). Every `/mcp` request needs `Authorization: Bearer` with `INVESTMENT_MCP_HTTP_TOKEN`, which must be at least 8 characters and is required on every address (ADR 0025).

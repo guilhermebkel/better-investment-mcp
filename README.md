@@ -235,7 +235,7 @@ Each category has a default, so a query works with no provider variable. A secon
 | B3 listing and COTAHIST | CNPJ and ISIN of a ticker; daily quotes of the current and the previous year | Public site routes. The COTAHIST file is about 90 MB per year, so its first load takes minutes. |
 | CVM company and fund files | company registry (sector), fund registry, daily quota and holdings | Open data. |
 | CVM FRE, VLMO and CGVN | reference form, securities holdings and governance rows of a company, by section, date and version | Open data. Each yearly zip is streamed; the last three years are read. |
-| yfinance (Python library) | quotes, dividends and splits, as an alternative to Yahoo | Needs `python3` and `pip install yfinance` on the machine. Unofficial. |
+| yfinance (Python library) | quotes, dividends and splits, as an alternative to Yahoo | Needs `python3` and `pip install yfinance` on the machine; the Docker image already has both. Unofficial. |
 | StatusInvest | fundamentals, FII monthly data | Blocked: the site answers with a Cloudflare challenge, which the server does not bypass. |
 | CVM | filings list (IPE) | Open data. A ticker needs a CNPJ link that no source gives yet. |
 | CVM | ITR, DFP, Formulário de Referência | Not built (issue #11). |
