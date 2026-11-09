@@ -18,6 +18,9 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Fixed
 
+- A reference form (FRE) is stored once per version. Its main section names the document as `ID_DOC` and its item sections as `ID_Documento`; the adapter read only the second, so one form was stored twice, and the copy without the link failed with "the filing has no link".
+- A CVM link that answers with a web page is named as such, with the link and the advice to try again, and the load error names the document kind (for example `fre filing …`).
+- A fund or an FII asked of the company registry says the registry covers stocks only, and where that asset's data is.
 - The answer of `query_sql` names only the periods that loaded; a failed load's period is no longer reported as loaded.
 - A missing search index is named (`search_chunks is not available`) instead of DuckDB's catalog error.
 - The unknown-series and unknown-indicator errors name the asset type, so `tax_rate:CDI` is not reported as absent from a list that has it.

@@ -490,12 +490,12 @@ describe("LoaderService.ensure()", () => {
 
     describe("when the CVM answer is a page, not a document (issue #27)", () => {
       it("names the filing, stores no chunk, and leaves the filing row as it was", async () => {
-        documentBytes = () => Promise.reject(new Error("CVM answered with a page, not a PDF document or a form zip; no document was stored"));
+        documentBytes = () => Promise.reject(new Error("the CVM link answered with a web page, not the document (a PDF or a form zip), so it was not read; the CVM site does this at times, so try the query again later. Link: https://www.rad.cvm.gov.br/ENET/f-pdf"));
 
         const [entry] = await buildLoader().ensure([PETR4_FILING]);
 
         expect(entry).toMatchObject({ status: "failed", filingId: PDF_FILING_ID });
-        expect(entry?.error).toBe(`filing ${PDF_FILING_ID}: CVM answered with a page, not a PDF document or a form zip; no document was stored`);
+        expect(entry?.error).toBe(`material_fact filing ${PDF_FILING_ID}: the CVM link answered with a web page, not the document (a PDF or a form zip), so it was not read; the CVM site does this at times, so try the query again later. Link: https://www.rad.cvm.gov.br/ENET/f-pdf`);
         expect(await readChunks()).toStrictEqual([]);
         expect(await store.writer.readRows("SELECT file_hash FROM asset_filings WHERE filing_id = ?", [PDF_FILING_ID])).toStrictEqual([{ file_hash: null }]);
       });

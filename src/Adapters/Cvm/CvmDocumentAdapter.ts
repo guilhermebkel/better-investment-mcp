@@ -38,7 +38,7 @@ export class CvmDocumentAdapter implements DocumentProvider {
     const bytes = await this.http.getBytes(url);
     // Why: the CVM site sometimes answers 200 with an HTML error page instead of the filing; that page is not a document, so it is refused before any text is read from it. A reference form is a zip of XML and PDFs.
     if (!CvmDocumentAdapter.isPdf(bytes) && !ZipFileUtil.isZip(bytes)) {
-      throw new Error("CVM answered with a page, not a PDF document or a form zip; no document was stored");
+      throw new Error(`the CVM link answered with a web page, not the document (a PDF or a form zip), so it was not read; the CVM site does this at times, so try the query again later. Link: ${url}`);
     }
     // Why: the HTTP adapter answers with a Node Buffer, which the PDF reader refuses; the document leaves the adapter as plain bytes.
     return new Uint8Array(bytes);

@@ -60,7 +60,7 @@ describe("CvmDocumentAdapter.fetchDocument()", () => {
   it("refuses an answer that is an HTML page instead of a PDF", async () => {
     const { http } = buildHttp(new TextEncoder().encode("<!DOCTYPE html><html><body>Pagina de erro</body></html>"));
 
-    await expect(new CvmDocumentAdapter(http).fetchDocument(DOCUMENT_URL)).rejects.toThrow("CVM answered with a page, not a PDF document or a form zip");
+    await expect(new CvmDocumentAdapter(http).fetchDocument(DOCUMENT_URL)).rejects.toThrow("the CVM link answered with a web page, not the document");
   });
 
   it("downloads a report that CVM indexes through its FNET link, the same way (P5)", async () => {

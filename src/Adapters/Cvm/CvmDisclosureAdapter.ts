@@ -139,7 +139,7 @@ export class CvmDisclosureAdapter implements ProviderPort<"disclosures"> {
           dataset: datasetId,
           reference_date: CsvUtil.readText(record.DT_REFER ?? record.Data_Referencia),
           version: CsvUtil.readText(record.VERSAO ?? record.Versao),
-          document_id: CsvUtil.readText(record.ID_Documento),
+          document_id: CvmDisclosureAdapter.readDocumentId(record.ID_DOC, record.ID_Documento),
           row_json: JSON.stringify(record),
           // Why: the reference form names its link LINK_DOC; the holdings file (VLMO) names it Link_Download, and a row with neither has no document to read.
           link: CvmDisclosureAdapter.readSecureLink(record.LINK_DOC ?? record.Link_Download),
@@ -187,6 +187,11 @@ export class CvmDisclosureAdapter implements ProviderPort<"disclosures"> {
       return candidate.version > current.version;
     }
     return candidate.received > current.received;
+  }
+
+  static readDocumentId(idDoc: string | undefined, idDocumento: string | undefined): string | null {
+    // Why: the main section names the document ID_DOC and the item sections name it ID_Documento; both must give one filing id, or one reference form is stored twice, once without its link.
+    return CsvUtil.readText(idDocumento ?? idDoc);
   }
 
   static readSecureLink(link: string | undefined): string | null {

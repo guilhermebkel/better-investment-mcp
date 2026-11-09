@@ -249,7 +249,7 @@ export class LoaderService implements LoaderPort {
       ...(result.pagesWithoutText === undefined ? {} : { pagesWithoutText: result.pagesWithoutText }),
       ...(result.indexError === undefined ? {} : { indexError: result.indexError }),
       // Why: a failed document names its filing, so the agent can tell which one could not be read; the other filings of the query still load (issue #27).
-      ...(result.errorMessage === undefined ? {} : { error: `filing ${filing.filing_id}: ${result.errorMessage}` }),
+      ...(result.errorMessage === undefined ? {} : { error: `${filing.filing_type} filing ${filing.filing_id}: ${result.errorMessage}` }),
     };
   }
 
@@ -287,7 +287,7 @@ export class LoaderService implements LoaderPort {
   private static async fetchAndSplit(registry: ProviderRegistryService, filing: FilingRow): Promise<DownloadOutcome> {
     try {
       if (filing.url === null || filing.url === "") {
-        throw new Error("the filing has no link to its document");
+        throw new Error(`the CVM file gives no link for this ${filing.filing_type} filing, so its document cannot be read`);
       }
       const provider: DocumentProvider = registry.resolveDocument(filing.market, filing.asset_type);
       // Why: nothing is written before the download, the size check and the extraction have all succeeded, so a refused document leaves the store as it was.

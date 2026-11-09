@@ -55,6 +55,21 @@ describe("ProviderRegistryService.resolve()", () => {
     });
   });
 
+  describe("when the registry is asked for a fund or an FII", () => {
+    it("says the company registry covers stocks only, and where the data is", () => {
+      const cvm = new FakeProvider({
+        vendor: "cvm",
+        markets: ["BR"],
+        category: "registry",
+        assetTypes: ["stock"],
+        respond: () => Promise.resolve(EMPTY_RESULT),
+      });
+      const registry = new ProviderRegistryService(buildEnv({ INVESTMENT_MCP_REGISTRY_PROVIDER: "BR:cvm" }), { ...ProviderRegistryService.buildEmptyCatalog(), registry: { cvm } });
+
+      expect(() => registry.resolve("registry", "BR", "fii")).toThrow("the company registry covers stocks only");
+    });
+  });
+
   describe("when a fallback is named after the primary", () => {
     it("returns both, so the loader can use the fallback when the primary fails", () => {
       const yahoo = buildProvider("yahoo", ["BR"]);

@@ -67,6 +67,12 @@ describe("CvmDisclosureAdapter.fetchTables()", () => {
     expect(urls).toContain(`${BASE}/dados/CIA_ABERTA/DOC/VLMO/DADOS/vlmo_cia_aberta_2025.zip`);
   });
 
+  it("gives the main section and an item of one reference form the same document id", () => {
+    expect(CvmDisclosureAdapter.readDocumentId("147376", undefined)).toBe("147376");
+    expect(CvmDisclosureAdapter.readDocumentId(undefined, "147376")).toBe("147376");
+    expect(CvmDisclosureAdapter.readDocumentId(undefined, undefined)).toBeNull();
+  });
+
   it("takes the document link from its main section, even when an earlier section of it has none", () => {
     const link = "http://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=138733";
     const assetId = "BR:stock:PETR4";

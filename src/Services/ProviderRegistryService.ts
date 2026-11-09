@@ -14,6 +14,11 @@ import type {
 
 const SETTING_ENTRY_PATTERN = /^([A-Z]{2,6}):([a-z0-9_]+)(?:>([a-z0-9_]+))?$/;
 
+// Why: the company registry covers listed companies only, so a fund or an FII asked of it is refused with where its data is.
+const categoryToRefusalHint: Readonly<Partial<Record<CacheCategory, string>>> = {
+  registry: "; the company registry covers stocks only, and a fund or an FII is read from its own files (fund data, filings and fund metrics)",
+};
+
 export class ProviderRegistryService {
   // Why: a category with no setting uses its default, so the server works with no provider variable; a default with a second vendor names it as the fallback, used when the first one fails.
   static readonly categoryToDefaultSetting: Record<CacheCategory, string> = {
@@ -156,7 +161,9 @@ export class ProviderRegistryService {
       throw new ProviderUnavailableError(`${vendor} does not serve ${market} ${category}`);
     }
     if (assetType !== undefined && !provider.assetTypes.includes(assetType)) {
-      throw new ProviderUnavailableError(`${vendor} does not serve ${assetType} assets in ${category}`);
+      // Why: the company registry covers listed companies only, so a fund or an FII asks the registry in vain; the message says where its data is.
+      const hint = categoryToRefusalHint[category] ?? "";
+      throw new ProviderUnavailableError(`${vendor} does not serve ${assetType} assets in ${category}${hint}`);
     }
   }
 
