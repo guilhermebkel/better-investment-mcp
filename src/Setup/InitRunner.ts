@@ -1,5 +1,8 @@
 import { LogUtil } from "@/Utils/LogUtil.ts";
 
+const MCP_SERVERS_OPEN = "  \"mcpServers\": {";
+const SERVER_OPEN = "    \"better-investment-analysis\": {";
+
 export class InitRunner {
   static readonly CLIENT_CONFIG_TEXT = [
     "Add the server to your MCP client.",
@@ -7,8 +10,8 @@ export class InitRunner {
     "Claude and Cursor read this JSON (claude_desktop_config.json, .mcp.json or .cursor/mcp.json):",
     "",
     "{",
-    "  \"mcpServers\": {",
-    "    \"better-investment-analysis\": {",
+    MCP_SERVERS_OPEN,
+    SERVER_OPEN,
     "      \"command\": \"npx\",",
     "      \"args\": [\"-y\", \"better-investment-analysis-mcp\"]",
     "    }",
@@ -24,10 +27,26 @@ export class InitRunner {
     "Docker (the image runs over stdio, and its cache is a named volume):",
     "",
     "{",
-    "  \"mcpServers\": {",
-    "    \"better-investment-analysis\": {",
+    MCP_SERVERS_OPEN,
+    SERVER_OPEN,
     "      \"command\": \"docker\",",
     "      \"args\": [\"run\", \"-i\", \"--rm\", \"-v\", \"better-investment-analysis-cache:/cache\", \"ghcr.io/guilhermebkel/better-investment-analysis-mcp\"]",
+    "    }",
+    "  }",
+    "}",
+    "",
+    "Docker over HTTP (the server runs on this machine; replace the token with your own secret of at least 8 characters):",
+    "",
+    "docker run -d --name investment-mcp -p 127.0.0.1:3100:3100 \\",
+    "  -e INVESTMENT_MCP_TRANSPORT=http -e INVESTMENT_MCP_HTTP_HOST=0.0.0.0 \\",
+    "  -e INVESTMENT_MCP_HTTP_TOKEN='your-long-random-secret' \\",
+    "  -v better-investment-analysis-cache:/cache ghcr.io/guilhermebkel/better-investment-analysis-mcp",
+    "",
+    "{",
+    MCP_SERVERS_OPEN,
+    SERVER_OPEN,
+    "      \"url\": \"http://127.0.0.1:3100/mcp\",",
+    "      \"headers\": { \"Authorization\": \"Bearer your-long-random-secret\" }",
     "    }",
     "  }",
     "}",

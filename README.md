@@ -26,9 +26,20 @@ With `npx`, the client starts the server:
 
     npx -y better-investment-analysis-mcp
 
-With Docker, the cache is a named volume:
+With Docker over stdio, the client starts the container, and the cache is a named volume:
 
     docker run -i --rm -v better-investment-analysis-cache:/cache ghcr.io/guilhermebkel/better-investment-analysis-mcp
+
+With Docker over HTTP, the server runs on your machine and any MCP client connects to it. It binds to localhost, and every request must send `Authorization: Bearer <token>`, where the token is a secret of your choice of at least 8 characters:
+
+    docker run -d --name investment-mcp -p 127.0.0.1:3100:3100 \
+      -e INVESTMENT_MCP_TRANSPORT=http \
+      -e INVESTMENT_MCP_HTTP_HOST=0.0.0.0 \
+      -e INVESTMENT_MCP_HTTP_TOKEN='your-long-random-secret' \
+      -v better-investment-analysis-cache:/cache \
+      ghcr.io/guilhermebkel/better-investment-analysis-mcp
+
+The client then points at `http://127.0.0.1:3100/mcp` with the same header. The image has a Docker `HEALTHCHECK` (`better-investment-analysis-mcp health`): in HTTP mode it checks `GET /health`, and over stdio it passes at once. The server does not terminate TLS, so put a reverse proxy with TLS in front of it before you expose it beyond localhost.
 
 The package and the image are published with the first release (see `docs/product/releasing.md`).
 
@@ -42,6 +53,10 @@ Every setting is an environment variable. The server reads them once at start an
 | `INVESTMENT_MCP_CACHE_DIR` | the system temporary directory | Where the DuckDB cache file is kept. Created when missing. |
 | `INVESTMENT_MCP_CACHE_TTL_SECONDS` | `86400` | How long a loaded piece of data stays valid, in seconds. |
 | `INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS` | `5` | How long a query waits for a load before it answers with the rows already stored and a load id. The load keeps running in the background. |
+| `INVESTMENT_MCP_TRANSPORT` | `stdio` | `stdio`: the client starts the server and talks over stdin and stdout. `http`: the server listens for MCP clients at `/mcp`, on the address and port below. |
+| `INVESTMENT_MCP_HTTP_HOST` | `127.0.0.1` | The address HTTP mode listens on. Use `0.0.0.0` only inside a container, behind a reverse proxy with TLS. |
+| `INVESTMENT_MCP_HTTP_PORT` | `3100` | The port HTTP mode listens on. |
+| `INVESTMENT_MCP_HTTP_TOKEN` | none | The bearer token every `/mcp` request must send. Required in HTTP mode on every address, at least 8 characters. It is never returned or logged. |
 | `INVESTMENT_MCP_QUOTES_PROVIDER` | `BR:yfinance>b3,US:yfinance>yahoo` | Quote source per market. For Brazil the fallback is B3 COTAHIST, which has no adjusted close. Set it only to replace the default. |
 | `INVESTMENT_MCP_DIVIDENDS_PROVIDER` | `BR:yfinance>yahoo,US:yfinance>yahoo` | Dividend source per market. Set it only to replace the default. |
 | `INVESTMENT_MCP_FUNDAMENTALS_PROVIDER` | `BR:statusinvest` | Fundamentals source per market. Set it only to replace the default. |

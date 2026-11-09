@@ -91,4 +91,50 @@ describe("EnvUtil.read()", () => {
       expect(EnvUtil.read().INVESTMENT_MCP_MACRO_PROVIDER).toBeUndefined();
     });
   });
+
+  describe("when the transport is set", () => {
+    it("defaults to stdio, on 127.0.0.1 port 3100, with no token", () => {
+      vi.stubEnv("INVESTMENT_MCP_TRANSPORT", undefined);
+      vi.stubEnv("INVESTMENT_MCP_HTTP_HOST", undefined);
+      vi.stubEnv("INVESTMENT_MCP_HTTP_PORT", undefined);
+      vi.stubEnv("INVESTMENT_MCP_HTTP_TOKEN", undefined);
+
+      const env = EnvUtil.read();
+
+      expect(env.INVESTMENT_MCP_TRANSPORT).toBe("stdio");
+      expect(env.INVESTMENT_MCP_HTTP_HOST).toBe("127.0.0.1");
+      expect(env.INVESTMENT_MCP_HTTP_PORT).toBe(3100);
+      expect(env.INVESTMENT_MCP_HTTP_TOKEN).toBeUndefined();
+    });
+
+    it.each(["stdio", "http"])("accepts %s", (transport) => {
+      vi.stubEnv("INVESTMENT_MCP_TRANSPORT", transport);
+
+      expect(EnvUtil.read().INVESTMENT_MCP_TRANSPORT).toBe(transport);
+    });
+
+    it("refuses another transport and names the variable", () => {
+      vi.stubEnv("INVESTMENT_MCP_TRANSPORT", "sse");
+
+      expect(() => EnvUtil.read()).toThrow(/INVESTMENT_MCP_TRANSPORT must be stdio or http\./);
+    });
+
+    it("refuses a token shorter than eight characters and names the variable", () => {
+      vi.stubEnv("INVESTMENT_MCP_HTTP_TOKEN", "short");
+
+      expect(() => EnvUtil.read()).toThrow(/INVESTMENT_MCP_HTTP_TOKEN must be at least 8 characters\./);
+    });
+
+    it("keeps a token of eight characters or more", () => {
+      vi.stubEnv("INVESTMENT_MCP_HTTP_TOKEN", "long-enough-token");
+
+      expect(EnvUtil.read().INVESTMENT_MCP_HTTP_TOKEN).toBe("long-enough-token");
+    });
+
+    it.each(["0", "-1", "abc", "3100.5"])("refuses the port %s and names the variable", (value) => {
+      vi.stubEnv("INVESTMENT_MCP_HTTP_PORT", value);
+
+      expect(() => EnvUtil.read()).toThrow(/INVESTMENT_MCP_HTTP_PORT must be a positive integer\./);
+    });
+  });
 });

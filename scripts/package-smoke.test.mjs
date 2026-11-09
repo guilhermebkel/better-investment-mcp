@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { checkRun, parseCommand } from "./package-smoke.mjs";
+import { checkHttpRun, checkRun, parseCommand } from "./package-smoke.mjs";
 
 const GOOD_STDERR = "{\"level\":\"info\",\"event\":\"environment_valid\"}\n";
+const SERVER_NAME = "better-investment-analysis-mcp";
+const GOOD_INSTRUCTIONS = "This server only reads.";
 const GOOD_INITIALIZE = JSON.stringify({
   jsonrpc: "2.0",
   id: 1,
-  result: { protocolVersion: "2025-11-25", serverInfo: { name: "better-investment-analysis-mcp", version: "0.0.0" }, instructions: "This server only reads." },
+  result: { protocolVersion: "2025-11-25", serverInfo: { name: SERVER_NAME, version: "0.0.0" }, instructions: GOOD_INSTRUCTIONS },
 });
 const GOOD_TOOLS_LIST = JSON.stringify({
   jsonrpc: "2.0",
@@ -13,6 +15,12 @@ const GOOD_TOOLS_LIST = JSON.stringify({
   result: { tools: [{ name: "get_overview" }, { name: "get_guide" }, { name: "query_sql" }] },
 });
 const GOOD_STDOUT = `${GOOD_INITIALIZE}\n${GOOD_TOOLS_LIST}\n`;
+const GOOD_HTTP = {
+  name: SERVER_NAME,
+  instructions: `${GOOD_INSTRUCTIONS} It never changes anything outside itself.`,
+  toolNames: ["get_overview", "get_guide", "query_sql"],
+  unauthorizedStatus: 401,
+};
 
 describe("checkRun()", () => {
   it("passes when the program exits 0, speaks only MCP on stdout and lists the three tools", () => {
@@ -40,10 +48,10 @@ describe("checkRun()", () => {
   });
 
   it("fails when the server does not answer initialize with its name", () => {
-    const wrongName = GOOD_INITIALIZE.replace("better-investment-analysis-mcp", "another-server");
+    const wrongName = GOOD_INITIALIZE.replace(SERVER_NAME, "another-server");
 
     expect(checkRun({ code: 0, stdout: `${wrongName}\n${GOOD_TOOLS_LIST}\n`, stderr: GOOD_STDERR })).toStrictEqual([
-      "initialize did not answer with the server name better-investment-analysis-mcp",
+      `initialize did not answer with the server name ${SERVER_NAME}`,
     ]);
   });
 
@@ -56,16 +64,56 @@ describe("checkRun()", () => {
   });
 });
 
+describe("checkHttpRun()", () => {
+  it("passes when the name, the instructions, the three tools and the 401 without a token are right", () => {
+    expect(checkHttpRun(GOOD_HTTP)).toStrictEqual([]);
+  });
+
+  it("fails when /mcp answers without a token with anything but 401", () => {
+    expect(checkHttpRun({ ...GOOD_HTTP, unauthorizedStatus: 200 })).toStrictEqual([
+      "HTTP /mcp without a token answered 200, expected 401",
+    ]);
+  });
+
+  it("fails when the instructions do not say the server only reads", () => {
+    expect(checkHttpRun({ ...GOOD_HTTP, instructions: "A server." })).toStrictEqual([
+      "HTTP instructions do not say the server only reads",
+    ]);
+  });
+
+  it("fails when tools/list over HTTP has a different set of tools", () => {
+    expect(checkHttpRun({ ...GOOD_HTTP, toolNames: ["get_overview"] })).toStrictEqual([
+      "HTTP tools/list answered [\"get_overview\"], expected [\"get_overview\",\"get_guide\",\"query_sql\"]",
+    ]);
+  });
+});
+
 describe("parseCommand()", () => {
-  it("runs the built file when no command is given", () => {
-    expect(parseCommand([])).toStrictEqual({ command: ["node", "dist/main.js"] });
+  it("runs the built file over stdio when no command is given", () => {
+    expect(parseCommand([])).toStrictEqual({ command: ["node", "dist/main.js"], isStdioOnly: false, isHttpOnly: false });
   });
 
   it("takes the command after the separator", () => {
-    expect(parseCommand(["--", "docker", "run", "-i", "image"])).toStrictEqual({ command: ["docker", "run", "-i", "image"] });
+    expect(parseCommand(["--", "docker", "run", "-i", "image"])).toStrictEqual({
+      command: ["docker", "run", "-i", "image"],
+      isStdioOnly: false,
+      isHttpOnly: false,
+    });
   });
 
   it("takes the whole list as the command when there is no separator", () => {
-    expect(parseCommand(["npx", "pkg"])).toStrictEqual({ command: ["npx", "pkg"] });
+    expect(parseCommand(["npx", "pkg"])).toStrictEqual({ command: ["npx", "pkg"], isStdioOnly: false, isHttpOnly: false });
+  });
+
+  it("reads --stdio-only before the separator and leaves it out of the command", () => {
+    expect(parseCommand(["--stdio-only", "--", "docker", "run", "-i", "image"])).toStrictEqual({
+      command: ["docker", "run", "-i", "image"],
+      isStdioOnly: true,
+      isHttpOnly: false,
+    });
+  });
+
+  it("reads --http-only without a separator and leaves it out of the command", () => {
+    expect(parseCommand(["--http-only", "npx", "pkg"])).toStrictEqual({ command: ["npx", "pkg"], isStdioOnly: false, isHttpOnly: true });
   });
 });

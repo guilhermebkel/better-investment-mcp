@@ -36,6 +36,17 @@ _Avoid_: catalog, registry
 **Surface**:
 The code that exposes the operations over MCP.
 
+**Transport**:
+How a client reaches the server: `stdio` (the client starts the process and talks over stdin and stdout) or `http` (the server listens on a port and a client sends its requests to `/mcp`). It is set by `INVESTMENT_MCP_TRANSPORT`.
+_Avoid_: mode (the server has no access modes; every operation is read-only)
+
+**HTTP token**:
+The bearer secret (`INVESTMENT_MCP_HTTP_TOKEN`) that every request to `/mcp` must send in the `Authorization` header in HTTP mode. It is never returned or logged.
+_Avoid_: password, API key
+
+**Health check**:
+The `health` command. Over stdio it passes at once; in HTTP mode it passes when `GET /health` answers `ok`. The image's Docker `HEALTHCHECK` runs it.
+
 **Provider**:
 An interface for one category of data, such as `QuoteProvider`. It declares which markets and asset types it serves.
 _Avoid_: source (a source is the vendor), client
