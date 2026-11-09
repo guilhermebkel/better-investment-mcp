@@ -61,6 +61,22 @@ export class CacheService {
     return CacheService.readFreshRunCount(rows) > 0;
   }
 
+  async countRecentFailures(category: CacheCategory, assetId: string, since: Date): Promise<number> {
+    const rows = await this.writer.readRows(
+      "SELECT CAST(count(*) AS INTEGER) AS freshRunCount FROM load_runs WHERE category = ? AND asset_id = ? AND error IS NOT NULL AND started_at >= CAST(? AS TIMESTAMPTZ)",
+      [category, assetId, this.formatIso(since.getTime())],
+    );
+    return CacheService.readFreshRunCount(rows);
+  }
+
+  async countRecentFilingFailures(filingId: string, since: Date): Promise<number> {
+    const rows = await this.writer.readRows(
+      "SELECT CAST(count(*) AS INTEGER) AS freshRunCount FROM load_runs WHERE category = 'documents' AND filing_id = ? AND error IS NOT NULL AND started_at >= CAST(? AS TIMESTAMPTZ)",
+      [filingId, this.formatIso(since.getTime())],
+    );
+    return CacheService.readFreshRunCount(rows);
+  }
+
   async isFreshFiling(filingId: string): Promise<boolean> {
     const rows = await this.writer.readRows(
       "SELECT CAST(count(*) AS INTEGER) AS freshRunCount FROM load_runs WHERE category = 'filings' AND filing_id = ? AND error IS NULL AND expires_at > CAST(? AS TIMESTAMPTZ)",

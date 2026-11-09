@@ -24,9 +24,14 @@ import { ConcurrencyUtil } from "@/Utils/ConcurrencyUtil.ts";
 const ASSET_TABLE = "asset";
 const DISCLOSURE_DOCUMENT_TYPES = ["fre", "vlmo", "cgvn"] as const;
 const DOCUMENT_SOURCE = "cvm";
+const MS_PER_MINUTE = 60_000;
+const FAILURE_WINDOW_MINUTES = 60;
 
 export class LoaderService implements LoaderPort {
   static readonly MAX_PARALLEL_LOADS = 4;
+  // Why: a source that keeps failing (StatusInvest answers 403 to this server) is not asked again on every query; after this many failures in the window the load is refused until the window has passed.
+  static readonly MAX_FAILED_ATTEMPTS = 3;
+  static readonly FAILURE_WINDOW_MS = FAILURE_WINDOW_MINUTES * MS_PER_MINUTE;
   static readonly INSERT_BATCH_ROWS = 500;
   static readonly WRITABLE_TABLES: ReadonlySet<string> = new Set(Object.keys(SqlGuardService.TABLE_TO_FILTERS));
 
@@ -70,6 +75,15 @@ export class LoaderService implements LoaderPort {
     return [...new Map(requirements.map((requirement) => [buildKey(requirement), requirement])).values()];
   }
 
+  private readFailureWindowStart(): Date {
+    return new Date(this.clock().getTime() - LoaderService.FAILURE_WINDOW_MS);
+  }
+
+  private static buildRetryError(failures: number): string {
+    const minutes = LoaderService.FAILURE_WINDOW_MS / MS_PER_MINUTE;
+    return `the load failed ${failures} times in the last ${minutes} minutes; it is not tried again until then`;
+  }
+
   private async ensureOne(requirement: Requirement): Promise<LoadedEntry> {
     const { cache } = this.store;
     const window = this.resolveWindow(requirement);
@@ -95,6 +109,11 @@ export class LoaderService implements LoaderPort {
       return { ...base, status: "fresh", ...(source === undefined ? {} : { source }), ...(period === undefined ? {} : { period }) };
     }
     const { category } = requirement;
+    const assetId = LoaderService.buildAssetId(requirement);
+    const failures = await cache.countRecentFailures(category, assetId, this.readFailureWindowStart());
+    if (failures >= LoaderService.MAX_FAILED_ATTEMPTS) {
+      return { ...base, status: "failed", error: LoaderService.buildRetryError(failures) };
+    }
     const windowKey = window === undefined ? "" : `:${window.from}:${window.to}`;
     const result = await cache.runOnce(`${category}:${LoaderService.buildAssetId(requirement)}${windowKey}`, () => this.load(requirement, window));
     const error = result.errorMessage === undefined ? {} : { error: result.errorMessage };
@@ -194,6 +213,10 @@ export class LoaderService implements LoaderPort {
     };
     if (await this.store.cache.isFreshFiling(filing.filing_id)) {
       return { ...base, status: "fresh", rowsWritten: 0 };
+    }
+    const failures = await this.store.cache.countRecentFilingFailures(filing.filing_id, this.readFailureWindowStart());
+    if (failures >= LoaderService.MAX_FAILED_ATTEMPTS) {
+      return { ...base, status: "failed", rowsWritten: 0, error: LoaderService.buildRetryError(failures) };
     }
     const result = await this.store.cache.runOnce(`documents:${filing.filing_id}`, () => this.loadDocument(filing));
     return {

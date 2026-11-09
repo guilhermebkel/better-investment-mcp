@@ -169,7 +169,8 @@ export class CvmDisclosureAdapter implements ProviderPort<"disclosures"> {
   static isLatest(row: ProviderRow, referenceToStamp: Map<string, VersionStamp>): boolean {
     const winner = referenceToStamp.get(CvmDisclosureAdapter.buildReferenceKey(row));
     const stamp = CvmDisclosureAdapter.readStamp(row);
-    return winner?.version === stamp.version && winner.received === stamp.received;
+    // Why: a section of a form without a receipt date (the shareholder file has none) belongs to the newest version alone; only a row with its own receipt date must match the newest receipt.
+    return winner?.version === stamp.version && (stamp.received === "" || stamp.received === winner.received);
   }
 
   private static buildReferenceKey(row: ProviderRow): string {

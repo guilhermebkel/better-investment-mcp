@@ -17,6 +17,8 @@ const TOTVS = "BR:stock:TOTS3";
 const MAIN = "principal";
 const FRE = "fre";
 const MAIN_FILE = "principal.csv";
+const SHAREHOLDER_FILE = "posicao.csv";
+const FRE_2026_FILING = "fre:BR:stock:TOTS3:147376";
 
 const buildHttp = (urls: string[] = []): HttpPort => ({
   // Why: only the recorded FRE year is served; any other URL answers 404, as CVM does for a year it does not publish.
@@ -71,7 +73,7 @@ describe("CvmDisclosureAdapter.fetchTables()", () => {
     const dataset = "fre";
     const documentId = "138733";
     const tables = CvmDisclosureAdapter.buildTables([
-      { asset_id: assetId, dataset: dataset, section: "posicao_acionaria", reference_date: REFERENCE_DATE, version: "1", document_id: documentId, row_json: "{}", source_file: "posicao.csv", link: null },
+      { asset_id: assetId, dataset: dataset, section: "posicao_acionaria", reference_date: REFERENCE_DATE, version: "1", document_id: documentId, row_json: "{}", source_file: SHAREHOLDER_FILE, link: null },
       { asset_id: assetId, dataset: dataset, section: "principal", reference_date: REFERENCE_DATE, version: "1", document_id: documentId, row_json: "{}", source_file: "principal.csv", link },
     ]);
 
@@ -87,7 +89,19 @@ describe("CvmDisclosureAdapter.fetchTables()", () => {
     ]);
 
     expect(tables.asset_filings?.map((row) => row.version)).toStrictEqual([11]);
-    expect(tables.asset_filing_items?.map((row) => row.filing_id)).toStrictEqual(["fre:BR:stock:TOTS3:147376"]);
+    expect(tables.asset_filing_items?.map((row) => row.filing_id)).toStrictEqual([FRE_2026_FILING]);
+  });
+
+  it("keeps the sections of the newest version that have no receipt date", () => {
+    const tables = CvmDisclosureAdapter.buildTables([
+      { asset_id: TOTVS, dataset: FRE, section: MAIN, reference_date: REFERENCE_DATE, version: "3", document_id: "139714", row_json: "{}", source_file: MAIN_FILE, link: null, received: "2024-07-18" },
+      { asset_id: TOTVS, dataset: FRE, section: MAIN, reference_date: REFERENCE_DATE, version: "11", document_id: "147376", row_json: "{}", source_file: MAIN_FILE, link: null, received: "2025-05-12" },
+      { asset_id: TOTVS, dataset: FRE, section: "posicao_acionaria", reference_date: REFERENCE_DATE, version: "11", document_id: "147376", row_json: "{}", source_file: SHAREHOLDER_FILE, link: null, received: null },
+      { asset_id: TOTVS, dataset: FRE, section: "posicao_acionaria", reference_date: REFERENCE_DATE, version: "3", document_id: "139714", row_json: "{}", source_file: SHAREHOLDER_FILE, link: null, received: null },
+    ]);
+
+    expect(tables.asset_filing_items?.map((row) => row.filing_id)).toStrictEqual([FRE_2026_FILING, FRE_2026_FILING]);
+    expect(tables.asset_filings?.map((row) => row.version)).toStrictEqual([11]);
   });
 
   it("breaks a tie between two rows of the highest version by the later receipt", () => {

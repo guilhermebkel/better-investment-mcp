@@ -145,7 +145,7 @@ describe("LoaderService.ensure()", () => {
   const buildLoader = (setting: string): LoaderService => new LoaderService(store, new ProviderRegistryService(
     { INVESTMENT_MCP_LOG_LEVEL: "error", INVESTMENT_MCP_CACHE_TTL_SECONDS: TTL_SECONDS, INVESTMENT_MCP_QUOTES_PROVIDER: setting },
     { ...ProviderRegistryService.buildEmptyCatalog(), quotes: { primary, fallback } },
-  ));
+  ), undefined, () => new Date(nowMs));
 
   const readStoredCloses = async (): Promise<number[]> => (await store.writer.readRows("SELECT close FROM asset_quotes ORDER BY reference_time_start")).map((row) => Number(row.close));
 
@@ -200,6 +200,45 @@ describe("LoaderService.ensure()", () => {
       expect(entry).toMatchObject({ status: "failed", error: "primary failed: Yahoo answered with a rate limit" });
       expect(await readStoredCloses()).toStrictEqual([31]);
       expect(runs).toStrictEqual([{ error: "primary failed: Yahoo answered with a rate limit" }]);
+    });
+  });
+
+  describe("when a source keeps failing", () => {
+    it("stops calling the provider after the limit, and says why", async () => {
+      let calls = 0;
+      respond = () => {
+        calls += 1;
+        return Promise.reject(new Error("StatusInvest blocks this client (status 403)"));
+      };
+      const loader = buildLoader(PRIMARY_SETTING);
+      for (let attempt = 0; attempt < LoaderService.MAX_FAILED_ATTEMPTS; attempt += 1) {
+        await loader.ensure([PETR4]);
+      }
+      const callsAtLimit = calls;
+
+      const [entry] = await loader.ensure([PETR4]);
+
+      expect(calls).toBe(callsAtLimit);
+      expect(entry).toMatchObject({ status: "failed", rowsWritten: 0 });
+      expect(entry?.error).toContain(`the load failed ${LoaderService.MAX_FAILED_ATTEMPTS} times`);
+    });
+
+    it("tries the provider again once the failure window has passed", async () => {
+      let calls = 0;
+      respond = () => {
+        calls += 1;
+        return Promise.reject(new Error("StatusInvest blocks this client (status 403)"));
+      };
+      const loader = buildLoader(PRIMARY_SETTING);
+      for (let attempt = 0; attempt < LoaderService.MAX_FAILED_ATTEMPTS; attempt += 1) {
+        await loader.ensure([PETR4]);
+      }
+      const callsAtLimit = calls;
+      nowMs += LoaderService.FAILURE_WINDOW_MS + 1;
+
+      await loader.ensure([PETR4]);
+
+      expect(calls).toBe(callsAtLimit + 1);
     });
   });
 
