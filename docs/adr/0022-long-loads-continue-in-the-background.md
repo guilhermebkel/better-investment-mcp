@@ -6,7 +6,7 @@ A query waits for the loads it needs before it answers. A load of a CVM year, of
 
 ## Decision
 
-- A load that runs longer than `INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS` (default 5, a positive integer) continues in the background. The query answers at once with the rows already stored, a warning that they may be incomplete, and the id of the load.
+- A load that runs longer than `INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS` (default 10, a positive integer) continues in the background. The query answers at once with the rows already stored, a warning that they may be incomplete, and the id of the load.
 - The client follows the load by running the query again. While the load runs, the answer says so and gives its progress; once it has finished, the rows are complete. No tool is added for this.
 - A request for the same requirements while a load runs shares that load and its id.
 - The rule covers every category, because every load goes through the same loader.

@@ -10,7 +10,7 @@ const LogLevelSchema = OptionalTextSchema.pipe(
 ).transform((level) => level ?? "info");
 
 // Why: the background threshold is the time a query waits for a load before it answers with the rows already stored.
-export const DEFAULT_BACKGROUND_AFTER_SECONDS = 5;
+export const DEFAULT_BACKGROUND_AFTER_SECONDS = 10;
 
 export const DEFAULT_HTTP_HOST = "127.0.0.1";
 export const DEFAULT_HTTP_PORT = 3100;
