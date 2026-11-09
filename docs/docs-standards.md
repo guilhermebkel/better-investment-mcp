@@ -14,6 +14,7 @@ What goes in `docs/` and where everything else goes.
 | --- | --- |
 | `docs/product/architecture.md` | product doc |
 | `docs/product/data-map.md` | product doc |
+| `docs/product/data-model.md` | product doc |
 | `docs/product/adding-an-operation.md` | product doc |
 | `docs/product/adding-a-source.md` | product doc |
 | `docs/product/releasing.md` | product doc |
