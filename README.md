@@ -41,6 +41,40 @@ With Docker over HTTP, the server runs on your machine and any MCP client connec
 
 The client then points at `http://127.0.0.1:3100/mcp` with the same header. The image has a Docker `HEALTHCHECK` (`better-investment-analysis-mcp health`): in HTTP mode it checks `GET /health`, and over stdio it passes at once. The server does not terminate TLS, so put a reverse proxy with TLS in front of it before you expose it beyond localhost.
 
+### Keep the cache between runs
+
+The cache is one DuckDB file, `investment-mcp-cache.duckdb`, in the folder set by `INVESTMENT_MCP_CACHE_DIR`. Without that variable the file goes to the system temporary directory, which the system may clear. To keep it on your computer, point the variable at a folder of your own; the server creates the folder when it is missing. Deleting the file loses nothing: the next query loads the data again.
+
+With `npx`, set the folder in the client configuration:
+
+    {
+      "mcpServers": {
+        "better-investment-analysis": {
+          "command": "npx",
+          "args": ["-y", "better-investment-analysis-mcp"],
+          "env": { "INVESTMENT_MCP_CACHE_DIR": "/home/you/.cache/better-investment-analysis" }
+        }
+      }
+    }
+
+With Docker over stdio, mount the same folder over `/cache`:
+
+    docker run -i --rm --user "$(id -u):$(id -g)" \
+      -v "$HOME/.cache/better-investment-analysis:/cache" \
+      ghcr.io/guilhermebkel/better-investment-analysis-mcp
+
+With Docker over HTTP, the same mount goes into the HTTP command:
+
+    docker run -d --name investment-mcp -p 127.0.0.1:3100:3100 \
+      --user "$(id -u):$(id -g)" \
+      -e INVESTMENT_MCP_TRANSPORT=http \
+      -e INVESTMENT_MCP_HTTP_HOST=0.0.0.0 \
+      -e INVESTMENT_MCP_HTTP_TOKEN='your-long-random-secret' \
+      -v "$HOME/.cache/better-investment-analysis:/cache" \
+      ghcr.io/guilhermebkel/better-investment-analysis-mcp
+
+Two things to know. The container writes to the folder as your user, which the `--user` line allows; without it the container runs as `node` (user 1000), and the server stops with `Permission denied` when the folder belongs to someone else. And one cache file serves one running server at a time: a second server that opens the same file stops with `in use by another process`, so give each running server its own folder. The `--user` form was tested on Linux.
+
 The package and the image are published with the first release (see `docs/product/releasing.md`).
 
 ## Configuration
