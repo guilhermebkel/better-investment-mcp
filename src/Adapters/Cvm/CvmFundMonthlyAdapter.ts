@@ -15,10 +15,10 @@ const VERSION_COLUMN = "Versao";
 const COMPLEMENT_FILE = "complemento";
 const ASSET_LIABILITY_FILE = "ativo_passivo";
 // Why: each CVM column maps to one fii metric of its month; the net worth is the complement file's, the liquidity and the balance items are the balance sheet file's.
-const COMPLEMENT_COLUMNS: readonly (readonly [CvmFundColumn, FundMonthField])[] = [
+export const COMPLEMENT_COLUMNS: readonly (readonly [CvmFundColumn, FundMonthField])[] = [
   ["Patrimonio_Liquido", "net_worth"],
 ];
-const ASSET_LIABILITY_COLUMNS: readonly (readonly [CvmFundColumn, FundMonthField])[] = [
+export const ASSET_LIABILITY_COLUMNS: readonly (readonly [CvmFundColumn, FundMonthField])[] = [
   ["Total_Necessidades_Liquidez", "liquidity_requirement"],
   ["Disponibilidades", "cash_available"],
   ["Titulos_Publicos", "government_bonds"],

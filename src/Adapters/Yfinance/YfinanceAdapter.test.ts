@@ -76,6 +76,19 @@ describe("YfinanceAdapter.fetchTables()", () => {
     expect(result.tables.asset_dividends?.[0]).toMatchObject({ ex_time: EX_DAY });
   });
 
+  it("fails with the ticker when the library sends no price for it, instead of loading nothing as a success", async () => {
+    const noPrice = JSON.stringify({
+      quotes: [{ date: "2026-11-02", open: null, high: null, low: null, close: null, adjClose: null, volume: null }],
+      dividends: [],
+      splits: [],
+      currency: null,
+      name: null,
+    });
+    await expect(buildAdapter(noPrice).fetchTables({ market: "BR", ticker: "ZZZZ9", assetType: "stock" })).rejects.toThrow(
+      "yfinance has no quotes for ZZZZ9",
+    );
+  });
+
   it("names the market it does not map", () => {
     expect(() => YfinanceAdapter.buildSymbol("XX", "PETR4")).toThrow("yfinance does not map the market XX to a symbol");
   });

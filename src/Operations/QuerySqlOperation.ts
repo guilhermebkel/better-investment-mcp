@@ -5,6 +5,7 @@ import { QuerySqlInputSchema } from "@/Schemas/QuerySqlSchema.ts";
 import type { OutputLimitResult } from "@/Protocols/OutputLimitProtocol.ts";
 import type { LoadJob, LoadJobRegistry } from "@/Protocols/LoadJobProtocol.ts";
 import { LoadJobService } from "@/Services/LoadJobService.ts";
+import { MetricCatalogService } from "@/Services/MetricCatalogService.ts";
 import { OutputLimitService } from "@/Services/OutputLimitService.ts";
 
 const VENDOR_KEYS: ReadonlySet<"source" | "isFallback"> = new Set(["source", "isFallback"]);
@@ -45,6 +46,12 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
     const verdict = await this.dependencies.guard.checkSql(input.sql);
     if (!verdict.isAccepted) {
       return { isError: true, message: verdict.message };
+    }
+    if (QuerySqlOperation.USES_SEARCH.test(input.sql) && this.dependencies.ensureSearchIndex !== undefined) {
+      const problem = await this.dependencies.ensureSearchIndex();
+      if (problem !== undefined) {
+        return { isError: true, message: `The query failed: ${problem}` };
+      }
     }
     const job = this.jobs.start(verdict.requirements);
     const isSettled = await LoadJobService.waitUpTo(job, this.backgroundAfterMs);
@@ -89,6 +96,7 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
       QuerySqlOperation.describeScans(loaded),
       QuerySqlOperation.describeIndexFailures(loaded),
       QuerySqlOperation.describeFundTables(sql, rows.length),
+      QuerySqlOperation.describeUnknownMetrics(sql),
       QuerySqlOperation.describeCut(limited),
     ].join("");
     return { isError: false, message: `${message}\n${limited.text}`, structuredResult };
@@ -129,6 +137,8 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
     return rowCount === 0 && periodicity !== undefined ? ` Published periodicity: ${periodicity}.` : "";
   }
 
+  private static readonly USES_SEARCH = /\bsearch_chunks\s*\(/iu;
+
   static describeError(error: unknown): string {
     const text = error instanceof Error ? error.message : "unknown error";
     // Why: search_chunks is a macro over the full-text index, which a rebuild drops and creates again; while it is missing DuckDB's catalog error is named here, with the way back.
@@ -158,6 +168,18 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
 
   private static isUsable(status: LoadedEntry["status"]): boolean {
     return USABLE_STATUSES.has(status);
+  }
+
+  private static describeUnknownMetrics(sql: string): string {
+    // Why: a metric name that is not in the catalog returns no rows; the answer names it and the metrics of its group, so a gap is not read as missing data.
+    const named = [
+      ...[...sql.matchAll(/metric\s*=\s*'([^']+)'/giu)].map((match) => match[1] ?? ""),
+      ...[...sql.matchAll(/metric\s+IN\s*\(([^)]*)\)/giu)].flatMap((match) => [...(match[1] ?? "").matchAll(/'([^']+)'/gu)].map((item) => item[1] ?? "")),
+    ];
+    return [...new Set(named)]
+      .filter((metric) => !MetricCatalogService.isKnown(metric))
+      .map((metric) => ` Metric ${metric} is not known; ${MetricCatalogService.describeGroup(metric)}.`)
+      .join("");
   }
 
   private static describeFundTables(sql: string, rowCount: number): string {

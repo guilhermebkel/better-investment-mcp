@@ -67,6 +67,22 @@ export class LoaderService implements LoaderPort {
     this.clock = clock;
   }
 
+  async ensureSearchIndex(): Promise<string | undefined> {
+    // Why: search_chunks is a macro over the full-text index, and DuckDB creates the macro only with its index. A query that needs it builds the index when the macro is missing and chunks are stored.
+    const macros = await this.store.writer.readRows(
+      "SELECT function_name FROM duckdb_functions() WHERE function_name = ?",
+      [FullTextIndexService.MACRO],
+    );
+    if (macros.length > 0) {
+      return undefined;
+    }
+    const counted = await this.store.writer.readRows("SELECT CAST(COUNT(*) AS INTEGER) AS total FROM asset_filing_chunks");
+    if (Number(counted[0]?.total ?? 0) === 0) {
+      return "no document is loaded to search yet; a query that loads a document (asset_filing_chunks) stores its text";
+    }
+    return this.enqueue(() => this.buildIndexOrReport());
+  }
+
   async ensure(requirements: readonly Requirement[]): Promise<LoadedEntry[]> {
     const documentRequirements = requirements.filter((requirement) => requirement.category === "documents");
     const otherRequirements = requirements.filter((requirement) => requirement.category !== "documents");

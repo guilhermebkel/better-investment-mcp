@@ -56,6 +56,17 @@ describe("CvmDisclosureAdapter.fetchTables()", () => {
     expect(JSON.parse(json)).toMatchObject({ Acionista: "UNIAO FEDERAL", Percentual: "36.0" });
   });
 
+  it("gives every item of a reference form a filing row, so the form is never listed without its rows", async () => {
+    const adapter = new CvmDisclosureAdapter(buildHttp(), () => Promise.resolve(PETROBRAS), BASE, () => CURRENT_YEAR);
+
+    const result = await adapter.fetchTables({ market: "BR", ticker: "PETR4", assetType: "stock" });
+    const filingIds = new Set((result.tables.asset_filings ?? []).map((row) => row.filing_id));
+    const itemIds = new Set((result.tables.asset_filing_items ?? []).map((row) => row.filing_id));
+
+    expect(itemIds.size).toBeGreaterThan(0);
+    expect([...itemIds].filter((id) => !filingIds.has(id))).toStrictEqual([]);
+  });
+
   it("asks for the three datasets of each year of the default window", async () => {
     const urls: string[] = [];
     const http = buildHttp(urls);

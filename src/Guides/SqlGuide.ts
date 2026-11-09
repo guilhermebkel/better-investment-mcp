@@ -60,10 +60,7 @@ Filings of a company:
 SELECT published_at, document_type, subject, url FROM asset_filings WHERE asset_id = 'BR:stock:PETR4' ORDER BY published_at DESC
 \`\`\`
 
-Loaded assets, with their period and expiry:
-\`\`\`sql
-SELECT asset_id, category, first_date, last_date, expires_at FROM asset_coverage
-\`\`\`
+Dollar sell rate (PTAX), last five days, in reais per dollar:\n\`\`\`sql\nSELECT reference_time_start, value FROM asset_metrics WHERE asset_id = 'BR:currency:USD' AND metric = 'fx.sell_rate' ORDER BY reference_time_start DESC LIMIT 5\n\`\`\`
 
 Stock splits of a company, newest first:
 \`\`\`sql
@@ -75,7 +72,7 @@ Quarterly reports (ITR) filed since November 2025:
 SELECT published_at, reference_time_start, subject FROM asset_filings WHERE asset_id = 'BR:stock:PETR4' AND document_type = 'itr' AND published_at >= TIMESTAMPTZ '2025-11-01 00:00:00-03' ORDER BY published_at DESC
 \`\`\`
 
-A wrong metric name returns no rows, not an error: check the name in the data map before you read a gap as missing data.
+A wrong metric name returns no rows, not an error; check the names in the data map.
 
 ## Notes
 
