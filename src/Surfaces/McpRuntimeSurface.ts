@@ -22,11 +22,12 @@ export class McpRuntimeSurface {
     const backgroundAfterSeconds = env.INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS ?? DEFAULT_BACKGROUND_AFTER_SECONDS;
     const dependencies = {
       querySql: {
+        loader,
+        jobs,
         guard: new SqlGuardService(store.writer),
         openReader: () => store.openReader(),
         backgroundAfterMs: backgroundAfterSeconds * MS_PER_SECOND,
-        loader,
-        jobs,
+        ensureSearchIndex: () => loader.ensureSearchIndex(),
       },
       overview: {
         cacheTtlSeconds: env.INVESTMENT_MCP_CACHE_TTL_SECONDS,

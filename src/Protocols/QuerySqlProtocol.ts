@@ -11,4 +11,5 @@ export type QuerySqlDependencies = {
   openReader: () => Promise<DatabasePort>;
   jobs?: LoadJobRegistry;
   backgroundAfterMs?: number;
+  ensureSearchIndex?: () => Promise<string | undefined>;
 };

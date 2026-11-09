@@ -70,7 +70,12 @@ export class YfinanceAdapter<Category extends "quotes" | "dividends"> implements
     }
     const symbol = YfinanceAdapter.buildSymbol(request.market, request.ticker);
     const text = await this.run(symbol);
-    const tables = YfinanceAdapter.buildTables(YfinanceAdapter.parseOutput(text, symbol), request);
+    const data = YfinanceAdapter.parseOutput(text, symbol);
+    // Why: a symbol the library does not know sends rows with no price; that is no quote, so the load fails and names the ticker, instead of loading nothing as a success.
+    if (this.category === "quotes" && data.quotes.every((quote) => quote.close === null)) {
+      throw new Error(`yfinance has no quotes for ${request.ticker}`);
+    }
+    const tables = YfinanceAdapter.buildTables(data, request);
     return { source: YfinanceAdapter.VENDOR, tables };
   }
 

@@ -371,6 +371,56 @@ describe("QuerySqlOperation.execute()", () => {
     });
   });
 
+  describe("when the search index cannot be built", () => {
+    it("says why and does not run the query", async () => {
+      const directory = mkdtempSync(TEMP_PREFIX);
+      vi.spyOn(process.stderr, "write").mockReturnValue(true);
+      const store = await StoreService.open(
+        { INVESTMENT_MCP_LOG_LEVEL: "error", INVESTMENT_MCP_CACHE_DIR: directory, INVESTMENT_MCP_CACHE_TTL_SECONDS: 60 },
+        () => START_MS,
+      );
+      let opened = false;
+      const operation = new QuerySqlOperation({
+        loader: { ensure: () => Promise.resolve([]) },
+        guard: new SqlGuardService(store.writer),
+        openReader: () => {
+          opened = true;
+          return store.openReader();
+        },
+        ensureSearchIndex: () => Promise.resolve("the full-text extension could not be installed"),
+      });
+      const answer = await operation.execute({ sql: "SELECT text FROM search_chunks('lucro', 'BR:stock:PETR4', 'material_fact', NULL, 'text')" });
+      store.close();
+      rmSync(directory, { recursive: true, force: true });
+      expect(answer).toMatchObject({ isError: true });
+      expect(answer.message).toContain("the full-text extension could not be installed");
+      expect(opened).toBe(false);
+    });
+  });
+
+  describe("for a metric name the catalog does not know", () => {
+    it("names the unknown metric and the metrics of its group", async () => {
+      const directory = mkdtempSync(TEMP_PREFIX);
+      vi.spyOn(process.stderr, "write").mockReturnValue(true);
+      const store = await StoreService.open(
+        { INVESTMENT_MCP_LOG_LEVEL: "error", INVESTMENT_MCP_CACHE_DIR: directory, INVESTMENT_MCP_CACHE_TTL_SECONDS: 60 },
+        () => START_MS,
+      );
+      const operation = new QuerySqlOperation({
+        loader: { ensure: () => Promise.resolve([]) },
+        guard: new SqlGuardService(store.writer),
+        openReader: () => store.openReader(),
+      });
+      const answer = await operation.execute({ sql: "SELECT value FROM asset_metrics WHERE asset_id = 'BR:fii:KNRI11' AND metric = 'fii.dividend_yield'" });
+      const known = await operation.execute({ sql: "SELECT value FROM asset_metrics WHERE asset_id = 'BR:fii:KNRI11' AND metric = 'fii.net_worth'" });
+      store.close();
+      rmSync(directory, { recursive: true, force: true });
+      expect(answer.message).toContain("Metric fii.dividend_yield is not known");
+      expect(answer.message).toContain("fii.net_worth");
+      expect(known.message).not.toContain("is not known");
+    });
+  });
+
   describe("describeError()", () => {
     it("names a missing search index and the way back", () => {
       const message = QuerySqlOperation.describeError(new Error("Catalog Error: Table Function with name search_chunks does not exist!"));

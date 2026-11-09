@@ -19,6 +19,18 @@ export class FullTextIndexService {
 
   static async buildIndex(writer: DatabasePort): Promise<void> {
     await writer.loadFullText();
+    // Why: the rebuild is one transaction, so a reader sees the index from before it or from after it, never a state without the index; a failed rebuild rolls back to the index that worked.
+    await writer.run("BEGIN TRANSACTION");
+    try {
+      await FullTextIndexService.buildIndexSteps(writer);
+      await writer.run("COMMIT");
+    } catch (error) {
+      await writer.run("ROLLBACK");
+      throw error;
+    }
+  }
+
+  private static async buildIndexSteps(writer: DatabasePort): Promise<void> {
     await writer.run(`DROP TABLE IF EXISTS ${FullTextIndexService.SEARCH_TABLE}`);
     await writer.run(`CREATE TABLE ${FullTextIndexService.SEARCH_TABLE} AS SELECT filing_id || ':' || CAST(seq AS VARCHAR) AS chunk_id, text FROM asset_filing_chunks`);
     await writer.run(`CREATE OR REPLACE TABLE ${FullTextIndexService.STOP_WORD_TABLE} (word VARCHAR)`);

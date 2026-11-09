@@ -18,6 +18,9 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Fixed
 
+- The search index is rebuilt in one transaction, so a query that runs during a rebuild still finds the index that was there. Before, the rebuild dropped the chunk table in a commit of its own, and a query in that moment failed with "search_chunks does not exist".
+- A query that needs `search_chunks` while its macro is missing builds the index first, when documents are stored; if it cannot, the answer says why.
+- A ticker whose quote load has no price fails with its name (`yfinance has no quotes for <ticker>`), instead of loading nothing as a success.
 - `query_sql` sends its rows once, in the text, within the 50,000-character limit. The structured content carries the counts, the truncation and the loaded report, not the rows. Before, the rows were sent twice, so a full answer was about twice the limit.
 - An empty answer from `asset_attribute` or `asset_holdings` for a stock says those tables hold fund data only. A fund asked of a fund category points to its CNPJ, `BR:fund:<CNPJ>`.
 - A reference form (FRE) is stored once per version. Its main section names the document as `ID_DOC` and its item sections as `ID_Documento`; the adapter read only the second, so one form was stored twice, and the copy without the link failed with "the filing has no link".
@@ -32,6 +35,8 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Added
 
+- A query that names a metric the catalog does not know says so, and lists the metrics of its group (for example `fii.dividend_yield`). The FII columns are checked against the adapters by a test.
+- The sql guide has the dollar sell rate example (`fx.sell_rate`).
 - `get_guide` (sql and search topics) has more examples: stock splits, ITR filings by date, ranked search by a vacancy passage and by a section. Every example is checked against the SQL guard and the schema by the test suite.
 - HTTP mode for Docker and for a server on your own machine (`INVESTMENT_MCP_TRANSPORT=http`): Streamable HTTP at `/mcp` and `GET /health` on `INVESTMENT_MCP_HTTP_HOST` and `INVESTMENT_MCP_HTTP_PORT` (`127.0.0.1:3100` by default). Every `/mcp` request needs `Authorization: Bearer` with `INVESTMENT_MCP_HTTP_TOKEN`, which must be at least 8 characters and is required on every address (ADR 0025).
 - The `health` command and a Docker `HEALTHCHECK` in the image, which exposes port 3100. `init` prints the Docker HTTP configuration next to the stdio one.
