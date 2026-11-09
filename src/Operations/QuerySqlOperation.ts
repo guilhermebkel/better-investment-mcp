@@ -18,9 +18,6 @@ const convertRow = (row: Record<string, unknown>): Record<string, unknown> => {
   return Object.fromEntries(Object.entries(row).map(([name, value]) => [name, convertValue(value)]));
 };
 
-// Why: the rows of an answer are sent as text and as structured content.
-const ROW_COPIES = 2;
-
 export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
   static readonly NAME = "querySql";
   static readonly DESCRIPTION = "Read-only. Runs one SELECT over the server's tables and returns the rows. "
@@ -74,15 +71,11 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
     pending?: LoadJob,
   ): OperationResult {
     const plainRows = rows.map(convertRow);
-    // Why: the rows go out twice, as text and as structured content (docs/mcp-standards.md), so each copy gets half the budget.
-    const limits = {
-      maxRows: OutputLimitService.DEFAULT_LIMITS.maxRows,
-      maxChars: OutputLimitService.DEFAULT_LIMITS.maxChars / ROW_COPIES,
-    };
-    const limited = new OutputLimitService(limits).limit(plainRows.map((row) => JSON.stringify(row)));
+    // Why: the rows are in the text, which every client shows; the structured content carries only the counts and the report, so the rows are not sent twice.
+    const limited = new OutputLimitService().limit(plainRows.map((row) => JSON.stringify(row)));
     const structuredResult: OperationData = {
       ...(pending === undefined ? {} : { loadingId: pending.id }),
-      rows: plainRows.slice(0, limited.returnedRows),
+      returnedRows: limited.returnedRows,
       truncated: limited.isTruncated,
       remainingRows: limited.remainingRows,
       remainingChars: limited.remainingChars,

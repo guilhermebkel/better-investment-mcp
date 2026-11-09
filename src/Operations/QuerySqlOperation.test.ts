@@ -78,10 +78,8 @@ describe("QuerySqlOperation.execute()", () => {
     it("loads it, then answers with its rows and the loaded report", async () => {
       const result = await operation.execute({ sql: PETR4_SQL });
 
-      expect(result).toMatchObject({
-        isError: false,
-        structuredResult: { rows: [{ asset_id: PETR4_ASSET_ID, close: 31 }], truncated: false },
-      });
+      expect(result).toMatchObject({ isError: false, structuredResult: { returnedRows: 1, truncated: false } });
+      expect(result.message).toContain(JSON.stringify({ asset_id: PETR4_ASSET_ID, close: 31 }));
       expect(provider.calls).toBe(1);
     });
 
@@ -106,7 +104,7 @@ describe("QuerySqlOperation.execute()", () => {
       const result = await operation.execute({ sql: PETR4_SQL });
 
       expect(provider.calls).toBe(1);
-      expect(result.structuredResult?.rows).toStrictEqual([{ asset_id: PETR4_ASSET_ID, close: 31 }]);
+      expect(result.structuredResult).not.toHaveProperty("rows");
     });
   });
 
@@ -165,11 +163,10 @@ describe("QuerySqlOperation.execute()", () => {
 
       const result = await bigOperation.execute({ sql: "SELECT close FROM asset_quotes WHERE asset_id = 'BR:stock:PETR4' AND reference_time_start BETWEEN '2020-01-01' AND '2026-12-31'" });
 
-      expect(result.structuredResult).toMatchObject({ truncated: true, remainingRows: 76 });
-      expect(result.structuredResult?.rows).toHaveLength(1024);
+      expect(result.structuredResult).toMatchObject({ truncated: true, remainingRows: 76, returnedRows: 1024 });
     });
 
-    it("keeps the rows of one answer within the output budget, counted once in the text and once in the structured content", async () => {
+    it("keeps the rows in the text within the output budget, and leaves them out of the structured content", async () => {
       // Why: a quote is one row per day, so each row gets its own day.
       const rows = Array.from({ length: 1100 }, (_, index) => {
         const day = new Date(Date.UTC(2020, 0, 1) + index * 86_400_000).toISOString().slice(0, 10);
@@ -204,10 +201,10 @@ describe("QuerySqlOperation.execute()", () => {
 
       const result = await operation.execute({ sql: "SELECT close FROM asset_quotes WHERE asset_id = 'BR:stock:PETR4' AND reference_time_start BETWEEN '2020-01-01' AND '2026-12-31'" });
 
-      const structuredChars = JSON.stringify(result.structuredResult?.rows).length;
-      // Why: the budget counts the rows, and the JSON array adds only its brackets around them.
-      expect(structuredChars).toBeLessThanOrEqual(OutputLimitService.DEFAULT_LIMITS.maxChars / 2 + 16);
+      // Why: the rows are the text; the budget applies to them, and the structured content carries only the counts.
+      expect(result.structuredResult).not.toHaveProperty("rows");
       expect(result.structuredResult?.truncated).toBe(true);
+      expect(result.message.length).toBeLessThanOrEqual(OutputLimitService.DEFAULT_LIMITS.maxChars + 1000);
     });
   });
   describe("documents", () => {
@@ -260,8 +257,7 @@ describe("QuerySqlOperation.execute()", () => {
       const result = await ask("SELECT text FROM asset_filing_chunks WHERE asset_id = 'BR:stock:PETR4' AND document_type = 'material_fact' AND text ILIKE '%PWNED%'");
 
       expect(result.isError).toBe(false);
-      const rows: unknown = result.structuredResult?.rows;
-      expect(JSON.stringify(rows)).toContain(INSTRUCTION);
+      expect(result.message).toContain(INSTRUCTION);
     });
 
     it("says the filing was indexed when a query has no matching row (AC7)", async () => {

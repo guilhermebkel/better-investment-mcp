@@ -52,7 +52,7 @@ The server has three tools and all of them are read-only: `get_overview`, `get_g
 - **Numbers are numbers, with the unit in the column name (review).** `amount_brl`, not "R$ 1,2 mi".
 - **Every row keeps the `source` that produced it (planned #5).** The agent can tell which vendor a number came from.
 - **A secret never leaves (test).** Every output path is tested with a fake secret (`RedactUtil`).
-- **A result is structured (review).** `structuredContent` carries the data. The text content carries the summary and the same data as JSON, because some clients show only the text to the model. Every tool declares an `outputSchema`.
+- **A result is structured (review).** The text content carries the summary and the data as JSON, because some clients show only the text to the model. `structuredContent` carries the counts, the truncation and the report, not the rows, so the rows are not sent twice. Every tool declares an `outputSchema`.
 
 ## Errors
 

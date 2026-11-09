@@ -18,7 +18,7 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Fixed
 
-- The output budget of `query_sql` covers the answer once: the rows are sent as text and as structured content, so each copy gets half of the 50,000-character limit. Before, a full answer was about twice the limit.
+- `query_sql` sends its rows once, in the text, within the 50,000-character limit. The structured content carries the counts, the truncation and the loaded report, not the rows. Before, the rows were sent twice, so a full answer was about twice the limit.
 - An empty answer from `asset_attribute` or `asset_holdings` for a stock says those tables hold fund data only. A fund asked of a fund category points to its CNPJ, `BR:fund:<CNPJ>`.
 - A reference form (FRE) is stored once per version. Its main section names the document as `ID_DOC` and its item sections as `ID_Documento`; the adapter read only the second, so one form was stored twice, and the copy without the link failed with "the filing has no link".
 - A CVM link that answers with a web page is named as such, with the link and the advice to try again, and the load error names the document kind (for example `fre filing …`).
