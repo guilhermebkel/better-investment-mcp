@@ -3,6 +3,7 @@ import type { BcbSeriesDefinition, DateWindow } from "@/Protocols/BcbProtocol.ts
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
 import { BcbSeriesRowsSchema } from "@/Schemas/BcbSchema.ts";
+import { PeriodService } from "@/Services/PeriodService.ts";
 import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 
 const MS_PER_DAY = 86_400_000;
@@ -58,7 +59,9 @@ export class BcbAdapter implements ProviderPort<"macro"> {
         dateToValue.set(date, value);
       }
     }
+    // Why: the service sends the whole series; only the days of the requested period are returned, so the load does not skip the rest.
     const rows: ProviderRow[] = [...dateToValue.entries()]
+      .filter(([date]) => request.period === undefined || PeriodService.isWithin(request.period, date))
       .sort(([left], [right]) => left.localeCompare(right))
       .map(([date, value]) => ({
         asset_id: AssetIdUtil.build({ market: "BR", assetType: definition.assetType, code: definition.name }),

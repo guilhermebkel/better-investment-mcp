@@ -4,7 +4,19 @@ import type { DatabasePort } from "@/Protocols/DatabaseProtocol.ts";
 import type { DocumentProvider } from "@/Protocols/DocumentProviderProtocol.ts";
 import type { ChunkRow } from "@/Protocols/DocumentTextProtocol.ts";
 import type { DataTable, Requirement } from "@/Protocols/SqlGuardProtocol.ts";
-import type { DownloadOutcome, FetchAttempt, FetchOutcome, FilingRow, LoadedEntry, LoaderPort, ScopeRule, SqlScope, TableToColumns } from "@/Protocols/LoaderProtocol.ts";
+import type {
+  DownloadOutcome,
+  FetchAttempt,
+  FetchOutcome,
+  FilingRow,
+  LoadedEntry,
+  LoaderPort,
+  ScopeRule,
+  SqlScope,
+  TableReplaceOutcome,
+  TableToColumns,
+  WriteOutcome,
+} from "@/Protocols/LoaderProtocol.ts";
 import type { PeriodWindow } from "@/Protocols/PeriodProtocol.ts";
 import type { ProviderPort, ProviderRequest, ProviderRow, ProviderResult, ResolvedProviders } from "@/Protocols/ProviderProtocol.ts";
 import { PeriodRowsSchema } from "@/Schemas/CacheSchema.ts";
@@ -79,6 +91,10 @@ export class LoaderService implements LoaderPort {
     return new Date(this.clock().getTime() - LoaderService.FAILURE_WINDOW_MS);
   }
 
+  private static buildItemErrors(result: CacheLoadResult): { itemErrors?: string[] } {
+    return result.itemErrors === undefined || result.itemErrors.length === 0 ? {} : { itemErrors: result.itemErrors };
+  }
+
   private static buildRetryError(failures: number): string {
     const minutes = LoaderService.FAILURE_WINDOW_MS / MS_PER_MINUTE;
     return `the load failed ${failures} times in the last ${minutes} minutes; it is not tried again until then`;
@@ -126,6 +142,7 @@ export class LoaderService implements LoaderPort {
       rowsWritten: result.rowsWritten,
       ...(period === undefined ? {} : { period }),
       ...error,
+      ...LoaderService.buildItemErrors(result),
     };
   }
 
@@ -167,9 +184,15 @@ export class LoaderService implements LoaderPort {
       };
     }
     try {
-      const rowsWritten = await this.writeInTransaction(requirement, fetched.result, window);
-      await this.store.cache.finishRun(runId, { rowsRead: rowsWritten });
-      return { rowsWritten, source: fetched.vendor, isFallback: fetched.isFallback };
+      const outcome = await this.writeInTransaction(requirement, fetched.result, window);
+      await this.store.cache.finishRun(runId, { rowsRead: outcome.rowsWritten });
+      const itemErrors = [...(fetched.result.itemErrors ?? []), ...outcome.itemErrors];
+      return {
+        rowsWritten: outcome.rowsWritten,
+        source: fetched.vendor,
+        isFallback: fetched.isFallback,
+        ...(itemErrors.length === 0 ? {} : { itemErrors }),
+      };
     } catch (error) {
       const errorMessage = LoaderService.describe(error);
       await this.store.cache.finishRun(runId, { rowsRead: 0, errorMessage });
@@ -393,7 +416,7 @@ export class LoaderService implements LoaderPort {
     requirement: Requirement,
     result: ProviderResult,
     window: PeriodWindow | undefined,
-  ): Promise<number> {
+  ): Promise<WriteOutcome> {
     // Why: DuckDB has one writer connection, so writes run one at a time, and each run is one transaction.
     return this.enqueue(() => this.writeNow(requirement, result, window));
   }
@@ -402,7 +425,7 @@ export class LoaderService implements LoaderPort {
     requirement: Requirement,
     result: ProviderResult,
     window: PeriodWindow | undefined,
-  ): Promise<number> {
+  ): Promise<WriteOutcome> {
     const { writer } = this.store;
     const tableToColumns = await this.readColumns();
     for (const table of Object.keys(result.tables)) {
@@ -412,14 +435,20 @@ export class LoaderService implements LoaderPort {
     }
     await writer.run("BEGIN TRANSACTION");
     try {
-      let written = 0;
+      let rowsWritten = 0;
+      const itemErrors: string[] = [];
       for (const [table, rows] of Object.entries(result.tables)) {
         const columns = tableToColumns[table] ?? [];
-        written += await this.replaceTable(requirement, table, rows, columns, window);
+        const replaced = await this.replaceTable(requirement, table, rows, columns, window);
+        rowsWritten += replaced.written;
+        // Why: a period load skips a row outside its window; the rows inside it are stored and the skipped ones are named.
+        if (replaced.outsidePeriod > 0 && window !== undefined) {
+          itemErrors.push(`${table}: ${replaced.outsidePeriod} row(s) outside the requested period ${window.from} to ${window.to} were not stored`);
+        }
       }
       await FileVersionService.record(writer, result.files ?? [], this.clock().toISOString());
       await writer.run("COMMIT");
-      return written;
+      return { rowsWritten, itemErrors };
     } catch (error) {
       await writer.run("ROLLBACK");
       throw error;
@@ -432,7 +461,7 @@ export class LoaderService implements LoaderPort {
     rows: ProviderRow[],
     columns: readonly string[],
     window: PeriodWindow | undefined,
-  ): Promise<number> {
+  ): Promise<TableReplaceOutcome> {
     const { writer } = this.store;
     const assetId = LoaderService.buildAssetId(requirement);
     const periodColumn = window === undefined ? undefined : PeriodService.TABLE_TO_PERIOD_COLUMN[table as DataTable];
@@ -447,15 +476,19 @@ export class LoaderService implements LoaderPort {
       await writer.run(`DELETE FROM ${table} WHERE asset_id = ?${scope.sql}${periodWhere}`, [assetId, ...scope.values, ...periodValues]);
     }
     const prepared: ProviderRow[] = [];
+    let outsidePeriod = 0;
     for (const original of rows) {
       const row = LoaderService.dropSource(original);
       LoaderService.checkRow(requirement, table, row, columns);
-      LoaderService.checkPeriod(table, row, window);
+      if (!LoaderService.isInPeriod(table, row, window)) {
+        outsidePeriod += 1;
+        continue;
+      }
       prepared.push(LoaderService.keepStoredHash(row, filingIdToHash));
     }
     if (table === ASSET_TABLE) {
       await LoaderService.mergeAssets(writer, prepared);
-      return rows.length;
+      return { written: prepared.length, outsidePeriod };
     }
     // Why: the rows go in batches of many value groups per statement; one statement per row made a full history of a series take minutes. A column a row does not carry is written as NULL, as before.
     const names = [...new Set(prepared.flatMap((row) => Object.keys(row)))];
@@ -465,7 +498,7 @@ export class LoaderService implements LoaderPort {
       const values = batch.flatMap((row) => names.map((name) => row[name] ?? null));
       await writer.run(`INSERT INTO ${table} (${names.join(", ")}) VALUES ${placeholders}`, values);
     }
-    return rows.length;
+    return { written: prepared.length, outsidePeriod };
   }
 
   private async readStoredHashes(table: string, requirement: Requirement): Promise<Map<string, string>> {
@@ -488,16 +521,16 @@ export class LoaderService implements LoaderPort {
     return storedHash === undefined ? row : { ...row, file_hash: storedHash };
   }
 
-  private static checkPeriod(table: string, row: ProviderRow, window: PeriodWindow | undefined): void {
+  private static isInPeriod(table: string, row: ProviderRow, window: PeriodWindow | undefined): boolean {
     const periodColumn = PeriodService.TABLE_TO_PERIOD_COLUMN[table as DataTable];
     if (window === undefined || periodColumn === undefined) {
-      return;
+      return true;
     }
     const date = row[periodColumn];
-    const isInWindow = typeof date === "string" && PeriodService.isWithin(window, date);
-    if (!isInWindow) {
-      throw new Error(`the provider sent a row of ${table} outside the requested period ${window.from} to ${window.to}`);
+    if (typeof date !== "string") {
+      throw new Error(`the provider sent a row of ${table} without a ${periodColumn}`);
     }
+    return PeriodService.isWithin(window, date);
   }
 
   private static checkRow(requirement: Requirement, table: string, row: ProviderRow, columns: readonly string[]): void {

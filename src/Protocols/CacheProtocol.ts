@@ -20,6 +20,7 @@ export type CacheLoadResult = {
   source?: string;
   isFallback: boolean;
   errorMessage?: string;
+  itemErrors?: string[];
   pagesWithoutText?: number;
   indexError?: string;
 };

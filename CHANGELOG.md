@@ -6,6 +6,7 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Changed
 
+- A load no longer stops for one bad item. A row outside the requested period is skipped and the rows inside it are stored; a StatusInvest value that is not a number skips only that indicator and year. The load entry names each skipped item in `itemErrors`, and the status stays `loaded`.
 - The document download reads the link a filing names on any http or https host, with the size limit and the timeout. Before, only the CVM and FNET hosts were read. The server now fetches whatever address the filing data contains.
 - A load that fails is not tried again on every query: after 3 failures of the same asset or filing within 60 minutes, the loader refuses it and names the failures, until the window passes. A source that blocks this server (StatusInvest answers 403) no longer keeps the query waiting.
 - CVM FRE, VLMO and CGVN filings keep their document link (`LINK_DOC` or `Link_Download`, stored as https), and only the highest version of each reference form is kept; the older versions leave the store on the next load.
@@ -17,6 +18,7 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Fixed
 
+- The BCB macro series and the Focus expectations return only the period asked for, as the Yahoo and yfinance adapters already did. Before, the whole history reached the loader, which refused it.
 - The Docker image installs `python3` and `yfinance` (pinned to 1.8.0) in a virtualenv, so the yfinance source works in the container. Before, the image had no Python, so the quotes and dividends fell back to the rate-limited Yahoo adapter. The Python tools stay out of the final image: pip and the build tools are in a build stage.
 
 ### Added

@@ -21,6 +21,7 @@ export type LoadedEntry = {
   rowsWritten: number;
   period?: Period;
   error?: string;
+  itemErrors?: string[];
   filingId?: string;
   pagesWithoutText?: number;
   indexError?: string;
@@ -36,6 +37,16 @@ export type FilingRow = {
   filing_type: string;
   url: string | null;
   file_hash: string | null;
+};
+
+export type WriteOutcome = {
+  rowsWritten: number;
+  itemErrors: string[];
+};
+
+export type TableReplaceOutcome = {
+  written: number;
+  outsidePeriod: number;
 };
 
 export type LoaderPort = { ensure(requirements: readonly Requirement[]): Promise<LoadedEntry[]> };

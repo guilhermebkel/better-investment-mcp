@@ -3,6 +3,7 @@ import type { FocusIndicator } from "@/Protocols/BcbFocusProtocol.ts";
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
 import { BCB_FOCUS_WIRE, BcbFocusResponseSchema } from "@/Schemas/BcbFocusSchema.ts";
+import { PeriodService } from "@/Services/PeriodService.ts";
 import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 
 const RATE_LIMIT_STATUS = 429;
@@ -52,7 +53,10 @@ export class BcbFocusAdapter implements ProviderPort<"expectations"> {
     const filter = encodeURIComponent(`Indicador eq '${indicator.odataName}'`);
     const url = `${this.baseUrl}/ExpectativasMercadoAnuais?$filter=${filter}&$format=json`;
     const text = await this.fetchText(url, indicator.key);
-    const rows = BcbFocusAdapter.parseIndicator(text, indicator);
+    // Why: the survey answers every year it has; only the reference years of the requested period are returned.
+    const rows = BcbFocusAdapter.parseIndicator(text, indicator).filter(
+      (row) => request.period === undefined || PeriodService.isWithin(request.period, String(row.reference_time_start)),
+    );
     return { source: BcbFocusAdapter.VENDOR, tables: { asset_expectations: rows } };
   }
 

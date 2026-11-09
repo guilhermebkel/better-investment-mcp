@@ -79,6 +79,20 @@ describe("BcbAdapter.fetchTables()", () => {
     ]);
   });
 
+  it("returns only the days of the requested period, although the service sends the whole series", async () => {
+    const { http } = buildHttpAnswering(() => readFixture("sgs-433-ipca-2025q1.json"));
+    const adapter = new BcbAdapter(http, BcbAdapter.BASE_URL, () => NOW);
+    const whole = await adapter.fetchTables({ market: "BR", assetType: "index", ticker: "IPCA" });
+    const period = { from: "2025-01-01", to: "2025-01-31" };
+    const filtered = await adapter.fetchTables({ market: "BR", assetType: "index", ticker: "IPCA", period });
+
+    const rows = filtered.tables.asset_metrics ?? [];
+    expect(rows.length).toBeGreaterThan(0);
+    const dates = rows.map((row) => String(row.reference_time_start));
+    expect(dates.every((date) => date >= period.from && date <= period.to)).toBe(true);
+    expect(rows.length).toBeLessThan((whole.tables.asset_metrics ?? []).length);
+  });
+
   it("refuses an unknown series and lists the known ones (AC2)", async () => {
     const { http } = buildHttpAnswering(() => "[]");
     await expect(new BcbAdapter(http).fetchTables({ market: "BR", assetType: "index", ticker: "IBOV" }))

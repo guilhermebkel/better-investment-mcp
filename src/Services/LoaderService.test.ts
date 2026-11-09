@@ -663,12 +663,32 @@ describe("LoaderService.ensure()", () => {
     });
 
     describe("when the provider sends a row outside the requested period", () => {
-      it("refuses the run and writes nothing", async () => {
-        respond = () => Promise.resolve({ source: "primary", tables: { [CVM_STATEMENTS_TABLE]: [buildStatementRow("2019-12-31", "2019-12-31")] } });
+      it("stores the rows inside the period and names the rows it skipped", async () => {
+        respond = () => Promise.resolve({
+          source: "primary",
+          tables: { [CVM_STATEMENTS_TABLE]: [buildStatementRow("2019-12-31", "2019-12-31"), buildStatementRow(Q1_2024_END, Q1_2024_END)] },
+        });
         const [entry] = await buildLoader().ensure([buildStatementRequirement(PERIOD_2024Q1)]);
-        expect(entry?.status).toBe("failed");
-        expect(entry?.error).toContain("outside the requested period 2024-01-01 to 2024-03-31");
-        expect(await readStoredPeriodEnds(store)).toStrictEqual([]);
+        expect(entry?.status).toBe("loaded");
+        expect(entry?.error).toBeUndefined();
+        expect(entry?.itemErrors).toStrictEqual([
+          `${CVM_STATEMENTS_TABLE}: 1 row(s) outside the requested period 2024-01-01 to 2024-03-31 were not stored`,
+        ]);
+        expect(await readStoredPeriodEnds(store)).toStrictEqual([Q1_2024_END]);
+      });
+    });
+
+    describe("when the provider names an item it could not read", () => {
+      it("stores the other rows and keeps the item errors on the entry", async () => {
+        respond = () => Promise.resolve({
+          source: "primary",
+          tables: { [CVM_STATEMENTS_TABLE]: [buildStatementRow(Q1_2024_END, Q1_2024_END)] },
+          itemErrors: ["fundamental.roe 2023 was not stored: value_F is not a number"],
+        });
+        const [entry] = await buildLoader().ensure([buildStatementRequirement(PERIOD_2024Q1)]);
+        expect(entry?.status).toBe("loaded");
+        expect(entry?.itemErrors).toStrictEqual(["fundamental.roe 2023 was not stored: value_F is not a number"]);
+        expect(await readStoredPeriodEnds(store)).toStrictEqual([Q1_2024_END]);
       });
     });
 

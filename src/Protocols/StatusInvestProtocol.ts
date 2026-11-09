@@ -28,3 +28,8 @@ export type StatusInvestKey = {
 };
 
 export type KeyColumn = "market" | "ticker" | "asset_type" | "period" | "source" | "version" | "source_file";
+
+export type FundamentalsOutcome = {
+  tables: import("@/Protocols/ProviderProtocol.ts").TableToRows;
+  itemErrors: string[];
+};
