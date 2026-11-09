@@ -4,7 +4,8 @@ Each answer says what was loaded, with its period and the error if any.
 
 ## Which public provider serves what
 
-- Quotes and dividends: Yahoo Finance, through yfinance; the BR and US tickers. Unofficial, for personal use, no service guarantee.
+- Quotes: Yahoo Finance through yfinance, for BR and US tickers. For a BR ticker that yfinance fails on, B3's daily file (COTAHIST) is the fallback; it has no adjusted close. Yahoo is unofficial, for personal use, with no service guarantee.
+- Dividends and splits: Yahoo Finance through yfinance, for BR and US tickers.
 - Fundamentals: StatusInvest. The site may block the requests; a blocked load says so and writes nothing.
 - Statements, company filings, fund files and FRE, VLMO, CGVN: CVM open data.
 - Company and fund registry, and the B3 identifiers (CNPJ, ISIN): CVM and B3.

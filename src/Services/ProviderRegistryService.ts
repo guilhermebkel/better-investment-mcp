@@ -17,7 +17,8 @@ const SETTING_ENTRY_PATTERN = /^([A-Z]{2,6}):([a-z0-9_]+)(?:>([a-z0-9_]+))?$/;
 export class ProviderRegistryService {
   // Why: a category with no setting uses its default, so the server works with no provider variable; a default with a second vendor names it as the fallback, used when the first one fails.
   static readonly categoryToDefaultSetting: Record<CacheCategory, string> = {
-    quotes: "BR:yfinance>yahoo,US:yfinance>yahoo",
+    // Why: the Brazilian fallback is B3 (COTAHIST), not Yahoo: yfinance and Yahoo read the same service, so Yahoo cannot back it up.
+    quotes: "BR:yfinance>b3,US:yfinance>yahoo",
     dividends: "BR:yfinance>yahoo,US:yfinance>yahoo",
     fundamentals: "BR:statusinvest",
     statements: "BR:cvm",

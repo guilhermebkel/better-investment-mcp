@@ -6,6 +6,7 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Changed
 
+- Brazilian quotes fall back to B3's COTAHIST file when yfinance fails, instead of Yahoo: both read the same service, so Yahoo could not back up yfinance. The fallback has no adjusted close. US quotes keep Yahoo.
 - The store moves to schema version 9: one `asset_id` (`market:asset_type:code`, for example `BR:stock:PETR4`) keys every asset table; the time columns are `reference_time_start` and `reference_time_end`; the numbers over time are the long table `asset_metrics` (`metric`, `value`, `unit`); the tables are named `asset_*` and `load_*`. `query_sql` filters on `asset_id`, and on `metric` for `asset_metrics`. The older names are mapped in `docs/product/data-map.md`.
 - The `document_text` view is removed, because it had no `asset_id` filter; query `asset_filing_chunks` instead.
 - The data tables no longer have a `source` column; the vendor of a load is kept once, in `load_runs` (ADR 0020). The answer of `query_sql` and `get_overview` do not name the vendor, nor whether a fallback served a load. The store is at schema version 8.

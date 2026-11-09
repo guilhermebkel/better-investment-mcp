@@ -84,7 +84,7 @@ describe("ProviderRegistryService.buildEmptyCatalog()", () => {
     const resolved = registry.resolve("quotes", "BR", "stock");
 
     expect(resolved.primary.vendor).toBe("yfinance");
-    expect(resolved.fallback?.vendor).toBe("yahoo");
+    expect(resolved.fallback?.vendor).toBe("b3");
   });
 
   it("uses the public source of each category without any variable", () => {

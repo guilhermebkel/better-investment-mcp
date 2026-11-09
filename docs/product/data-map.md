@@ -132,7 +132,7 @@ A category is the contract a provider fills. A category fills the tables listed 
 
 | Category | Tables | Provider by default |
 | --- | --- | --- |
-| `quotes` | `asset_quotes` | yfinance, then Yahoo (BR and US); B3 COTAHIST when set |
+| `quotes` | `asset_quotes` | yfinance, then B3 COTAHIST (BR) or Yahoo (US) |
 | `dividends` | `asset_dividends`, `asset_splits` | yfinance, then Yahoo |
 | `fundamentals` | `asset_metrics` (`fundamental.*`) | StatusInvest |
 | `statements` | `asset_metrics` (`statement.*`) | CVM |
