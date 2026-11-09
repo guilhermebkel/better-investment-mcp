@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process";
 import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow, TableToRows } from "@/Protocols/ProviderProtocol.ts";
 import { YfinanceSchema } from "@/Schemas/YfinanceSchema.ts";
+import { PeriodService } from "@/Services/PeriodService.ts";
 import { QualityFlagService } from "@/Services/QualityFlagService.ts";
 import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 
@@ -95,24 +96,31 @@ export class YfinanceAdapter<Category extends "quotes" | "dividends"> implements
     const key = { asset_id: assetId };
     const priced = data.quotes.filter((quote) => quote.close !== null);
     const points = priced.map((quote) => ({ close: quote.close ?? 0, volume: quote.volume ?? 0 }));
+    // Why: the library returns the whole history; rows outside the requested period are dropped after the flags are built.
     const flags = QualityFlagService.buildFlags(points);
-    const quoteRows: ProviderRow[] = priced.map((quote, index) => ({
-      ...key,
-      reference_time_start: quote.date,
-      reference_time_end: quote.date,
-      open: quote.open,
-      high: quote.high,
-      low: quote.low,
-      close: quote.close,
-      adj_close: quote.adjClose,
-      volume: quote.volume,
-      is_stale: flags[index]?.isStale ?? false,
-      suspect_tick: flags[index]?.isSuspectTick ?? false,
-    }));
+    const keepInPeriod = (date: string): boolean =>
+      request.period === undefined || PeriodService.isWithin(request.period, date);
+    const quoteRows: ProviderRow[] = priced.flatMap((quote, index) =>
+      keepInPeriod(quote.date)
+        ? [{
+            ...key,
+            reference_time_start: quote.date,
+            reference_time_end: quote.date,
+            open: quote.open,
+            high: quote.high,
+            low: quote.low,
+            close: quote.close,
+            adj_close: quote.adjClose,
+            volume: quote.volume,
+            is_stale: flags[index]?.isStale ?? false,
+            suspect_tick: flags[index]?.isSuspectTick ?? false,
+          }]
+        : [],
+    );
     return {
       asset: [{ ...key, market: request.market, asset_type: request.assetType ?? "", code: request.ticker, name: data.name, currency: data.currency }],
       asset_quotes: quoteRows,
-      asset_dividends: data.dividends.map((dividend) => ({
+      asset_dividends: data.dividends.filter((dividend) => keepInPeriod(dividend.exDate)).map((dividend) => ({
         ...key, ex_time: dividend.exDate, payment_time: null, amount: dividend.amount, kind: "dividend",
       })),
       asset_splits: data.splits.map((split) => ({
