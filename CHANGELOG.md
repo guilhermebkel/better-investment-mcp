@@ -6,6 +6,9 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Added
 
+- Every provider has a default: a query works with no provider variable. A default with a second vendor (yfinance, then Yahoo) falls back automatically when the first fails.
+- CVM FRE, VLMO and CGVN rows of a company (`company_disclosures`), with their section, date, version and the whole row as JSON.
+- The CVM files that were read in memory (ITR, DFP, IPE, FCA, monthly FII files, fund filings) are now downloaded to a temporary file and streamed.
 - B3 identifiers: a ticker's CNPJ and ISIN from the B3 listing and detail, so a FII outside the curated list resolves (IRIM11 now too).
 - B3 COTAHIST daily quotes (`quotes`, `INVESTMENT_MCP_QUOTES_PROVIDER=BR:b3`), streamed from the yearly file.
 - yfinance (Python library) for quotes and dividends, as the source map asks: `INVESTMENT_MCP_QUOTES_PROVIDER=BR:yfinance`. Needs `python3` and `pip install yfinance`.

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { Readable } from "node:stream";
 import { join } from "node:path";
@@ -193,9 +194,9 @@ describe("CvmAdapter.fetchTables()", () => {
       const http = {
         getText: () => Promise.reject(new Error("not used")),
         postForm: () => Promise.reject(new Error("not used")),
-        downloadToFile: () => Promise.reject(new Error("not used")),
         getCookies: () => Promise.reject(new Error("not used")),
         getBytes: () => Promise.reject(new HttpFailureError("the vendor answered with status 500", 500)),
+        downloadToFile: () => Promise.reject(new HttpFailureError("the vendor answered with status 500", 500)),
       };
       await expect(new CvmAdapter(http, resolveKnownCompany, CvmAdapter.BASE_URL, () => CURRENT_YEAR).fetchTables(key))
         .rejects.toThrow("CVM: HTTP error:");
@@ -206,9 +207,9 @@ describe("CvmAdapter.fetchTables()", () => {
       const http = {
         getText: () => Promise.reject(new Error("not used")),
         postForm: () => Promise.reject(new Error("not used")),
-        downloadToFile: () => Promise.reject(new Error("not used")),
         getCookies: () => Promise.reject(new Error("not used")),
         getBytes: () => Promise.reject(new HttpRefusedError("the vendor redirected the request, and redirects are not followed")),
+        downloadToFile: () => Promise.reject(new HttpRefusedError("the vendor redirected the request, and redirects are not followed")),
       };
       await expect(new CvmAdapter(http, resolveKnownCompany, CvmAdapter.BASE_URL, () => CURRENT_YEAR).fetchTables(key))
         .rejects.toThrow("CVM: blocked or refused request:");
@@ -222,7 +223,7 @@ describe("CvmAdapter.fetchTables()", () => {
         url: `${BASE}/IPE/DADOS/ipe_cia_aberta_2024.zip`,
         dataset: "cia_aberta-doc-ipe",
         referenceYear: 2024,
-        sha256: CvmUtil.buildFileRecord(`${BASE}/IPE/DADOS/ipe_cia_aberta_2024.zip`, "x", 2024, ipe).sha256,
+        sha256: createHash("sha256").update(ipe).digest("hex"),
         sizeBytes: ipe.byteLength,
       }]);
     });

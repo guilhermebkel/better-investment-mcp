@@ -25,6 +25,7 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 | `fx_rates` | **currency**, **date**, buy_rate, sell_rate, source | BCB PTAX (Olinda, closing bulletin) | PR #30 |
 | `fund_registry` | **cnpj**, fund_name, fund_type, class_name, situation, administrator, administrator_cnpj, manager, net_worth, net_worth_date, source | CVM fund file (`cad_fi.csv`) | PR #30 |
 | `fund_daily` | **cnpj**, **date**, quota, net_worth, total_value, subscriptions, redemptions, holders, source | CVM daily informe (`inf_diario_fi`, the last twelve months) | PR #30 |
+| `company_disclosures` | **market**, **ticker**, **asset_type**, **dataset**, **section**, reference_date, version, document_id, row_json, source_file, source | CVM FRE, VLMO and CGVN yearly zips (`fre_cia_aberta`, `vlmo_cia_aberta`, `cgvn_cia_aberta`) | PR #30 |
 | `fund_holdings` | **cnpj**, **period**, **block**, application_type, asset_category, asset_code, asset_description, issuer, quantity, market_value, source_file, source | CVM CDA (`cda_fi`, blocks 1 to 8, the last twelve months) | PR #30 |
 | `cache_runs` | run_id, category, market, ticker, source, started_at, finished_at, expires_at, rows_read, error, filing_id, period_from, period_to | the loader (`filing_id` set for a document; the period columns set for a period load) | #3, #5, #10, #28 |
 | `cvm_files` | **url**, **sha256**, dataset, reference_year, size_bytes, fetched_at, is_current | the loader: one record per downloaded CVM file and version | #28 |
@@ -51,6 +52,7 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 | `treasury_prices` | `bond_type` | none |
 | `market_expectations` | `indicator` | none |
 | `fx_rates` | `currency` | none |
+| `company_disclosures` | `market`, `ticker`, `asset_type` | none |
 | `fund_registry`, `fund_daily`, `fund_holdings` | `cnpj` (the fund class CNPJ, as CVM writes it) | none |
 | `asset_identifiers`, `company_registry` | `market`, `ticker`, `asset_type` | none |
 | `assets`, `cache_runs`, `asset_coverage`, `schema_version`, `cvm_files` | nothing | none |
@@ -118,6 +120,12 @@ The map of the CVM open data that serves the tables above. CVM is the primary so
 - The CVM open data has no item text of the Formulário de Referência, so the reference form is not in `chunks` (issue #11, scope item S3, not built).
 - A document is downloaded only from `www.rad.cvm.gov.br` (CVM) or `fnet.bmfbovespa.com.br` (FNET, the host of the FII reports linked by CVM), over https, and only when a query asks for its chunks. The text is indexed in `chunks` and searched with `search_chunks`. A scanned PDF without text is not read (no OCR).
 - A load that cannot finish says which class of failure it is (HTTP error, blocked request, file that could not be read, or unmapped ticker); a CVM failure never falls back to another source.
+
+## Company disclosures (FRE, VLMO, CGVN)
+
+`company_disclosures` holds every row of the company in the yearly CVM files: the main file of each dataset has the section `principal`, and each other CSV has its section name from the file name (for example `posicao_acionaria`). `dataset` is `fre`, `vlmo` or `cgvn`. `version` is CVM's version of the document: a company delivers a new version when it corrects one, and every version is kept, so a query takes the highest `version` of a reference date. `row_json` holds the whole CSV row as JSON, so no column is dropped; read it with `json_extract`. A file with no CNPJ column is not a company table and is not read.
+
+The last three years are read by each load (the default period), since each yearly FRE zip is about 8 MB.
 
 ## Tickers and CNPJ
 

@@ -125,9 +125,9 @@ describe("CvmFundMonthlyAdapter.fetchTables()", () => {
     const http: HttpPort = {
       getText: () => Promise.reject(new Error("not used")),
       postForm: () => Promise.reject(new Error("not used")),
-      downloadToFile: () => Promise.reject(new Error("not used")),
       getCookies: () => Promise.reject(new Error("not used")),
       getBytes: () => Promise.reject(new Error("socket hang up")),
+      downloadToFile: () => Promise.reject(new Error("socket hang up")),
     };
     const attempt = fetchFundTables(http, IRDM_FUND, FULL_YEAR);
     await expect(attempt)

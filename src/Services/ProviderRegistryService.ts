@@ -15,6 +15,25 @@ import type {
 const SETTING_ENTRY_PATTERN = /^([A-Z]{2,6}):([a-z0-9_]+)(?:>([a-z0-9_]+))?$/;
 
 export class ProviderRegistryService {
+  // Why: a category with no setting uses its default, so the server works with no provider variable; a default with a second vendor names it as the fallback, used when the first one fails.
+  static readonly categoryToDefaultSetting: Record<CacheCategory, string> = {
+    quotes: "BR:yfinance>yahoo,US:yfinance>yahoo",
+    dividends: "BR:yfinance>yahoo,US:yfinance>yahoo",
+    fundamentals: "BR:statusinvest",
+    statements: "BR:cvm",
+    fund_data: "BR:cvm",
+    filings: "BR:cvm",
+    documents: "BR:cvm",
+    macro: "SERIES:bcb",
+    treasury: "TDIR:tesouro",
+    expectations: "FOCUS:bcb",
+    identifiers: "BR:b3",
+    registry: "BR:cvm",
+    fx: "FX:bcb",
+    fund: "FUND:cvm",
+    disclosures: "BR:cvm",
+  };
+
   static readonly CATEGORY_TO_SETTING: Record<CacheCategory, ProviderSettingName> = {
     quotes: "INVESTMENT_MCP_QUOTES_PROVIDER",
     dividends: "INVESTMENT_MCP_DIVIDENDS_PROVIDER",
@@ -30,6 +49,7 @@ export class ProviderRegistryService {
     registry: "INVESTMENT_MCP_REGISTRY_PROVIDER",
     fx: "INVESTMENT_MCP_FX_PROVIDER",
     fund: "INVESTMENT_MCP_FUND_PROVIDER",
+    disclosures: "INVESTMENT_MCP_DISCLOSURES_PROVIDER",
   };
 
   private readonly categoryToSettings: Record<CacheCategory, VendorSettings>;
@@ -52,6 +72,7 @@ export class ProviderRegistryService {
       registry: ProviderRegistryService.parseSetting(env, "registry"),
       fx: ProviderRegistryService.parseSetting(env, "fx"),
       fund: ProviderRegistryService.parseSetting(env, "fund"),
+      disclosures: ProviderRegistryService.parseSetting(env, "disclosures"),
     };
   }
 
@@ -71,6 +92,7 @@ export class ProviderRegistryService {
       registry: {},
       fx: {},
       fund: {},
+      disclosures: {},
     };
   }
 
@@ -141,10 +163,8 @@ export class ProviderRegistryService {
     const setting = ProviderRegistryService.CATEGORY_TO_SETTING[category];
     const value = env[setting];
     const settings: VendorSettings = { marketToPrimary: {}, marketToFallback: {} };
-    if (value === undefined || value.trim() === "") {
-      return settings;
-    }
-    for (const rawEntry of value.split(",")) {
+    const text = value === undefined || value.trim() === "" ? ProviderRegistryService.categoryToDefaultSetting[category] : value;
+    for (const rawEntry of text.split(",")) {
       const entry = rawEntry.trim();
       const match = SETTING_ENTRY_PATTERN.exec(entry);
       if (match === null) {

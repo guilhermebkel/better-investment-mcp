@@ -12,7 +12,7 @@ import type {
 import type { ProviderPort, ProviderRequest, ProviderResult } from "@/Protocols/ProviderProtocol.ts";
 import { PeriodService } from "@/Services/PeriodService.ts";
 import { CvmUtil } from "@/Utils/CvmUtil.ts";
-import { ZipUtil } from "@/Utils/ZipUtil.ts";
+import { ZipFileUtil } from "@/Utils/ZipFileUtil.ts";
 
 const THOUSAND = 1000;
 const ONE = 1;
@@ -73,16 +73,14 @@ export class CvmStatementAdapter extends CvmBaseAdapter implements ProviderPort<
 
   private async collectKind(kind: CvmPeriodicKind, year: number, scan: CvmStatementScan): Promise<void> {
     const url = CvmUtil.buildZipUrl(this.baseUrl, kind.toUpperCase(), kind, year);
-    const zip = await CvmUtil.loadFile(this.http, url, `${DATASET_PREFIX}${kind}`, year, scan.files);
-    if (zip === undefined) {
-      return;
-    }
-    for (const entry of STATEMENT_ENTRIES) {
-      const sourceFile = `${kind}_cia_aberta_${entry.code}_${entry.version}_${year}.csv`;
-      const source: StatementSource = { statement: `${entry.code}_${entry.version}`, sourceFile };
-      const lines = CvmUtil.readLines(ZipUtil.streamEntry(zip, sourceFile));
-      await CvmStatementAdapter.scanLines(lines, source, scan);
-    }
+    await CvmUtil.downloadCvmFile(this.http, url, { dataset: `${DATASET_PREFIX}${kind}`, year: year }, scan.files, async (zip) => {
+      for (const entry of STATEMENT_ENTRIES) {
+        const sourceFile = `${kind}_cia_aberta_${entry.code}_${entry.version}_${year}.csv`;
+        const source: StatementSource = { statement: `${entry.code}_${entry.version}`, sourceFile };
+        const lines = CvmUtil.readLines(await ZipFileUtil.openEntry(zip, sourceFile));
+        await CvmStatementAdapter.scanLines(lines, source, scan);
+      }
+    });
   }
 
   private static async scanLines(

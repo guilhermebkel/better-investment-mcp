@@ -18,7 +18,8 @@ export type DataTable
     | "fx_rates"
     | "fund_registry"
     | "fund_daily"
-    | "fund_holdings";
+    | "fund_holdings"
+    | "company_disclosures";
 
 export type KeyedSource = {
   market: string;

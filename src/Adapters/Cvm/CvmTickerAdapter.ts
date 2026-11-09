@@ -3,7 +3,7 @@ import type { CvmCompanyColumns, CvmCompanyEntry, CvmFiiTicker, CvmFundEntry, Le
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type { ProviderFile } from "@/Protocols/ProviderProtocol.ts";
 import { CvmUtil } from "@/Utils/CvmUtil.ts";
-import { ZipUtil } from "@/Utils/ZipUtil.ts";
+import { ZipFileUtil } from "@/Utils/ZipFileUtil.ts";
 
 const SEPARATOR = ";";
 const COMPANY_FILE_PREFIX = "fca_cia_aberta_valor_mobiliario_";
@@ -82,12 +82,11 @@ export class CvmTickerAdapter {
     const year = this.currentYear();
     for (const referenceYear of [year, year - 1]) {
       const url = `${this.baseUrl}/dados/CIA_ABERTA/DOC/FCA/DADOS/fca_cia_aberta_${referenceYear}.zip`;
-      const zip = await CvmUtil.loadFile(this.http, url, COMPANY_DATASET, referenceYear, files);
-      if (zip === undefined) {
-        continue;
-      }
-      const lines = CvmUtil.readLines(ZipUtil.streamEntry(zip, `${COMPANY_FILE_PREFIX}${referenceYear}.csv`));
-      await CvmTickerAdapter.readCompanyLines(lines, tickerToEntry);
+      const key = { dataset: COMPANY_DATASET, year: referenceYear };
+      await CvmUtil.downloadCvmFile(this.http, url, key, files, async (zip) => {
+        const lines = CvmUtil.readLines(await ZipFileUtil.openEntry(zip, `${COMPANY_FILE_PREFIX}${referenceYear}.csv`));
+        await CvmTickerAdapter.readCompanyLines(lines, tickerToEntry);
+      });
     }
     return new Map([...tickerToEntry].map(([ticker, entry]) => [ticker, entry.cnpj] as const));
   }

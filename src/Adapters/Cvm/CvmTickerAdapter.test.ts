@@ -1,3 +1,4 @@
+import { writeFileSync } from "node:fs";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -54,20 +55,24 @@ describe("CvmTickerAdapter.resolveCnpj()", () => {
 
   it("does not keep a company list that failed to read, so the next lookup reads it again", async () => {
     let calls = 0;
+    const fetchServed = (url: string): Promise<Uint8Array> => {
+      if (url === FCA_2024) {
+        return Promise.reject(new HttpFailureError("the vendor answered with status 404", 404));
+      }
+      calls += 1;
+      return calls === 1
+        ? Promise.reject(new HttpFailureError("the vendor answered with status 500", 500))
+        : Promise.resolve(buildCompanyZip());
+    };
     const http: HttpPort = {
       getText: () => Promise.reject(new Error("not used")),
       postForm: () => Promise.reject(new Error("not used")),
-      downloadToFile: () => Promise.reject(new Error("not used")),
       getCookies: () => Promise.reject(new Error("not used")),
-      getBytes: (url: string) => {
-        if (url === FCA_2024) {
-          return Promise.reject(new HttpFailureError("the vendor answered with status 404", 404));
-        }
-        calls += 1;
-        return calls === 1
-          ? Promise.reject(new HttpFailureError("the vendor answered with status 500", 500))
-          : Promise.resolve(buildCompanyZip());
-      },
+      getBytes: fetchServed,
+      downloadToFile: (url: string, filePath: string) => fetchServed(url).then((bytes) => {
+        writeFileSync(filePath, bytes);
+        return bytes.byteLength;
+      }),
     };
     const adapter = buildAdapter(http);
     await expect(adapter.resolveCnpj("BR", "PETR4")).rejects.toThrow("HTTP error");

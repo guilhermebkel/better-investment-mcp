@@ -1,11 +1,15 @@
 import { createHash } from "node:crypto";
+import { createReadStream } from "node:fs";
+import { join } from "node:path";
 import { CvmFailureError } from "@/Errors/CvmFailureError.ts";
 import { HttpFailureError } from "@/Errors/HttpFailureError.ts";
 import { HttpRefusedError } from "@/Errors/HttpRefusedError.ts";
+import type { CvmFileKey } from "@/Protocols/CvmFileProtocol.ts";
 import type { CvmSubject, LegalIdLookup } from "@/Protocols/CvmProtocol.ts";
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type { PeriodWindow } from "@/Protocols/PeriodProtocol.ts";
 import type { ProviderFile, ProviderRequest, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
+import { TempFileUtil } from "@/Utils/TempFileUtil.ts";
 
 const NOT_FOUND_STATUS = 404;
 const CNPJ_NON_DIGITS = /\D/gu;
@@ -68,36 +72,39 @@ export class CvmUtil {
     return `unmapped: ${market}:${ticker} is pending; no CNPJ is known for it in the CVM company list or the FII list, so none was guessed`;
   }
 
-  static async loadFile(
+  static async downloadCvmFile<Result>(
     http: HttpPort,
     url: string,
-    dataset: string,
-    year: number,
+    key: CvmFileKey,
     files: ProviderFile[],
-  ): Promise<Uint8Array | undefined> {
-    let bytes: Uint8Array;
-    try {
-      bytes = await http.getBytes(url);
-    } catch (error) {
-      if (error instanceof HttpFailureError && error.status === NOT_FOUND_STATUS) {
-        return undefined;
+    work: (path: string) => Promise<Result>,
+  ): Promise<Result | undefined> {
+    // Why: a CVM file is downloaded to a temporary file owned by this call and handed to the work as a path, so it is read as a stream and removed when the work ends.
+    return TempFileUtil.runInTempDir(async (directory) => {
+      const path = join(directory, `${key.dataset}-${key.year}`);
+      try {
+        await http.downloadToFile(url, path);
+      } catch (error) {
+        if (error instanceof HttpFailureError && error.status === NOT_FOUND_STATUS) {
+          return undefined;
+        }
+        throw error;
       }
-      throw error;
-    }
-    const fileRecord = CvmUtil.buildFileRecord(url, dataset, year, bytes);
-    files.push(fileRecord);
-    return bytes;
+      files.push(await CvmUtil.buildFileRecord(url, key.dataset, key.year, path));
+      return work(path);
+    });
   }
 
-  static buildFileRecord(url: string, dataset: string, year: number, bytes: Uint8Array): ProviderFile {
+  static async buildFileRecord(url: string, dataset: string, year: number, path: string): Promise<ProviderFile> {
     // Why: the hash and the size identify one version of the file, so a changed file is told apart from the one stored before.
-    return {
-      url,
-      dataset,
-      referenceYear: year,
-      sha256: createHash("sha256").update(bytes).digest("hex"),
-      sizeBytes: bytes.byteLength,
-    };
+    const hash = createHash("sha256");
+    const chunks: AsyncIterable<Buffer> = createReadStream(path);
+    let sizeBytes = 0;
+    for await (const chunk of chunks) {
+      hash.update(chunk);
+      sizeBytes += chunk.byteLength;
+    }
+    return { url, dataset, sizeBytes, referenceYear: year, sha256: hash.digest("hex") };
   }
 
   static async* readLines(chunks: AsyncIterable<Uint8Array>): AsyncGenerator<string> {

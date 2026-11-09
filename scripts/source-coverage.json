@@ -55,6 +55,10 @@
     "FundProvider": {
       "status": "implemented",
       "reason": "A fund's registry, daily quota and holdings from CVM's open files, keyed by the fund CNPJ; the fund adapter fills fund_registry, fund_daily and fund_holdings."
+    },
+    "DisclosuresProvider": {
+      "status": "implemented",
+      "reason": "A company's FRE, VLMO and CGVN rows from the CVM yearly zips, streamed and kept with their section, date and version; the CVM disclosure adapter fills company_disclosures."
     }
   }
 }

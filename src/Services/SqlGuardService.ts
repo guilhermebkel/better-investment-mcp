@@ -62,6 +62,7 @@ export class SqlGuardService implements SqlGuardPort {
     fund_registry: "fund",
     fund_daily: "fund",
     fund_holdings: "fund",
+    company_disclosures: "disclosures",
   };
 
   // Why: a keyed table is loaded per value of its key column (a series, a bond family, an indicator); each value is one load in the market the category serves.
@@ -91,6 +92,7 @@ export class SqlGuardService implements SqlGuardPort {
     fund_registry: { columns: ["cnpj"], anyOf: [] },
     fund_daily: { columns: ["cnpj"], anyOf: [] },
     fund_holdings: { columns: ["cnpj"], anyOf: [] },
+    company_disclosures: SqlGuardService.MARKET_FILTERS,
     macro_series: { columns: ["series"], anyOf: [] },
     treasury_prices: { columns: ["bond_type"], anyOf: [] },
     market_expectations: { columns: ["indicator"], anyOf: [] },

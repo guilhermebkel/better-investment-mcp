@@ -1,9 +1,12 @@
+import { VendorCatalogService } from "@/Services/VendorCatalogService.ts";
 import { describe, expect, it } from "vitest";
 import { ProviderConfigError } from "@/Errors/ProviderConfigError.ts";
 import { ProviderUnavailableError } from "@/Errors/ProviderUnavailableError.ts";
 import type { Env } from "@/Protocols/EnvProtocol.ts";
 import { ProviderRegistryService } from "@/Services/ProviderRegistryService.ts";
 import { FakeProvider } from "@/Testing/FakeProvider.ts";
+
+const NO_SETTINGS = { INVESTMENT_MCP_LOG_LEVEL: "error" as const, INVESTMENT_MCP_CACHE_TTL_SECONDS: 86_400 };
 
 const EMPTY_RESULT = { source: "fake", tables: {} };
 const buildEnv = (overrides: Partial<Env>): Env => ({ ...overrides, INVESTMENT_MCP_LOG_LEVEL: "error", INVESTMENT_MCP_CACHE_TTL_SECONDS: 60 });
@@ -73,5 +76,33 @@ describe("ProviderRegistryService.buildEmptyCatalog()", () => {
       expect(() => new ProviderRegistryService(buildEnv({ INVESTMENT_MCP_QUOTES_PROVIDER: "Brazil=yahoo" }), ProviderRegistryService.buildEmptyCatalog())).toThrow(ProviderConfigError);
       expect(() => new ProviderRegistryService(buildEnv({ INVESTMENT_MCP_QUOTES_PROVIDER: "Brazil=yahoo" }), ProviderRegistryService.buildEmptyCatalog())).toThrow("BR:yahoo, or BR:yahoo>fallback");
     });
+  });
+
+  it("uses yfinance for Brazilian quotes, with Yahoo as the fallback when it fails", () => {
+    const registry = new ProviderRegistryService(NO_SETTINGS, VendorCatalogService.build());
+
+    const resolved = registry.resolve("quotes", "BR", "stock");
+
+    expect(resolved.primary.vendor).toBe("yfinance");
+    expect(resolved.fallback?.vendor).toBe("yahoo");
+  });
+
+  it("uses the public source of each category without any variable", () => {
+    const registry = new ProviderRegistryService(NO_SETTINGS, VendorCatalogService.build());
+
+    expect(registry.resolve("macro", "SERIES", undefined).primary.vendor).toBe("bcb");
+    expect(registry.resolve("statements", "BR", "stock").primary.vendor).toBe("cvm");
+    expect(registry.resolve("identifiers", "BR", "fii").primary.vendor).toBe("b3");
+    expect(registry.resolve("fx", "FX", undefined).primary.vendor).toBe("bcb");
+    expect(registry.resolve("fund", "FUND", undefined).primary.vendor).toBe("cvm");
+  });
+
+  it("lets a variable replace the default when it is set", () => {
+    const registry = new ProviderRegistryService(
+      { ...NO_SETTINGS, INVESTMENT_MCP_QUOTES_PROVIDER: "BR:b3" },
+      VendorCatalogService.build(),
+    );
+
+    expect(registry.resolve("quotes", "BR", "stock").primary.vendor).toBe("b3");
   });
 });

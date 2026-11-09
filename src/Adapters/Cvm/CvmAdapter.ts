@@ -7,7 +7,7 @@ import type { PeriodWindow } from "@/Protocols/PeriodProtocol.ts";
 import type { ProviderFile, ProviderPort, ProviderRequest, ProviderResult, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
 import { PeriodService } from "@/Services/PeriodService.ts";
 import { CvmUtil } from "@/Utils/CvmUtil.ts";
-import { ZipUtil } from "@/Utils/ZipUtil.ts";
+import { ZipFileUtil } from "@/Utils/ZipFileUtil.ts";
 
 const FIRST_IPE_YEAR = 2003;
 const BYTES_PER_MIB = 1_048_576;
@@ -154,12 +154,11 @@ export class CvmAdapter extends CvmBaseAdapter implements ProviderPort<"filings"
       return;
     }
     const url = CvmUtil.buildZipUrl(this.baseUrl, "IPE", "ipe", year);
-    const zip = await CvmUtil.loadFile(this.http, url, "cia_aberta-doc-ipe", year, collection.files);
-    if (zip === undefined) {
-      return;
-    }
-    const lines = CvmUtil.readLines(ZipUtil.streamEntry(zip, `ipe_cia_aberta_${year}.csv`));
-    for (const row of await CvmAdapter.readRows(lines, collection.cnpjDigits, collection.key, collection.window)) {
+    const rows = await CvmUtil.downloadCvmFile(this.http, url, { dataset: "cia_aberta-doc-ipe", year: year }, collection.files, async (zip) => {
+      const lines = CvmUtil.readLines(await ZipFileUtil.openEntry(zip, `ipe_cia_aberta_${year}.csv`));
+      return CvmAdapter.readRows(lines, collection.cnpjDigits, collection.key, collection.window);
+    });
+    for (const row of rows ?? []) {
       CvmUtil.keep(collection.filingIdToRow, row);
     }
   }
@@ -167,19 +166,12 @@ export class CvmAdapter extends CvmBaseAdapter implements ProviderPort<"filings"
   private async collectPeriodicYear(kind: CvmPeriodicKind, year: number, collection: CvmCollection): Promise<void> {
     const url = CvmUtil.buildZipUrl(this.baseUrl, kind.toUpperCase(), kind, year);
     const dataset = `cia_aberta-doc-${kind}`;
-    const zip = await CvmUtil.loadFile(this.http, url, dataset, year, collection.files);
-    if (zip === undefined) {
-      return;
-    }
-    const lines = CvmUtil.readLines(ZipUtil.streamEntry(zip, `${kind}_cia_aberta_${year}.csv`));
-    const rows = await CvmAdapter.readPeriodicRows(
-      lines,
-      collection.cnpjDigits,
-      collection.key,
-      kind,
-      collection.window,
-    );
-    for (const row of rows) {
+    const key = { dataset, year };
+    const rows = await CvmUtil.downloadCvmFile(this.http, url, key, collection.files, async (zip) => {
+      const lines = CvmUtil.readLines(await ZipFileUtil.openEntry(zip, `${kind}_cia_aberta_${year}.csv`));
+      return CvmAdapter.readPeriodicRows(lines, collection.cnpjDigits, collection.key, kind, collection.window);
+    });
+    for (const row of rows ?? []) {
       CvmUtil.keep(collection.filingIdToRow, row);
     }
   }

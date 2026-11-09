@@ -4,6 +4,7 @@ import { BcbPtaxAdapter } from "@/Adapters/Bcb/BcbPtaxAdapter.ts";
 import { HttpAdapter } from "@/Adapters/Http/HttpAdapter.ts";
 import { CvmAdapter } from "@/Adapters/Cvm/CvmAdapter.ts";
 import { CvmFundAdapter } from "@/Adapters/Cvm/CvmFundAdapter.ts";
+import { CvmDisclosureAdapter } from "@/Adapters/Cvm/CvmDisclosureAdapter.ts";
 import { CvmRegistryAdapter } from "@/Adapters/Cvm/CvmRegistryAdapter.ts";
 import { CvmTickerAdapter } from "@/Adapters/Cvm/CvmTickerAdapter.ts";
 import { YfinanceAdapter } from "@/Adapters/Yfinance/YfinanceAdapter.ts";
@@ -97,5 +98,17 @@ describe("YfinanceAdapter against the live library", () => {
 
     expect((result.tables.quotes ?? []).length).toBeGreaterThan(MIN_HISTORY_DAYS);
     expect(result.tables.assets?.[0]).toMatchObject({ ticker: "PETR4" });
+  }, TIMEOUT_MS);
+});
+
+describe("CVM disclosures against the live zips", () => {
+  it("writes the FRE, VLMO and CGVN rows of PETR4 from the last years", async () => {
+    const adapter = new CvmDisclosureAdapter(buildCvmHttp(), () => Promise.resolve(PETROBRAS_CNPJ));
+
+    const result = await adapter.fetchTables({ market: BR, ticker: "PETR4", assetType: "stock" });
+    const datasets = new Set((result.tables.company_disclosures ?? []).map((row) => row.dataset));
+
+    expect(datasets.has("fre")).toBe(true);
+    expect((result.tables.company_disclosures ?? []).length).toBeGreaterThan(MIN_HISTORY_DAYS);
   }, TIMEOUT_MS);
 });

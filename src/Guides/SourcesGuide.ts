@@ -10,6 +10,7 @@ Each row keeps the source that produced it, in the source column. Each answer al
 - CVM (source cvm): filings for a company, from the yearly IPE file. Filing types: material_fact, sustainability and other. Not every ticker has a CVM company yet.
 - B3 (source b3): asset_identifiers (CNPJ and ISIN of a ticker); quotes for BR tickers when INVESTMENT_MCP_QUOTES_PROVIDER names b3 (COTAHIST, the current and the previous year, unit-factor prices only).
 - CVM company file (source cvm): company_registry, the sector and legal name of a stock.
+- CVM FRE, VLMO and CGVN (source cvm): company_disclosures, the rows of a company by dataset (fre, vlmo, cgvn), section, date and version; the whole row is in row_json.
 - CVM fund files (source cvm): fund_registry, fund_daily and fund_holdings for a fund CNPJ, the last twelve months.
 - BCB PTAX (source bcb): fx_rates, the closing rate per currency and day.
 - Tesouro Transparente (source tesouro): treasury_prices for one bond family per load (bond_type), daily prices and rates from 2004. Open data.

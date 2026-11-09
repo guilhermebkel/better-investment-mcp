@@ -173,7 +173,7 @@ describe("CvmStatementAdapter.fetchTables()", () => {
     const { http } = FakeHttp.buildServing({ [`${BASE}/ITR/DADOS/itr_cia_aberta_2025.zip`]: itrZip });
     const attempt = new CvmStatementAdapter(http, resolveSampleCompany, CvmAdapter.BASE_URL, () => CURRENT_YEAR)
       .fetchTables(request);
-    await expect(attempt).rejects.toThrow("the zip has no entry named itr_cia_aberta_DRE_ind_2025.csv");
+    await expect(attempt).rejects.toThrow("has no entry itr_cia_aberta_DRE_ind_2025.csv");
   });
 
   it("names the ticker as pending when it cannot be mapped to a company (AC8)", async () => {

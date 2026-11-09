@@ -3,7 +3,7 @@ import type { ColumnPairs, CvmFundColumn, CvmFundMonth, CvmKey, FileScope, FundM
 import type { ProviderFile, ProviderPort, ProviderRequest, ProviderResult, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
 import { PeriodService } from "@/Services/PeriodService.ts";
 import { CvmUtil } from "@/Utils/CvmUtil.ts";
-import { ZipUtil } from "@/Utils/ZipUtil.ts";
+import { ZipFileUtil } from "@/Utils/ZipFileUtil.ts";
 
 const SEPARATOR = ";";
 const DATASET = "fii-doc-inf_mensal";
@@ -48,26 +48,24 @@ export class CvmFundMonthlyAdapter extends CvmBaseAdapter implements ProviderPor
     const scope: FileScope = { cnpjDigits, window, periodToMonth };
     for (const year of PeriodService.readYears(window)) {
       const url = `${this.baseUrl}/dados/FII/DOC/INF_MENSAL/DADOS/inf_mensal_fii_${year}.zip`;
-      const zip = await CvmUtil.loadFile(this.http, url, DATASET, year, files);
-      if (zip === undefined) {
-        continue;
-      }
-      await CvmFundMonthlyAdapter.readFile(zip, year, COMPLEMENT_FILE, COMPLEMENT_COLUMNS, scope);
-      await CvmFundMonthlyAdapter.readFile(zip, year, ASSET_LIABILITY_FILE, ASSET_LIABILITY_COLUMNS, scope);
+      await CvmUtil.downloadCvmFile(this.http, url, { dataset: DATASET, year: year }, files, async (zip) => {
+        await CvmFundMonthlyAdapter.readFile(zip, year, COMPLEMENT_FILE, COMPLEMENT_COLUMNS, scope);
+        await CvmFundMonthlyAdapter.readFile(zip, year, ASSET_LIABILITY_FILE, ASSET_LIABILITY_COLUMNS, scope);
+      });
     }
     const rows = [...periodToMonth].map(([period, month]) => CvmFundMonthlyAdapter.buildRow(key, period, month));
     return { source: CvmFundMonthlyAdapter.VENDOR, tables: { fii_monthly: rows }, files };
   }
 
   private static async readFile(
-    zip: Uint8Array,
+    zip: string,
     year: number,
     fileKind: string,
     columns: ColumnPairs,
     scope: FileScope,
   ): Promise<void> {
     const sourceFile = `inf_mensal_fii_${fileKind}_${year}.csv`;
-    const lines = CvmUtil.readLines(ZipUtil.streamEntry(zip, sourceFile));
+    const lines = CvmUtil.readLines(await ZipFileUtil.openEntry(zip, sourceFile));
     await CvmFundMonthlyAdapter.readLines(lines, sourceFile, columns, scope);
   }
 

@@ -6,6 +6,7 @@ import { CvmAdapter } from "@/Adapters/Cvm/CvmAdapter.ts";
 import { CvmDocumentAdapter } from "@/Adapters/Cvm/CvmDocumentAdapter.ts";
 import { CvmFundMonthlyAdapter } from "@/Adapters/Cvm/CvmFundMonthlyAdapter.ts";
 import { CvmFundAdapter } from "@/Adapters/Cvm/CvmFundAdapter.ts";
+import { CvmDisclosureAdapter } from "@/Adapters/Cvm/CvmDisclosureAdapter.ts";
 import { CvmRegistryAdapter } from "@/Adapters/Cvm/CvmRegistryAdapter.ts";
 import { BcbPtaxAdapter } from "@/Adapters/Bcb/BcbPtaxAdapter.ts";
 import { CvmStatementAdapter } from "@/Adapters/Cvm/CvmStatementAdapter.ts";
@@ -81,6 +82,7 @@ export class VendorCatalogService {
       registry: { cvm: new CvmRegistryAdapter(cvmHttp, cvmTicker.resolveCnpj) },
       fx: { bcb: new BcbPtaxAdapter(focusHttp) },
       fund: { cvm: new CvmFundAdapter(cvmHttp) },
+      disclosures: { cvm: new CvmDisclosureAdapter(cvmHttp, cvmTicker.resolveCnpj) },
     };
   }
 }

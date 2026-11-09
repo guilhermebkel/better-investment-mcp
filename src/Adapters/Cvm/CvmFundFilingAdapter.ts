@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { Readable } from "node:stream";
+import { createReadStream } from "node:fs";
 import type { CvmFilingKind, CvmFundDocType, FundFilingCollection } from "@/Protocols/CvmProtocol.ts";
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type { ProviderRow } from "@/Protocols/ProviderProtocol.ts";
@@ -30,13 +30,12 @@ export class CvmFundFilingAdapter {
     const identityToRow = new Map<string, ProviderRow>();
     for (const year of PeriodService.readYears(collection.window)) {
       const url = `${this.baseUrl}/dados/FI/DOC/EVENTUAL/DADOS/eventual_fi_${year}.csv`;
-      const bytes = await CvmUtil.loadFile(this.http, url, DATASET, year, collection.files);
-      if (bytes === undefined) {
-        continue;
-      }
-      const lines = CvmUtil.readLines(Readable.from([bytes]));
-      const rows = await CvmFundFilingAdapter.readRows(lines, collection);
-      for (const row of rows) {
+      const key = { dataset: DATASET, year };
+      const rows = await CvmUtil.downloadCvmFile(this.http, url, key, collection.files, (path) => {
+        const lines = CvmUtil.readLines(createReadStream(path));
+        return CvmFundFilingAdapter.readRows(lines, collection);
+      });
+      for (const row of rows ?? []) {
         CvmUtil.keep(identityToRow, row);
       }
     }
