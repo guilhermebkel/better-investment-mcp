@@ -142,7 +142,7 @@ export class CvmDisclosureAdapter implements ProviderPort<"disclosures"> {
           document_id: CsvUtil.readText(record.ID_Documento),
           row_json: JSON.stringify(record),
           // Why: the reference form names its link LINK_DOC; the holdings file (VLMO) names it Link_Download, and a row with neither has no document to read.
-          link: CsvUtil.readText(record.LINK_DOC ?? record.Link_Download),
+          link: CvmDisclosureAdapter.readSecureLink(record.LINK_DOC ?? record.Link_Download),
           received: CsvUtil.readText(record.DT_RECEB ?? record.Data_Entrega),
           source_file: entry.name,
           source: CvmDisclosureAdapter.VENDOR,
@@ -186,6 +186,12 @@ export class CvmDisclosureAdapter implements ProviderPort<"disclosures"> {
       return candidate.version > current.version;
     }
     return candidate.received > current.received;
+  }
+
+  static readSecureLink(link: string | undefined): string | null {
+    // Why: CVM writes the form links as http://, but the document host answers https only; the link is stored as https so the document can be read.
+    const text = CsvUtil.readText(link);
+    return text === null ? null : text.replace(/^http:\/\/www\.rad\.cvm\.gov\.br\//u, "https://www.rad.cvm.gov.br/");
   }
 
   static readSection(name: string, prefix: string, year: number): string {

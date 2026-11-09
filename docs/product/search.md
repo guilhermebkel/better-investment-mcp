@@ -18,7 +18,8 @@ A document is loaded only when a query asks for `asset_filing_chunks` with a `fi
 - A PDF is read page by page (`unpdf`). A page with no text is counted and reported in the answer (`pagesWithoutText`); it is not read. OCR is not available.
 - An HTML page is read by block. A heading (`h1` to `h4`) starts a section; the text under it is one segment per paragraph. Scripts, styles and the head are dropped.
 - The format is read from the bytes, not from the content type. CVM sends PDFs with `text/html`.
-- For CVM, only a PDF is stored. The CVM site sometimes answers 200 with an HTML error page; that page is refused (`CvmDocumentAdapter`).
+- A CVM reference form (FRE) is a zip with one XML. Its items are PDFs inside the XML, read the same way (ADR 0024): each chunk's `section` is the form section and the item number, for example `FatoresRisco 4.1`, and its `page` is the page of that item's PDF. A blank slot of the form is skipped. The XML is read as cp1252, although it declares UTF-8.
+- For CVM, only a PDF or a form zip is stored. The CVM site sometimes answers 200 with an HTML error page; that page is refused (`CvmDocumentAdapter`).
 
 ## Chunking rules
 

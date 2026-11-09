@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import { CvmDocumentAdapter } from "@/Adapters/Cvm/CvmDocumentAdapter.ts";
@@ -45,10 +47,20 @@ describe("CvmDocumentAdapter.fetchDocument()", () => {
     expect(bytes).toStrictEqual(pdf);
   });
 
+  it("accepts a reference form zip as it is, the same way (FRE)", async () => {
+    const fixture = join(import.meta.dirname, "..", "..", "Testing", "fixtures", "fre", "form-sample.zip");
+    const zip = new Uint8Array(readFileSync(fixture));
+    const { http } = buildHttp(Buffer.from(zip));
+
+    const bytes = await new CvmDocumentAdapter(http).fetchDocument(DOCUMENT_URL);
+
+    expect(bytes).toStrictEqual(zip);
+  });
+
   it("refuses an answer that is an HTML page instead of a PDF", async () => {
     const { http } = buildHttp(new TextEncoder().encode("<!DOCTYPE html><html><body>Pagina de erro</body></html>"));
 
-    await expect(new CvmDocumentAdapter(http).fetchDocument(DOCUMENT_URL)).rejects.toThrow("CVM answered with a page, not a PDF document");
+    await expect(new CvmDocumentAdapter(http).fetchDocument(DOCUMENT_URL)).rejects.toThrow("CVM answered with a page, not a PDF document or a form zip");
   });
 
   it("downloads a report that CVM indexes through its FNET link, the same way (P5)", async () => {

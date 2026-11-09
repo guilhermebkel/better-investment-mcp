@@ -6,6 +6,7 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Changed
 
+- CVM FRE, VLMO and CGVN filings keep their document link (`LINK_DOC` or `Link_Download`, stored as https), and only the highest version of each reference form is kept; the older versions leave the store on the next load.
 - `search_chunks` takes a fifth argument, the mode. Only `'text'` exists for now; the guard refuses any other mode by name. Semantic and hybrid modes come later (ADR 0023).
 - Brazilian quotes fall back to B3's COTAHIST file when yfinance fails, instead of Yahoo: both read the same service, so Yahoo could not back up yfinance. The fallback has no adjusted close. US quotes keep Yahoo.
 - The store moves to schema version 9: one `asset_id` (`market:asset_type:code`, for example `BR:stock:PETR4`) keys every asset table; the time columns are `reference_time_start` and `reference_time_end`; the numbers over time are the long table `asset_metrics` (`metric`, `value`, `unit`); the tables are named `asset_*` and `load_*`. `query_sql` filters on `asset_id`, and on `metric` for `asset_metrics`. The older names are mapped in `docs/product/data-map.md`.
@@ -14,6 +15,7 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Added
 
+- The text of a CVM reference form (FRE) is searchable: its items are read from the PDFs inside the form's XML, one section and item per chunk (ADR 0024).
 - Loads that outlive `INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS` (5 seconds by default) continue in the background. `query_sql` answers with the rows already stored, a warning that they may be incomplete, and the load id; The client follows it by running the query again (ADR 0022). A load that was running at a restart is closed as interrupted.
 - Every provider has a default: a query works with no provider variable. A default with a second vendor (yfinance, then Yahoo) falls back automatically when the first fails.
 - CVM FRE, VLMO and CGVN rows of a company (`asset_filing_items`), with their section, date, version and the whole row as JSON.

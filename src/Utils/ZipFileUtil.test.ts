@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ZipFileUtil } from "@/Utils/ZipFileUtil.ts";
@@ -12,6 +13,22 @@ const readAll = async (stream: AsyncIterable<Buffer | string>): Promise<string> 
   }
   return Buffer.concat(chunks).toString("latin1");
 };
+
+describe("ZipFileUtil.listEntriesFromBuffer()", () => {
+  it("lists the same entries as the file reader, and reads each one from memory", async () => {
+    const bytes = new Uint8Array(readFileSync(SAMPLE));
+    const fromFile = await ZipFileUtil.listEntries(SAMPLE);
+    const fromMemory = ZipFileUtil.listEntriesFromBuffer(bytes);
+
+    expect(fromMemory).toStrictEqual(fromFile);
+    for (const entry of fromMemory) {
+      expect(ZipFileUtil.readEntryFromBuffer(bytes, entry)).toHaveLength(entry.uncompressedBytes);
+    }
+    expect(ZipFileUtil.isZip(bytes)).toBe(true);
+    const notZip = new TextEncoder().encode("%PDF-1.7");
+    expect(ZipFileUtil.isZip(notZip)).toBe(false);
+  });
+});
 
 describe("ZipFileUtil.listEntries()", () => {
   it("lists the entries from the central directory, with their sizes and method", async () => {

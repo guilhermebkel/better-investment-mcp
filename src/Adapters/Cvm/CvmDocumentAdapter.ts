@@ -1,5 +1,6 @@
 import type { DocumentProvider } from "@/Protocols/DocumentProviderProtocol.ts";
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
+import { ZipFileUtil } from "@/Utils/ZipFileUtil.ts";
 
 const BYTES_PER_MIB = 1_048_576;
 const PDF_SIGNATURE = "%PDF";
@@ -35,9 +36,9 @@ export class CvmDocumentAdapter implements DocumentProvider {
     }
     // Why: the HTTP adapter checks the host and the size; a refused document leaves nothing in the store because the caller writes only after a download succeeds.
     const bytes = await this.http.getBytes(url);
-    // Why: the CVM site sometimes answers 200 with an HTML error page instead of the filing; that page is not a document, so it is refused before any text is read from it.
-    if (!CvmDocumentAdapter.isPdf(bytes)) {
-      throw new Error("CVM answered with a page, not a PDF document; no document was stored");
+    // Why: the CVM site sometimes answers 200 with an HTML error page instead of the filing; that page is not a document, so it is refused before any text is read from it. A reference form is a zip of XML and PDFs.
+    if (!CvmDocumentAdapter.isPdf(bytes) && !ZipFileUtil.isZip(bytes)) {
+      throw new Error("CVM answered with a page, not a PDF document or a form zip; no document was stored");
     }
     // Why: the HTTP adapter answers with a Node Buffer, which the PDF reader refuses; the document leaves the adapter as plain bytes.
     return new Uint8Array(bytes);

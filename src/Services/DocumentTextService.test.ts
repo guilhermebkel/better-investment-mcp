@@ -7,6 +7,13 @@ const FIXTURES = join(import.meta.dirname, "..", "Testing", "fixtures", "cvm", "
 const readFixture = (name: string): Uint8Array => new Uint8Array(readFileSync(join(FIXTURES, name)));
 
 describe("DocumentTextService.extract()", () => {
+  it("reads a reference form zip through the form reader", async () => {
+    const fixture = join(import.meta.dirname, "..", "Testing", "fixtures", "fre", "form-sample.zip");
+    const extracted = await DocumentTextService.extract(new Uint8Array(readFileSync(fixture)));
+
+    expect(extracted.format).toBe("form");
+  });
+
   it("reads a PDF page by page and counts the pages with no text", async () => {
     const extracted = await DocumentTextService.extract(readFixture("material-fact-sample.pdf"));
 

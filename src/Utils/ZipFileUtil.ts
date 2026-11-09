@@ -1,5 +1,5 @@
 import { open } from "node:fs/promises";
-import { createInflateRaw } from "node:zlib";
+import { createInflateRaw, inflateRawSync } from "node:zlib";
 import { Readable } from "node:stream";
 import type { ZipFileEntry } from "@/Protocols/ZipFileProtocol.ts";
 
@@ -10,6 +10,7 @@ const EOCD_LENGTH = 22;
 const MAX_COMMENT_BYTES = 65_535;
 const CENTRAL_LENGTH = 46;
 const LOCAL_LENGTH = 30;
+const LOCAL_SIGNATURE_BYTES = 4;
 const METHOD_STORED = 0;
 const METHOD_DEFLATE = 8;
 const EOCD_COUNT_OFFSET = 10;
@@ -42,6 +43,43 @@ export class ZipFileUtil {
     } finally {
       await handle.close();
     }
+  }
+
+  static isZip(bytes: Uint8Array): boolean {
+    if (bytes.length < LOCAL_SIGNATURE_BYTES) {
+      return false;
+    }
+    return Buffer.from(bytes.subarray(0, LOCAL_SIGNATURE_BYTES)).readUInt32LE(0) === LOCAL_SIGNATURE;
+  }
+
+  static listEntriesFromBuffer(archive: Uint8Array): ZipFileEntry[] {
+    // Why: a zip that is already in memory is read from the same end record and central directory as a file, so both readers list the same entries.
+    const data = ZipFileUtil.readBuffer(archive);
+    const tailStart = Math.max(0, data.length - (EOCD_LENGTH + MAX_COMMENT_BYTES));
+    const eocd = tailStart + ZipFileUtil.findEndRecord(data.subarray(tailStart));
+    const count = data.readUInt16LE(eocd + EOCD_COUNT_OFFSET);
+    const centralSize = data.readUInt32LE(eocd + EOCD_CENTRAL_SIZE_OFFSET);
+    const centralOffset = data.readUInt32LE(eocd + EOCD_CENTRAL_OFFSET_OFFSET);
+    return ZipFileUtil.parseCentral(data.subarray(centralOffset, centralOffset + centralSize), count);
+  }
+
+  static readEntryFromBuffer(archive: Uint8Array, entry: ZipFileEntry): Uint8Array {
+    // Why: an entry of an archive in memory is inflated whole; the form zips of CVM hold one XML of a few megabytes.
+    const data = ZipFileUtil.readBuffer(archive);
+    if (data.readUInt32LE(entry.localHeaderOffset) !== LOCAL_SIGNATURE) {
+      throw new Error(`the zip entry ${entry.name} has no local header; the file is damaged`);
+    }
+    const dataStart = entry.localHeaderOffset + LOCAL_LENGTH
+      + data.readUInt16LE(entry.localHeaderOffset + LOCAL_NAME_LENGTH_OFFSET)
+      + data.readUInt16LE(entry.localHeaderOffset + LOCAL_EXTRA_LENGTH_OFFSET);
+    const compressed = data.subarray(dataStart, dataStart + entry.compressedBytes);
+    if (entry.method === METHOD_STORED) {
+      return Uint8Array.from(compressed);
+    }
+    if (entry.method !== METHOD_DEFLATE) {
+      throw new Error(`the zip entry ${entry.name} uses method ${entry.method}, which is not read`);
+    }
+    return Uint8Array.from(inflateRawSync(compressed));
   }
 
   static async openEntry(filePath: string, entryName: string): Promise<Readable> {
@@ -81,6 +119,10 @@ export class ZipFileUtil {
       }
     }
     throw new Error("the file is not a zip archive: no end of central directory");
+  }
+
+  private static readBuffer(bytes: Uint8Array): Buffer {
+    return Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   }
 
   private static parseCentral(central: Buffer, count: number): ZipFileEntry[] {

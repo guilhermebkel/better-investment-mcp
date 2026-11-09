@@ -99,6 +99,13 @@ describe("CvmDisclosureAdapter.fetchTables()", () => {
     expect(tables.asset_filings?.map((row) => row.filing_id)).toStrictEqual(["fre:BR:stock:TOTS3:2"]);
   });
 
+  it("stores a CVM form link as https, the only scheme the document host answers", () => {
+    expect(CvmDisclosureAdapter.readSecureLink("http://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=147376"))
+      .toBe("https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=147376");
+    expect(CvmDisclosureAdapter.readSecureLink("")).toBeNull();
+    expect(CvmDisclosureAdapter.readSecureLink(undefined)).toBeNull();
+  });
+
   it("reports a ticker with no CNPJ as pending", async () => {
     const adapter = new CvmDisclosureAdapter(buildHttp(), () => Promise.resolve(undefined), BASE, () => CURRENT_YEAR);
 
