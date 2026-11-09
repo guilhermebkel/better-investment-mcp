@@ -9,6 +9,8 @@ import type { MacroProvider } from "@/Protocols/MacroProviderProtocol.ts";
 import type { PeriodWindow } from "@/Protocols/PeriodProtocol.ts";
 import type { QuoteProvider } from "@/Protocols/QuoteProviderProtocol.ts";
 import type { StatementProvider } from "@/Protocols/StatementProviderProtocol.ts";
+import type { ExpectationsProvider } from "@/Protocols/ExpectationsProviderProtocol.ts";
+import type { TreasuryProvider } from "@/Protocols/TreasuryProviderProtocol.ts";
 
 export type ColumnToValue = Record<string, DatabaseValue>;
 
@@ -64,7 +66,9 @@ export type ProviderSettingName
     | "INVESTMENT_MCP_FUND_DATA_PROVIDER"
     | "INVESTMENT_MCP_FILINGS_PROVIDER"
     | "INVESTMENT_MCP_DOCUMENTS_PROVIDER"
-    | "INVESTMENT_MCP_MACRO_PROVIDER";
+    | "INVESTMENT_MCP_MACRO_PROVIDER"
+    | "INVESTMENT_MCP_TREASURY_PROVIDER"
+    | "INVESTMENT_MCP_EXPECTATIONS_PROVIDER";
 
 export type VendorToProvider<Provider> = Record<string, Provider>;
 
@@ -77,6 +81,8 @@ export type CategoryToVendors = {
   filings: VendorToProvider<FilingProvider>;
   documents: VendorToProvider<DocumentProvider>;
   macro: VendorToProvider<MacroProvider>;
+  treasury: VendorToProvider<TreasuryProvider>;
+  expectations: VendorToProvider<ExpectationsProvider>;
 };
 
 export type MarketToVendor = Record<string, string>;

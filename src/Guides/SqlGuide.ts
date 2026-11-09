@@ -8,6 +8,8 @@ Every data table in the query needs WHERE filters that compare with = or IN and 
 - quotes, splits, dividends, fundamentals, financial_statements, fii_monthly, filings: market, ticker and asset_type.
 - chunks: market, ticker, asset_type, and filing_type or filing_id.
 - macro_series: series.
+- treasury_prices: bond_type (a Tesouro Direto family, such as 'Tesouro Selic').
+- market_expectations: indicator (ipca, selic, pib_total or cambio).
 - assets, cache_runs, asset_coverage: no filter.
 
 A query without its filters is refused, and the answer names the filter to add.
@@ -44,6 +46,16 @@ SELECT delivered_at, filing_type, subject, url FROM filings WHERE market = 'BR' 
 Macro series:
 \`\`\`sql
 SELECT date, value FROM macro_series WHERE series IN ('ipca', 'selic') ORDER BY date DESC LIMIT 24
+\`\`\`
+
+Treasury prices of one bond family on a base date:
+\`\`\`sql
+SELECT maturity, buy_rate, sell_rate, base_unit_price FROM treasury_prices WHERE bond_type = 'Tesouro Selic' AND base_date = DATE '2026-11-06' ORDER BY maturity
+\`\`\`
+
+Market expectations for the Selic, the reference year 2027:
+\`\`\`sql
+SELECT survey_date, median_value, mean_value FROM market_expectations WHERE indicator = 'selic' AND calculation_base = 0 AND reference_year = 2027 ORDER BY survey_date DESC LIMIT 12
 \`\`\`
 
 Financial statements of one quarter, with the version and the file of each row:

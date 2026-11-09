@@ -24,6 +24,8 @@ export class ProviderRegistryService {
     filings: "INVESTMENT_MCP_FILINGS_PROVIDER",
     documents: "INVESTMENT_MCP_DOCUMENTS_PROVIDER",
     macro: "INVESTMENT_MCP_MACRO_PROVIDER",
+    treasury: "INVESTMENT_MCP_TREASURY_PROVIDER",
+    expectations: "INVESTMENT_MCP_EXPECTATIONS_PROVIDER",
   };
 
   private readonly categoryToSettings: Record<CacheCategory, VendorSettings>;
@@ -40,6 +42,8 @@ export class ProviderRegistryService {
       filings: ProviderRegistryService.parseSetting(env, "filings"),
       documents: ProviderRegistryService.parseSetting(env, "documents"),
       macro: ProviderRegistryService.parseSetting(env, "macro"),
+      treasury: ProviderRegistryService.parseSetting(env, "treasury"),
+      expectations: ProviderRegistryService.parseSetting(env, "expectations"),
     };
   }
 
@@ -53,6 +57,8 @@ export class ProviderRegistryService {
       filings: {},
       documents: {},
       macro: {},
+      treasury: {},
+      expectations: {},
     };
   }
 

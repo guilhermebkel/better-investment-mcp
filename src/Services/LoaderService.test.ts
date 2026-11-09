@@ -268,6 +268,56 @@ describe("LoaderService.ensure()", () => {
     });
   });
 
+  describe("when a keyed table (a bond family) is loaded", () => {
+    const TREASURY_TABLE = "treasury_prices";
+    const TREASURY_MARKET = "TDIR";
+    const SELIC_FAMILY = "Tesouro Selic";
+    const IPCA_FAMILY = "Tesouro IPCA+";
+    const TREASURY_SETTING = `${TREASURY_MARKET}:tesouro`;
+    const TESOURO_SELIC = { table: TREASURY_TABLE, category: "treasury", market: TREASURY_MARKET, ticker: SELIC_FAMILY } as const;
+    const TESOURO_IPCA = { table: TREASURY_TABLE, category: "treasury", market: TREASURY_MARKET, ticker: IPCA_FAMILY } as const;
+    const buildTreasuryRow = (bondType: string, baseDate: string): ProviderRow => ({
+      bond_type: bondType, maturity: "2027-03-01", base_date: baseDate,
+      buy_rate: 0.02, sell_rate: 0.03, buy_unit_price: 20251.05, sell_unit_price: 20240.05, base_unit_price: 20240.05, source: "tesouro",
+    });
+    const buildTreasuryLoader = (answer: (request: ProviderRequest) => Promise<ProviderResult>): LoaderService => {
+      const treasury = new FakeProvider({ category: "treasury", vendor: "tesouro", markets: ["TDIR"], assetTypes: [], respond: answer });
+      return new LoaderService(store, new ProviderRegistryService(
+        { INVESTMENT_MCP_LOG_LEVEL: "error", INVESTMENT_MCP_CACHE_TTL_SECONDS: TTL_SECONDS, INVESTMENT_MCP_TREASURY_PROVIDER: TREASURY_SETTING },
+        { ...ProviderRegistryService.buildEmptyCatalog(), treasury: { tesouro: treasury } },
+      ));
+    };
+    const readStoredFamilies = async (): Promise<string[]> => {
+      const rows = await store.writer.readRows("SELECT bond_type AS bondType FROM treasury_prices ORDER BY bond_type, base_date");
+      return rows.map((row) => String(row.bondType));
+    };
+
+    it("replaces only the rows of the family asked, so the other families stay", async () => {
+      const loader = buildTreasuryLoader((request) => Promise.resolve({
+        source: "tesouro",
+        tables: { treasury_prices: [buildTreasuryRow(request.ticker, QUOTE_DATE)] },
+      }));
+      await loader.ensure([TESOURO_IPCA]);
+      await loader.ensure([TESOURO_SELIC]);
+
+      const [again] = await loader.ensure([TESOURO_SELIC]);
+      expect(again).toMatchObject({ status: "fresh" });
+      expect(await readStoredFamilies()).toStrictEqual([IPCA_FAMILY, SELIC_FAMILY]);
+    });
+
+    it("refuses a row of another family and writes nothing", async () => {
+      const loader = buildTreasuryLoader(() => Promise.resolve({
+        source: "tesouro",
+        tables: { treasury_prices: [buildTreasuryRow(IPCA_FAMILY, QUOTE_DATE)] },
+      }));
+
+      const [entry] = await loader.ensure([TESOURO_SELIC]);
+
+      expect(entry).toMatchObject({ status: "failed", error: "the provider sent a row for another asset in treasury_prices" });
+      expect(await readStoredFamilies()).toStrictEqual([]);
+    });
+  });
+
   describe("when no provider serves the asset's market", () => {
     it("reports that no provider serves it and calls no provider", async () => {
       const loader = buildLoader(PRIMARY_SETTING);

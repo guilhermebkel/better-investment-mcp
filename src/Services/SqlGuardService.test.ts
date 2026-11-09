@@ -73,6 +73,13 @@ const ACCEPTED: [string, string, Requirement[]][] = [
   ["macro_series with its series", "SELECT value FROM macro_series WHERE series = 'SELIC'", [
     { table: "macro_series", category: "macro", market: "SERIES", ticker: "SELIC" },
   ]],
+  ["treasury_prices with two bond families", "SELECT buy_rate FROM treasury_prices WHERE bond_type IN ('Tesouro Selic', 'Tesouro IPCA+')", [
+    { table: "treasury_prices", category: "treasury", market: "TDIR", ticker: "Tesouro Selic" },
+    { table: "treasury_prices", category: "treasury", market: "TDIR", ticker: "Tesouro IPCA+" },
+  ]],
+  ["market_expectations with one indicator", "SELECT median_value FROM market_expectations WHERE indicator = 'ipca'", [
+    { table: "market_expectations", category: "expectations", market: "FOCUS", ticker: "ipca" },
+  ]],
   ["chunks with filing_type", "SELECT text FROM chunks WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND filing_type = 'ITR'", [
     { table: "chunks", category: "documents", market: "BR", ticker: "PETR4", assetType: "stock", filingType: "ITR" },
   ]],
@@ -111,6 +118,8 @@ const REFUSED: [string, string, string][] = [
   + "WHERE q.market = 'BR' AND q.ticker = 'PETR4' AND q.asset_type = 'stock'", "dividends (as d) needs a WHERE filter on market, ticker, asset_type"],
   ["chunks without filing_type or filing_id", "SELECT text FROM chunks WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock'", "chunks needs a WHERE filter on filing_type or filing_id"],
   ["macro_series without series", "SELECT value FROM macro_series", "macro_series needs a WHERE filter on series"],
+  ["treasury_prices without bond_type", "SELECT buy_rate FROM treasury_prices", "treasury_prices needs a WHERE filter on bond_type"],
+  ["market_expectations without indicator", "SELECT median_value FROM market_expectations", "market_expectations needs a WHERE filter on indicator"],
   ["two statements", "SELECT 1; SELECT 2", "Send exactly one SELECT statement per query"],
   ["PRAGMA", "PRAGMA version", ONLY_SELECT],
   ["COPY", "COPY quotes TO 'out.csv'", ONLY_SELECT],

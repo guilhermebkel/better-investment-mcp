@@ -18,6 +18,8 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 | `financial_statements` | market, ticker, asset_type, period_end, period_type, statement, line_item, value, currency, version, source_file, source | CVM ITR, DFP | #11, #28 |
 | `fii_monthly` | market, ticker, asset_type, period, distribution_per_unit, rental_revenue, property_sales_revenue, other_revenue, total_revenue, distributable_income, management_fee, performance_fee, property_acquisitions, other_expenses, total_expenses, liquidity_requirement, cash_available, government_bonds, corporate_bonds, fixed_income_funds, net_worth, version, source_file, source | CVM monthly fund files (`fii-doc-inf_mensal`); StatusInvest for the columns CVM does not carry is blocked | #8, #28 |
 | `macro_series` | **series**, **date**, value, source | BCB SGS (ipca 433, cdi 12, selic 432, ptax 1, igpm 189) | #7 |
+| `treasury_prices` | **bond_type**, **maturity**, **base_date**, buy_rate, sell_rate, buy_unit_price, sell_unit_price, base_unit_price, source | Tesouro Transparente (`precotaxatesourodireto.csv`) | PR #30 |
+| `market_expectations` | **indicator**, **reference_year**, **survey_date**, **calculation_base**, mean_value, median_value, std_dev, min_value, max_value, respondents, source | BCB Focus (Olinda `ExpectativasMercadoAnuais`) | PR #30 |
 | `cache_runs` | run_id, category, market, ticker, source, started_at, finished_at, expires_at, rows_read, error, filing_id, period_from, period_to | the loader (`filing_id` set for a document; the period columns set for a period load) | #3, #5, #10, #28 |
 | `cvm_files` | **url**, **sha256**, dataset, reference_year, size_bytes, fetched_at, is_current | the loader: one record per downloaded CVM file and version | #28 |
 | `schema_version` | version | the store (one row, the schema version of the file) | #3 |
@@ -40,6 +42,8 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 | `chunks` | `market`, `ticker`, `asset_type` and `filing_type` or `filing_id` | none |
 | `search_chunks` | the arguments `market`, `ticker`, `asset_type` and `filing_type` (literal strings); `section` may be NULL | none |
 | `macro_series` | `series` | none |
+| `treasury_prices` | `bond_type` | none |
+| `market_expectations` | `indicator` | none |
 | `assets`, `cache_runs`, `asset_coverage`, `schema_version`, `cvm_files` | nothing | none |
 
 A period filter compares its column with a date literal, with `=`, `>=`, `>`, `<=`, `<`, `BETWEEN` or `IN`, for example `period_end BETWEEN '2024-01-01' AND '2024-12-31'` or `period >= DATE '2025-01-01'`. The loader loads the years of the period. A query with no period filter loads the last three years (the current year and the two before it). A bound given alone is completed with the default: a missing end runs to the end of the current year, and a missing start reaches back to the default start or to the end, whichever is earlier. A period longer than 10 years is refused with the reason, because each yearly file is tens of megabytes. A period filter that is not a date literal, or sits inside an `OR`, is not read as a bound and loads the default period.
@@ -73,6 +77,11 @@ The map of the CVM open data that serves the tables above. CVM is the primary so
 
 - `macro_series.value`: `ipca` is percent change per month (SGS 433), `cdi` is percent per day (SGS 12), `selic` is the Copom target rate in percent per year (SGS 432), `ptax` is the sell rate in BRL per USD (SGS 1), `igpm` is the monthly percent change of the IGP-M (SGS 189). The units of the first four were checked against the service's answers; `igpm`'s unit was checked against three recent answers (-0.22, 1.57, 1.47), not against the series metadata.
 - `macro_series` has no market: its rows use the market `SERIES` in the registry, so the setting is `INVESTMENT_MCP_MACRO_PROVIDER=SERIES:bcb`.
+- `treasury_prices` is loaded per bond family: the filter `bond_type` names the family, and the registry market is `TDIR` (`INVESTMENT_MCP_TREASURY_PROVIDER=TDIR:tesouro`). The file holds the history of every family from 2004, so one load downloads it once for that family.
+- `treasury_prices.buy_rate` and `sell_rate` are the morning rates of the base date, percent per year (the file's `Taxa Compra Manha` and `Taxa Venda Manha`). The unit prices (`buy_unit_price`, `sell_unit_price`, `base_unit_price`) are reais per bond, with the file's decimal comma read as a point. `maturity` is the bond's maturity date and `base_date` the date of the prices.
+- `market_expectations` is loaded per indicator: the filter `indicator` names it, and the registry market is `FOCUS` (`INVESTMENT_MCP_EXPECTATIONS_PROVIDER=FOCUS:bcb`). `survey_date` is the date of the survey and `reference_year` the year the expectation is for.
+- `market_expectations.calculation_base` is the service's `baseCalculo` (0 or 1). The service sends only the number, so its meaning was not checked: use it as a key that tells two surveys apart, not as a label.
+- The stats of `market_expectations` (mean, median, standard deviation, minimum, maximum, respondents) are null for old surveys, when the service did not publish them. A row with an indicator detail is refused, because the table has no column for it.
 - `splits.ratio` is the new shares per old share (a 2-for-1 split is 2).
 - `dividends.kind` is `dividend` for every Yahoo row; Yahoo does not tell a dividend from interest on equity.
 - `assets.sector` and `assets.legal_id` are null from Yahoo: its chart endpoint gives neither.
@@ -116,4 +125,5 @@ The succession of IRDM11 and IRIM11 (issue #28, S6): IRIM11's CNPJ was not confi
 - Fund NAV, holdings and credit funds (`fi-doc-inf_diario`, `fi-doc-cda`, FIDC, FIP, FIAGRO, securitization): Phase 2 of issue #28, each as its own unit when a use case asks for it.
 - The policy for joining IRDM11 and IRIM11 into one series (adjusted or not, the factor and the date of the event). Until it is decided, each ticker keeps its own history.
 - The per-unit distribution of FIIs with ex and payment dates. CVM does not publish one in these datasets (P4).
+- PTAX by currency (the BCB Olinda PTAX service), the CVM company and fund registries (sector and legal name of a company, `cad_fi` for funds), the daily NAV and holdings of funds, and the B3 COTAHIST history. COTAHIST waits for the owner's decision on its licence terms; the B3 site routes are not documented, so they are not used.
 

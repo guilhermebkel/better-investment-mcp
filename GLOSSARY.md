@@ -50,7 +50,7 @@ An outside service that has data: Yahoo Finance, StatusInvest, CVM, FNET or BCB.
 The `source` column on every row: the vendor that produced it.
 
 **Data category**:
-A kind of data with its own provider: quotes and splits, dividends, fundamentals, financial statements, periodic fund data, filing list, document text, macro.
+A kind of data with its own provider: quotes and splits, dividends, fundamentals, financial statements, periodic fund data, filing list, document text, macro, Tesouro Direto prices and market expectations.
 
 **Cache**:
 The temporary DuckDB file the server fills on demand. It can be deleted without loss. Its location is `INVESTMENT_MCP_CACHE_DIR` and its time to live is `INVESTMENT_MCP_CACHE_TTL_SECONDS`.
@@ -105,6 +105,14 @@ _Avoid_: error, outlier (the row is kept)
 **Series**:
 A macro series such as `ipca`, `cdi`, `selic`, `ptax` or `igpm`. It has no market; its registry market is `SERIES`.
 _Avoid_: indicator, index
+
+**Bond family**:
+A Tesouro Direto group of bonds that the file names alike, such as `Tesouro Selic` or `Tesouro IPCA+`. It is the ticker of a load of `treasury_prices`, whose registry market is `TDIR`.
+_Avoid_: product, bond type
+
+**Focus**:
+The BCB survey of market expectations. `market_expectations` holds its annual mean and median for `ipca`, `selic`, `pib_total` and `cambio`, one row per survey date and reference year. Its registry market is `FOCUS`.
+_Avoid_: forecast, projection
 
 ## CVM open data
 

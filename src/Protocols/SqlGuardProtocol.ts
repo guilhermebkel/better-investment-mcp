@@ -10,7 +10,14 @@ export type DataTable
     | "fii_monthly"
     | "filings"
     | "chunks"
-    | "macro_series";
+    | "macro_series"
+    | "treasury_prices"
+    | "market_expectations";
+
+export type KeyedSource = {
+  market: string;
+  column: string;
+};
 
 export type Requirement = {
   table: DataTable;

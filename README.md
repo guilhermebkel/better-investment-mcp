@@ -49,6 +49,8 @@ Every setting is an environment variable. The server reads them once at start an
 | `INVESTMENT_MCP_FILINGS_PROVIDER` | unset | Filings list source per market, for example `BR:cvm`. Same rule. |
 | `INVESTMENT_MCP_DOCUMENTS_PROVIDER` | unset | Document download source per market. Same rule. |
 | `INVESTMENT_MCP_MACRO_PROVIDER` | unset | Macro series source. The series have no market, so the value is `SERIES:bcb`. |
+| `INVESTMENT_MCP_TREASURY_PROVIDER` | unset | Tesouro Direto source. The bond families have no market, so the value is `TDIR:tesouro`. |
+| `INVESTMENT_MCP_EXPECTATIONS_PROVIDER` | unset | Market expectations source. The indicators have no market, so the value is `FOCUS:bcb`. |
 
 A provider variable names the vendor for each market: `BR:yahoo` uses one vendor, and `BR:yahoo>statusinvest` uses a second vendor only when the first fails. The vendors are added with their adapters.
 
@@ -58,6 +60,8 @@ A provider variable names the vendor for each market: `BR:yahoo` uses one vendor
 | --- | --- | --- |
 | Yahoo Finance | quotes, dividends, splits, asset summary | Unofficial. Personal use, no service guarantee. |
 | BCB SGS | macro series (ipca, cdi, selic, ptax, igpm) | Open data. |
+| Tesouro Transparente | Tesouro Direto prices and rates, daily history from 2004 | Open data. One download of the file per bond family loaded. |
+| BCB Focus (Olinda) | annual market expectations: ipca, selic, pib_total, cambio | Open data. |
 | StatusInvest | fundamentals, FII monthly data | Built, but the site blocks requests from this server. |
 | CVM | filings list (IPE) | Open data. A ticker needs a CNPJ link that no source gives yet. |
 | CVM | ITR, DFP, Formulário de Referência | Not built (issue #11). |

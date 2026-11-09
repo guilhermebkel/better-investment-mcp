@@ -1,0 +1,44 @@
+{
+  "@odata.context": "https://was-p.bcnet.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata$metadata#ExpectativasMercadoAnuais",
+  "value": [
+    {
+      "Indicador": "IPCA",
+      "IndicadorDetalhe": null,
+      "Data": "2000-01-03",
+      "DataReferencia": "2000",
+      "Media": 7.0,
+      "Mediana": 7.0,
+      "DesvioPadrao": 0.8,
+      "Minimo": null,
+      "Maximo": null,
+      "numeroRespondentes": null,
+      "baseCalculo": 0
+    },
+    {
+      "Indicador": "IPCA",
+      "IndicadorDetalhe": null,
+      "Data": "2000-01-04",
+      "DataReferencia": "2000",
+      "Media": 7.0,
+      "Mediana": 7.0,
+      "DesvioPadrao": 0.79,
+      "Minimo": null,
+      "Maximo": null,
+      "numeroRespondentes": null,
+      "baseCalculo": 0
+    },
+    {
+      "Indicador": "IPCA",
+      "IndicadorDetalhe": null,
+      "Data": "2014-01-02",
+      "DataReferencia": "2014",
+      "Media": 5.89,
+      "Mediana": 5.9,
+      "DesvioPadrao": 0.3,
+      "Minimo": 5.15,
+      "Maximo": 6.54,
+      "numeroRespondentes": 27,
+      "baseCalculo": 1
+    }
+  ]
+}

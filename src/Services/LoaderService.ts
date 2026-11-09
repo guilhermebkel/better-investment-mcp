@@ -20,13 +20,12 @@ import { SqlGuardService } from "@/Services/SqlGuardService.ts";
 import type { StoreService } from "@/Services/StoreService.ts";
 import { ConcurrencyUtil } from "@/Utils/ConcurrencyUtil.ts";
 
-const MACRO_TABLE = "macro_series";
 const ASSET_KEY_COLUMNS: readonly ("market" | "ticker")[] = ["market", "ticker"];
-const SERIES_KEY_COLUMNS: readonly "series"[] = ["series"];
 const DOCUMENT_SOURCE = "cvm";
 
 export class LoaderService implements LoaderPort {
   static readonly MAX_PARALLEL_LOADS = 4;
+  static readonly INSERT_BATCH_ROWS = 500;
   static readonly WRITABLE_TABLES: ReadonlySet<string> = new Set([...Object.keys(SqlGuardService.TABLE_TO_CATEGORY), "assets"]);
 
   private readonly store: StoreService;
@@ -409,9 +408,9 @@ export class LoaderService implements LoaderPort {
     window: PeriodWindow | undefined,
   ): Promise<number> {
     const { writer } = this.store;
-    const isSeries = table === MACRO_TABLE;
-    const keyColumns = isSeries ? SERIES_KEY_COLUMNS : ASSET_KEY_COLUMNS;
-    const keyValues = isSeries ? [requirement.ticker] : [requirement.market, requirement.ticker];
+    const keyed = SqlGuardService.TABLE_TO_KEYED_SOURCE[table as DataTable];
+    const keyColumns: readonly string[] = keyed === undefined ? ASSET_KEY_COLUMNS : [keyed.column];
+    const keyValues = keyed === undefined ? [requirement.market, requirement.ticker] : [requirement.ticker];
     const periodColumn = window === undefined ? undefined : PeriodService.TABLE_TO_PERIOD_COLUMN[table as DataTable];
     const deleteWhere = keyColumns.map((column) => `${column} = ?`).join(" AND ");
     // Why: a period load replaces only the rows of its own window, so the rows of another period stay in the store.
@@ -420,14 +419,19 @@ export class LoaderService implements LoaderPort {
     // Why: a filing list reload keeps the hash of each document already stored, so an unchanged document is not downloaded again into the chunks.
     const filingIdToHash = await this.readStoredHashes(table, requirement);
     await writer.run(`DELETE FROM ${table} WHERE ${deleteWhere}${periodWhere}`, [...keyValues, ...periodValues]);
+    const prepared: ProviderRow[] = [];
     for (const original of rows) {
       LoaderService.checkRow(requirement, table, original, columns);
       LoaderService.checkPeriod(table, original, window);
-      const row = LoaderService.keepStoredHash(original, filingIdToHash);
-      const names = Object.keys(row);
-      const placeholders = names.map(() => "?").join(", ");
-      const values = names.map((name) => row[name] ?? null);
-      await writer.run(`INSERT INTO ${table} (${names.join(", ")}) VALUES (${placeholders})`, values);
+      prepared.push(LoaderService.keepStoredHash(original, filingIdToHash));
+    }
+    // Why: the rows go in batches of many value groups per statement; one statement per row made a full history of a series take minutes. A column a row does not carry is written as NULL, as before.
+    const names = [...new Set(prepared.flatMap((row) => Object.keys(row)))];
+    for (let start = 0; start < prepared.length; start += LoaderService.INSERT_BATCH_ROWS) {
+      const batch = prepared.slice(start, start + LoaderService.INSERT_BATCH_ROWS);
+      const placeholders = batch.map(() => `(${names.map(() => "?").join(", ")})`).join(", ");
+      const values = batch.flatMap((row) => names.map((name) => row[name] ?? null));
+      await writer.run(`INSERT INTO ${table} (${names.join(", ")}) VALUES ${placeholders}`, values);
     }
     return rows.length;
   }
@@ -469,9 +473,10 @@ export class LoaderService implements LoaderPort {
     if (unknownColumn !== undefined) {
       throw new Error(`the provider sent the column ${unknownColumn}, which ${table} does not have`);
     }
-    const isOtherAsset = table === MACRO_TABLE
-      ? row.series !== requirement.ticker
-      : row.market !== requirement.market || row.ticker !== requirement.ticker;
+    const keyed = SqlGuardService.TABLE_TO_KEYED_SOURCE[table as DataTable];
+    const isOtherAsset = keyed === undefined
+      ? row.market !== requirement.market || row.ticker !== requirement.ticker
+      : row[keyed.column] !== requirement.ticker;
     if (isOtherAsset) {
       throw new Error(`the provider sent a row for another asset in ${table}`);
     }

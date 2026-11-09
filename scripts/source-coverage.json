@@ -31,6 +31,14 @@
     "MacroProvider": {
       "status": "implemented",
       "reason": "Macro series from BCB SGS; the BCB adapter (#7) fills ipca, cdi, selic, ptax and igpm (SGS 189)."
+    },
+    "TreasuryProvider": {
+      "status": "implemented",
+      "reason": "Tesouro Direto prices and rates (daily history from 2004) from the Tesouro Transparente file; the Tesouro adapter fills treasury_prices for one bond family per load."
+    },
+    "ExpectationsProvider": {
+      "status": "implemented",
+      "reason": "Annual market expectations from the BCB Focus survey (Olinda); the Focus adapter fills market_expectations for ipca, selic, pib_total and cambio."
     }
   }
 }

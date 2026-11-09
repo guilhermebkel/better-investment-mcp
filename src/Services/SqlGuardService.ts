@@ -12,6 +12,7 @@ import type {
   FilingSelector,
   FromReading,
   GuardVerdict,
+  KeyedSource,
   MacroReading,
   RefScope,
   Requirement,
@@ -37,7 +38,6 @@ import { PeriodService } from "@/Services/PeriodService.ts";
 const SELECT_TYPES: readonly ("SELECT_NODE" | "SET_OPERATION_NODE")[] = ["SELECT_NODE", "SET_OPERATION_NODE"];
 
 const isSelectType = (value: string): boolean => SELECT_TYPES.some((candidate) => candidate === value);
-const SERIES_MARKET = "SERIES";
 const QUALIFIED_COLUMN_PARTS = 2;
 const SEARCH_MACRO = "search_chunks";
 const SEARCH_MACRO_FILTERS = ["market", "ticker", "asset_type", "filing_type", "section"] as const;
@@ -54,6 +54,15 @@ export class SqlGuardService implements SqlGuardPort {
     filings: "filings",
     chunks: "documents",
     macro_series: "macro",
+    treasury_prices: "treasury",
+    market_expectations: "expectations",
+  };
+
+  // Why: a keyed table is loaded per value of its key column (a series, a bond family, an indicator); each value is one load in the market the category serves.
+  static readonly TABLE_TO_KEYED_SOURCE: Partial<Record<DataTable, KeyedSource>> = {
+    macro_series: { market: "SERIES", column: "series" },
+    treasury_prices: { market: "TDIR", column: "bond_type" },
+    market_expectations: { market: "FOCUS", column: "indicator" },
   };
 
   static readonly MARKET_FILTERS: TableFilters = { columns: ["market", "ticker", "asset_type"], anyOf: [] };
@@ -67,6 +76,8 @@ export class SqlGuardService implements SqlGuardPort {
     filings: SqlGuardService.MARKET_FILTERS,
     chunks: { columns: ["market", "ticker", "asset_type"], anyOf: ["filing_type", "filing_id"] },
     macro_series: { columns: ["series"], anyOf: [] },
+    treasury_prices: { columns: ["bond_type"], anyOf: [] },
+    market_expectations: { columns: ["indicator"], anyOf: [] },
   };
 
   static readonly CONDITION_TO_READER = new Map<ConditionType, ConditionReader>([
@@ -284,9 +295,10 @@ export class SqlGuardService implements SqlGuardPort {
       return { problems: [SqlGuardService.describeMissing(ref, needed)], requirements: [] };
     }
     const category = SqlGuardService.TABLE_TO_CATEGORY[table];
-    if (table === "macro_series") {
-      const series = readValues("series") ?? [];
-      const requirements = series.map((value) => ({ table, category, market: SERIES_MARKET, ticker: value }));
+    const keyed = SqlGuardService.TABLE_TO_KEYED_SOURCE[table];
+    if (keyed !== undefined) {
+      const values = readValues(keyed.column) ?? [];
+      const requirements = values.map((value) => ({ table, category, market: keyed.market, ticker: value }));
       return { problems: [], requirements };
     }
     const requirements = SqlGuardService.buildRequirements(table, category, readValues);

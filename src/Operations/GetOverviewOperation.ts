@@ -48,6 +48,8 @@ export class GetOverviewOperation implements OperationPort<GetOverviewInput> {
       "filings: the filings of a company with type, date and url. Filter: market, ticker, asset_type.",
       "chunks: the text of filings by section and page. Filter: market, ticker, asset_type and filing_type or filing_id.",
       "macro_series: monthly and daily macro series (ipca, cdi, selic, ptax, igpm). Filter: series.",
+      "treasury_prices: Tesouro Direto prices and rates per bond family, daily from 2004. Filter: bond_type.",
+      "market_expectations: BCB Focus annual expectations (ipca, selic, pib_total, cambio). Filter: indicator.",
       "asset_coverage, cache_runs: what is loaded, and the load runs. No filter.",
     ];
   }

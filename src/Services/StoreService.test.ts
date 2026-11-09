@@ -54,9 +54,11 @@ describe("StoreService.open()", () => {
         "financial_statements",
         "fundamentals",
         "macro_series",
+        "market_expectations",
         "quotes",
         "schema_version",
         "splits",
+        "treasury_prices",
       ]);
     });
 
@@ -77,7 +79,7 @@ describe("StoreService.open()", () => {
       store = await StoreService.open(buildEnv());
 
       expect(stderr).toHaveBeenCalledWith(expect.stringContaining("\"event\":\"store_replaced\""));
-      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 3 }]);
+      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 4 }]);
     });
   });
 
@@ -88,7 +90,7 @@ describe("StoreService.open()", () => {
       store = await StoreService.open(buildEnv());
 
       expect(stderr).toHaveBeenCalledWith(expect.stringContaining("\"reason\":\"it cannot be opened\""));
-      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 3 }]);
+      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 4 }]);
     });
   });
 

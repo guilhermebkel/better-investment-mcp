@@ -49,6 +49,8 @@ One interface per data category, one adapter per vendor (`docs/adr/0005-one-prov
 - `FilingProvider`: the list of filings. `INVESTMENT_MCP_FILINGS_PROVIDER`. CVM and FNET.
 - `DocumentProvider`: document download and text. `INVESTMENT_MCP_DOCUMENTS_PROVIDER`. CVM and FNET.
 - `MacroProvider`: macro series. `INVESTMENT_MCP_MACRO_PROVIDER`. BCB SGS.
+- `TreasuryProvider`: Tesouro Direto prices and rates per bond family. `INVESTMENT_MCP_TREASURY_PROVIDER`. Tesouro Transparente.
+- `ExpectationsProvider`: annual market expectations (the BCB Focus survey). `INVESTMENT_MCP_EXPECTATIONS_PROVIDER`. BCB Olinda.
 <!-- providers:end -->
 
 `scripts/source-coverage.json` classifies each provider as `implemented`, `planned` or `excluded` with a reason, and `pnpm source:drift` fails when this list and that file disagree.
