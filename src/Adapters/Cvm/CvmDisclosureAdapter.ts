@@ -1,5 +1,5 @@
 import type { LegalIdLookup } from "@/Protocols/CvmProtocol.ts";
-import type { CvmDisclosureDataset } from "@/Protocols/CvmDisclosureProtocol.ts";
+import type { CvmDisclosureDataset, VersionStamp } from "@/Protocols/CvmDisclosureProtocol.ts";
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type { ProviderFile, ProviderPort, ProviderRequest, ProviderResult, ProviderRow, TableToRows } from "@/Protocols/ProviderProtocol.ts";
 import { CvmAdapter } from "@/Adapters/Cvm/CvmAdapter.ts";
@@ -71,7 +71,10 @@ export class CvmDisclosureAdapter implements ProviderPort<"disclosures"> {
     // Why: a document is one asset_filings row, and each section of it is one asset_filing_items row; a document that has several sections is written once.
     const filingIdToRow = new Map<string, ProviderRow>();
     const items: ProviderRow[] = [];
-    for (const row of rows) {
+    // Why: a company files a new version of the same reference form; only the highest version of each reference is kept, so a search never returns an older one.
+    const latest = CvmDisclosureAdapter.readLatestVersions(rows);
+    const newestRows = rows.filter((row) => CvmDisclosureAdapter.isLatest(row, latest));
+    for (const row of newestRows) {
       const assetId = String(row.asset_id);
       const reference = row.reference_date ?? null;
       const version = row.version ?? null;
@@ -140,12 +143,49 @@ export class CvmDisclosureAdapter implements ProviderPort<"disclosures"> {
           row_json: JSON.stringify(record),
           // Why: the reference form names its link LINK_DOC; the holdings file (VLMO) names it Link_Download, and a row with neither has no document to read.
           link: CsvUtil.readText(record.LINK_DOC ?? record.Link_Download),
+          received: CsvUtil.readText(record.DT_RECEB ?? record.Data_Entrega),
           source_file: entry.name,
           source: CvmDisclosureAdapter.VENDOR,
         });
       }
     }
     return rows;
+  }
+
+  static readLatestVersions(rows: readonly ProviderRow[]): Map<string, VersionStamp> {
+    // Why: the newest version of a reference is the highest version number; two rows of that version are told apart by the later receipt date.
+    const referenceToStamp = new Map<string, VersionStamp>();
+    for (const row of rows) {
+      const key = CvmDisclosureAdapter.buildReferenceKey(row);
+      const candidate = CvmDisclosureAdapter.readStamp(row);
+      const current = referenceToStamp.get(key);
+      if (current === undefined || CvmDisclosureAdapter.isNewer(candidate, current)) {
+        referenceToStamp.set(key, candidate);
+      }
+    }
+    return referenceToStamp;
+  }
+
+  static isLatest(row: ProviderRow, referenceToStamp: Map<string, VersionStamp>): boolean {
+    const winner = referenceToStamp.get(CvmDisclosureAdapter.buildReferenceKey(row));
+    const stamp = CvmDisclosureAdapter.readStamp(row);
+    return winner?.version === stamp.version && winner.received === stamp.received;
+  }
+
+  private static buildReferenceKey(row: ProviderRow): string {
+    return `${String(row.dataset)}:${String(row.asset_id)}:${String(row.reference_date)}`;
+  }
+
+  private static readStamp(row: ProviderRow): VersionStamp {
+    const version = row.version === null || row.version === undefined ? -1 : Number(row.version);
+    return { version, received: String(row.received ?? "") };
+  }
+
+  private static isNewer(candidate: VersionStamp, current: VersionStamp): boolean {
+    if (candidate.version !== current.version) {
+      return candidate.version > current.version;
+    }
+    return candidate.received > current.received;
   }
 
   static readSection(name: string, prefix: string, year: number): string {

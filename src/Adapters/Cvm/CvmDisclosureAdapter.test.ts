@@ -13,6 +13,10 @@ const CURRENT_YEAR = 2026;
 const NOT_FOUND = 404;
 const NOT_USED = "not used";
 const REFERENCE_DATE = "2024-12-31";
+const TOTVS = "BR:stock:TOTS3";
+const MAIN = "principal";
+const FRE = "fre";
+const MAIN_FILE = "principal.csv";
 
 const buildHttp = (urls: string[] = []): HttpPort => ({
   // Why: only the recorded FRE year is served; any other URL answers 404, as CVM does for a year it does not publish.
@@ -73,6 +77,26 @@ describe("CvmDisclosureAdapter.fetchTables()", () => {
 
     expect(tables.asset_filings).toHaveLength(1);
     expect(tables.asset_filings?.[0]).toMatchObject({ filing_id: `${dataset}:${assetId}:${documentId}`, url: link });
+  });
+
+  it("keeps only the highest version of each reference", () => {
+    const tables = CvmDisclosureAdapter.buildTables([
+      { asset_id: TOTVS, dataset: FRE, section: MAIN, reference_date: REFERENCE_DATE, version: "2", document_id: "138992", row_json: "{}", source_file: MAIN_FILE, link: null, received: "2024-06-07" },
+      { asset_id: TOTVS, dataset: FRE, section: MAIN, reference_date: REFERENCE_DATE, version: "11", document_id: "147376", row_json: "{}", source_file: MAIN_FILE, link: null, received: "2025-05-12" },
+      { asset_id: TOTVS, dataset: FRE, section: MAIN, reference_date: REFERENCE_DATE, version: "3", document_id: "139714", row_json: "{}", source_file: MAIN_FILE, link: null, received: "2024-07-18" },
+    ]);
+
+    expect(tables.asset_filings?.map((row) => row.version)).toStrictEqual([11]);
+    expect(tables.asset_filing_items?.map((row) => row.filing_id)).toStrictEqual(["fre:BR:stock:TOTS3:147376"]);
+  });
+
+  it("breaks a tie between two rows of the highest version by the later receipt", () => {
+    const tables = CvmDisclosureAdapter.buildTables([
+      { asset_id: TOTVS, dataset: FRE, section: MAIN, reference_date: REFERENCE_DATE, version: "13", document_id: "1", row_json: "{}", source_file: "a.csv", link: null, received: "2025-02-01" },
+      { asset_id: TOTVS, dataset: FRE, section: MAIN, reference_date: REFERENCE_DATE, version: "13", document_id: "2", row_json: "{}", source_file: "b.csv", link: null, received: "2025-03-01" },
+    ]);
+
+    expect(tables.asset_filings?.map((row) => row.filing_id)).toStrictEqual(["fre:BR:stock:TOTS3:2"]);
   });
 
   it("reports a ticker with no CNPJ as pending", async () => {
