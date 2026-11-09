@@ -70,6 +70,21 @@ describe("ProviderRegistryService.resolve()", () => {
     });
   });
 
+  describe("when a fund is asked of a provider that serves another asset type", () => {
+    it("says a fund is read by its CNPJ", () => {
+      const cvm = new FakeProvider({
+        vendor: "cvm",
+        markets: ["BR"],
+        category: "fund",
+        assetTypes: ["fund"],
+        respond: () => Promise.resolve(EMPTY_RESULT),
+      });
+      const registry = new ProviderRegistryService(buildEnv({ INVESTMENT_MCP_FUNDAMENTALS_PROVIDER: "BR:cvm" }), { ...ProviderRegistryService.buildEmptyCatalog(), fund: { cvm } });
+
+      expect(() => registry.resolve("fund", "BR", "stock")).toThrow("a fund is read by its CNPJ, as BR:fund:<CNPJ>");
+    });
+  });
+
   describe("when a fallback is named after the primary", () => {
     it("returns both, so the loader can use the fallback when the primary fails", () => {
       const yahoo = buildProvider("yahoo", ["BR"]);

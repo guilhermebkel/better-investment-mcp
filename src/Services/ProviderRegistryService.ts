@@ -17,6 +17,7 @@ const SETTING_ENTRY_PATTERN = /^([A-Z]{2,6}):([a-z0-9_]+)(?:>([a-z0-9_]+))?$/;
 // Why: the company registry covers listed companies only, so a fund or an FII asked of it is refused with where its data is.
 const categoryToRefusalHint: Readonly<Partial<Record<CacheCategory, string>>> = {
   registry: "; the company registry covers stocks only, and a fund or an FII is read from its own files (fund data, filings and fund metrics)",
+  fund: "; a fund is read by its CNPJ, as BR:fund:<CNPJ>, and this category holds funds only",
 };
 
 export class ProviderRegistryService {

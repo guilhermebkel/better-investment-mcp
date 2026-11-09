@@ -18,6 +18,9 @@ const convertRow = (row: Record<string, unknown>): Record<string, unknown> => {
   return Object.fromEntries(Object.entries(row).map(([name, value]) => [name, convertValue(value)]));
 };
 
+// Why: the rows of an answer are sent as text and as structured content.
+const ROW_COPIES = 2;
+
 export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
   static readonly NAME = "querySql";
   static readonly DESCRIPTION = "Read-only. Runs one SELECT over the server's tables and returns the rows. "
@@ -61,12 +64,22 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
     } finally {
       reader.close();
     }
-    return QuerySqlOperation.answer(rows, loaded, isSettled ? undefined : job);
+    return QuerySqlOperation.answer(input.sql, rows, loaded, isSettled ? undefined : job);
   }
 
-  private static answer(rows: Record<string, unknown>[], loaded: LoadedEntry[], pending?: LoadJob): OperationResult {
+  private static answer(
+    sql: string,
+    rows: Record<string, unknown>[],
+    loaded: LoadedEntry[],
+    pending?: LoadJob,
+  ): OperationResult {
     const plainRows = rows.map(convertRow);
-    const limited = new OutputLimitService().limit(plainRows.map((row) => JSON.stringify(row)));
+    // Why: the rows go out twice, as text and as structured content (docs/mcp-standards.md), so each copy gets half the budget.
+    const limits = {
+      maxRows: OutputLimitService.DEFAULT_LIMITS.maxRows,
+      maxChars: OutputLimitService.DEFAULT_LIMITS.maxChars / ROW_COPIES,
+    };
+    const limited = new OutputLimitService(limits).limit(plainRows.map((row) => JSON.stringify(row)));
     const structuredResult: OperationData = {
       ...(pending === undefined ? {} : { loadingId: pending.id }),
       rows: plainRows.slice(0, limited.returnedRows),
@@ -82,6 +95,7 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
       QuerySqlOperation.describePeriods(loaded),
       QuerySqlOperation.describeScans(loaded),
       QuerySqlOperation.describeIndexFailures(loaded),
+      QuerySqlOperation.describeFundTables(sql, rows.length),
       QuerySqlOperation.describeCut(limited),
     ].join("");
     return { isError: false, message: `${message}\n${limited.text}`, structuredResult };
@@ -151,6 +165,15 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
 
   private static isUsable(status: LoadedEntry["status"]): boolean {
     return USABLE_STATUSES.has(status);
+  }
+
+  private static describeFundTables(sql: string, rowCount: number): string {
+    // Why: asset_attribute and asset_holdings hold fund data only; an empty answer for a stock from them is a wrong table, not missing data.
+    const isFundTableQuery = /\basset_(attribute|holdings)\b/u.test(sql);
+    if (rowCount > 0 || !isFundTableQuery || sql.includes("BR:fund:")) {
+      return "";
+    }
+    return " asset_attribute and asset_holdings hold fund data only; for a stock or an FII, read the asset table instead.";
   }
 
   private static describeCut(limited: OutputLimitResult): string {

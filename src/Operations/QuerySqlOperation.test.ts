@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const QUERY_NOW_MS = Date.parse("2026-11-08T12:00:00Z");
+import { OutputLimitService } from "@/Services/OutputLimitService.ts";
 import { QuerySqlOperation } from "@/Operations/QuerySqlOperation.ts";
 import { LoaderService } from "@/Services/LoaderService.ts";
 import { ProviderRegistryService } from "@/Services/ProviderRegistryService.ts";
@@ -167,6 +168,47 @@ describe("QuerySqlOperation.execute()", () => {
       expect(result.structuredResult).toMatchObject({ truncated: true, remainingRows: 76 });
       expect(result.structuredResult?.rows).toHaveLength(1024);
     });
+
+    it("keeps the rows of one answer within the output budget, counted once in the text and once in the structured content", async () => {
+      // Why: a quote is one row per day, so each row gets its own day.
+      const rows = Array.from({ length: 1100 }, (_, index) => {
+        const day = new Date(Date.UTC(2020, 0, 1) + index * 86_400_000).toISOString().slice(0, 10);
+        // Why: wide rows, so the character budget is what cuts the answer, not the row limit.
+        return {
+          asset_id: PETR4_ASSET_ID,
+          reference_time_start: day,
+          reference_time_end: day,
+          open: index * Math.E,
+          high: index * Math.SQRT2,
+          low: index * Math.LN2,
+          close: index * Math.PI,
+          adj_close: index * Math.LN10,
+        };
+      });
+      const wideProvider = new FakeProvider({
+        vendor: FAKE_VENDOR,
+        markets: [BR_MARKET],
+        category: "quotes",
+        assetTypes: [STOCK],
+        respond: () => Promise.resolve({ source: FAKE_VENDOR, tables: { asset_quotes: rows } }),
+      });
+      const registry = new ProviderRegistryService(
+        { INVESTMENT_MCP_LOG_LEVEL: "error", INVESTMENT_MCP_CACHE_TTL_SECONDS: 60, INVESTMENT_MCP_QUOTES_PROVIDER: `BR:${FAKE_VENDOR}` },
+        { ...ProviderRegistryService.buildEmptyCatalog(), quotes: { [FAKE_VENDOR]: wideProvider } },
+      );
+      const operation = new QuerySqlOperation({
+        guard: new SqlGuardService(store.writer),
+        loader: new LoaderService(store, registry),
+        openReader: () => store.openReader(),
+      });
+
+      const result = await operation.execute({ sql: "SELECT close FROM asset_quotes WHERE asset_id = 'BR:stock:PETR4' AND reference_time_start BETWEEN '2020-01-01' AND '2026-12-31'" });
+
+      const structuredChars = JSON.stringify(result.structuredResult?.rows).length;
+      // Why: the budget counts the rows, and the JSON array adds only its brackets around them.
+      expect(structuredChars).toBeLessThanOrEqual(OutputLimitService.DEFAULT_LIMITS.maxChars / 2 + 16);
+      expect(result.structuredResult?.truncated).toBe(true);
+    });
   });
   describe("documents", () => {
     beforeEach(() => {
@@ -310,6 +352,26 @@ describe("QuerySqlOperation.execute()", () => {
       store.close();
       rmSync(directory, { recursive: true, force: true });
       expect(answer.message).not.toContain("Reference period loaded");
+    });
+  });
+
+  describe("for an empty answer from a fund table", () => {
+    it("says the table holds fund data only, when the query asks a stock", async () => {
+      const directory = mkdtempSync(TEMP_PREFIX);
+      vi.spyOn(process.stderr, "write").mockReturnValue(true);
+      const store = await StoreService.open(
+        { INVESTMENT_MCP_LOG_LEVEL: "error", INVESTMENT_MCP_CACHE_DIR: directory, INVESTMENT_MCP_CACHE_TTL_SECONDS: 60 },
+        () => START_MS,
+      );
+      const operation = new QuerySqlOperation({
+        loader: { ensure: () => Promise.resolve([]) },
+        guard: new SqlGuardService(store.writer),
+        openReader: () => store.openReader(),
+      });
+      const answer = await operation.execute({ sql: `SELECT * FROM asset_attribute WHERE asset_id = '${PETR4_ASSET_ID}'` });
+      store.close();
+      rmSync(directory, { recursive: true, force: true });
+      expect(answer.message).toContain("hold fund data only");
     });
   });
 
