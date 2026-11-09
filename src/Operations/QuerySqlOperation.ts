@@ -3,8 +3,11 @@ import type { LoadedEntry } from "@/Protocols/LoaderProtocol.ts";
 import type { QuerySqlDependencies, QuerySqlInput } from "@/Protocols/QuerySqlProtocol.ts";
 import { QuerySqlInputSchema } from "@/Schemas/QuerySqlSchema.ts";
 import type { OutputLimitResult } from "@/Protocols/OutputLimitProtocol.ts";
+import type { LoadJob, LoadJobRegistry } from "@/Protocols/LoadJobProtocol.ts";
+import { LoadJobService } from "@/Services/LoadJobService.ts";
 import { OutputLimitService } from "@/Services/OutputLimitService.ts";
 
+const VENDOR_KEYS: ReadonlySet<"source" | "isFallback"> = new Set(["source", "isFallback"]);
 const USABLE_STATUSES: ReadonlySet<LoadedEntry["status"]> = new Set<LoadedEntry["status"]>(["loaded", "fresh"]);
 
 const convertValue = (value: unknown): unknown => {
@@ -18,7 +21,7 @@ const convertRow = (row: Record<string, unknown>): Record<string, unknown> => {
 export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
   static readonly NAME = "querySql";
   static readonly DESCRIPTION = "Read-only. Runs one SELECT over the server's tables and returns the rows. "
-    + "Every data table in the query needs WHERE filters on market, ticker and asset_type, compared with = or IN "
+    + "Every asset table in the query needs a WHERE filter on asset_id (market:asset_type:code), compared with = or IN "
     + "and literal values; a query without them is refused with the filter to add. Output is limited to "
     + `${OutputLimitService.DEFAULT_LIMITS.maxRows} rows and ${OutputLimitService.DEFAULT_LIMITS.maxChars} characters, `
     + "and a cut is reported. "
@@ -29,9 +32,13 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
   readonly inputSchema = QuerySqlInputSchema;
 
   private readonly dependencies: QuerySqlDependencies;
+  private readonly jobs: LoadJobRegistry;
+  private readonly backgroundAfterMs: number;
 
   constructor(dependencies: QuerySqlDependencies) {
     this.dependencies = dependencies;
+    this.jobs = dependencies.jobs ?? new LoadJobService(dependencies.loader);
+    this.backgroundAfterMs = dependencies.backgroundAfterMs ?? LoadJobService.DEFAULT_BACKGROUND_AFTER_MS;
   }
 
   async execute(input: QuerySqlInput): Promise<OperationResult> {
@@ -39,7 +46,12 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
     if (!verdict.isAccepted) {
       return { isError: true, message: verdict.message };
     }
-    const loaded = await this.dependencies.loader.ensure(verdict.requirements);
+    const job = this.jobs.start(verdict.requirements);
+    const isSettled = await LoadJobService.waitUpTo(job, this.backgroundAfterMs);
+    if (isSettled && job.state === "failed") {
+      throw new Error(job.error ?? "the load failed");
+    }
+    const loaded = isSettled ? job.entries ?? [] : [];
     const reader = await this.dependencies.openReader();
     let rows: Record<string, unknown>[];
     try {
@@ -49,26 +61,44 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
     } finally {
       reader.close();
     }
-    return QuerySqlOperation.answer(rows, loaded);
+    return QuerySqlOperation.answer(rows, loaded, isSettled ? undefined : job);
   }
 
-  private static answer(rows: Record<string, unknown>[], loaded: LoadedEntry[]): OperationResult {
+  private static answer(rows: Record<string, unknown>[], loaded: LoadedEntry[], pending?: LoadJob): OperationResult {
     const plainRows = rows.map(convertRow);
     const limited = new OutputLimitService().limit(plainRows.map((row) => JSON.stringify(row)));
     const structuredResult: OperationData = {
+      ...(pending === undefined ? {} : { loadingId: pending.id }),
       rows: plainRows.slice(0, limited.returnedRows),
       truncated: limited.isTruncated,
       remainingRows: limited.remainingRows,
       remainingChars: limited.remainingChars,
-      loaded,
+      loaded: loaded.map((entry) => QuerySqlOperation.removeVendorKeys(entry)),
     };
     const message = [
+      QuerySqlOperation.describePending(pending),
       QuerySqlOperation.describeRows(rows.length, limited.returnedRows, loaded),
+      QuerySqlOperation.describePeriodicity(rows.length, loaded),
+      QuerySqlOperation.describePeriods(loaded),
       QuerySqlOperation.describeScans(loaded),
       QuerySqlOperation.describeIndexFailures(loaded),
       QuerySqlOperation.describeCut(limited),
     ].join("");
     return { isError: false, message: `${message}\n${limited.text}`, structuredResult };
+  }
+
+  private static removeVendorKeys(entry: LoadedEntry): Record<string, unknown> {
+    // Why: the answer never names the vendor that served a load, nor whether a fallback did; that is kept in load_runs.
+    return Object.fromEntries(Object.entries(entry).filter(([key]) => !VENDOR_KEYS.has(key as "source")));
+  }
+
+  private static describePending(pending: LoadJob | undefined): string {
+    if (pending === undefined) {
+      return "";
+    }
+    // Why: a row set answered while a load runs can be incomplete, so the answer says so and gives the id to follow.
+    return `A load is still running in the background (id ${pending.id}) for ${LoadJobService.describe(pending)}. `
+      + "The rows below are the ones already stored, so they may be incomplete. Run the query again later to read the rows once it finishes. ";
   }
 
   private static describeRows(rowCount: number, returnedRows: number, loaded: LoadedEntry[]): string {
@@ -84,6 +114,22 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
     const isIndexed = loaded.some((entry) => entry.category === "documents" && QuerySqlOperation.isUsable(entry.status));
     // Why: a document that was indexed and has no match is not the same as a document that was not loaded.
     return isIndexed ? "0 rows. The filing was indexed, and no row matches the query." : "0 rows.";
+  }
+
+  private static describePeriodicity(rowCount: number, loaded: LoadedEntry[]): string {
+    const [periodicity] = loaded.flatMap((entry) => (entry.periodicity === undefined ? [] : [entry.periodicity]));
+    // Why: an empty month of a table published quarterly or yearly is explained with its periodicity, so it is not read as missing data (issue #28, AC9).
+    return rowCount === 0 && periodicity !== undefined ? ` Published periodicity: ${periodicity}.` : "";
+  }
+
+  private static describePeriods(loaded: LoadedEntry[]): string {
+    const windows = [...new Set(loaded.flatMap((entry) => {
+      return entry.requestedPeriod === undefined ? [] : [`${entry.requestedPeriod.from} to ${entry.requestedPeriod.to}`];
+    }))];
+    if (windows.length === 0) {
+      return "";
+    }
+    return ` Reference period loaded: ${windows.join(", ")}. Each row keeps its version (version); the latest version of each row is kept.`;
   }
 
   private static isUsable(status: LoadedEntry["status"]): boolean {

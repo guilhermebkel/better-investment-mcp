@@ -3,6 +3,7 @@ import type { BcbSeriesDefinition, DateWindow } from "@/Protocols/BcbProtocol.ts
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
 import { BcbSeriesRowsSchema } from "@/Schemas/BcbSchema.ts";
+import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 
 const MS_PER_DAY = 86_400_000;
 const RATE_LIMIT_STATUS = 429;
@@ -15,17 +16,18 @@ export class BcbAdapter implements ProviderPort<"macro"> {
   static readonly VENDOR = "bcb";
   static readonly HOST = "api.bcb.gov.br";
   static readonly BASE_URL = `https://${BcbAdapter.HOST}`;
+  // Why: the PTAX rate is a currency rate and comes from the PTAX service (category fx), so it is not read from SGS here.
   static readonly SERIES: readonly BcbSeriesDefinition[] = [
-    { name: "ipca", code: 433, unit: "percent change per month" },
-    { name: "cdi", code: 12, unit: "percent per day" },
-    { name: "selic", code: 432, unit: "percent per year (Copom target rate)" },
-    { name: "ptax", code: 1, unit: "BRL per USD, sell rate" },
+    { name: "IPCA", code: 433, unit: "percent_per_month", assetType: "index" },
+    { name: "CDI", code: 12, unit: "percent_per_day", assetType: "tax_rate" },
+    { name: "SELIC", code: 432, unit: "percent_per_year", assetType: "tax_rate" },
+    { name: "IGPM", code: 189, unit: "percent_per_month", assetType: "index" },
   ];
 
   readonly category = "macro";
   readonly vendor = BcbAdapter.VENDOR;
-  readonly markets = ["SERIES"] as const;
-  readonly assetTypes = [] as const;
+  readonly markets = ["BR"] as const;
+  readonly assetTypes = ["index", "tax_rate"] as const;
 
   private readonly http: HttpPort;
   private readonly baseUrl: string;
@@ -38,7 +40,9 @@ export class BcbAdapter implements ProviderPort<"macro"> {
   }
 
   async fetchTables(request: ProviderRequest): Promise<ProviderResult> {
-    const definition = BcbAdapter.SERIES.find((candidate) => candidate.name === request.ticker);
+    const definition = BcbAdapter.SERIES.find(
+      (candidate) => candidate.name === request.ticker && candidate.assetType === request.assetType,
+    );
     if (definition === undefined) {
       const known = BcbAdapter.SERIES.map((candidate) => candidate.name).join(", ");
       throw new Error(`unknown series ${request.ticker}; the known series are ${known}`);
@@ -56,8 +60,15 @@ export class BcbAdapter implements ProviderPort<"macro"> {
     }
     const rows: ProviderRow[] = [...dateToValue.entries()]
       .sort(([left], [right]) => left.localeCompare(right))
-      .map(([date, value]) => ({ date, value, series: definition.name, source: BcbAdapter.VENDOR }));
-    return { source: BcbAdapter.VENDOR, tables: { macro_series: rows } };
+      .map(([date, value]) => ({
+        asset_id: AssetIdUtil.build({ market: "BR", assetType: definition.assetType, code: definition.name }),
+        metric: "macro.value",
+        reference_time_start: date,
+        reference_time_end: date,
+        unit: definition.unit,
+        value,
+      }));
+    return { source: BcbAdapter.VENDOR, tables: { asset_metrics: rows } };
   }
 
   static splitWindows(from: Date, to: Date): DateWindow[] {

@@ -6,7 +6,7 @@ import { GUIDE_TOPICS } from "@/Schemas/GetGuideSchema.ts";
 export class GetOverviewOperation implements OperationPort<GetOverviewInput> {
   static readonly NAME = "getOverview";
   static readonly USAGE_NOTICE = "Usage notice: the output describes and locates information. It is not investment advice, a recommendation or an analysis of what to buy or sell.";
-  static readonly FILTER_RULE = "Filter rule: every data table needs WHERE filters that compare with = or IN and literal values. A query without them is refused, and the answer names the filter to add.";
+  static readonly FILTER_RULE = "Filter rule: every asset table needs WHERE asset_id = or IN with literal values (market:asset_type:code, for example BR:stock:PETR4); asset_metrics also needs metric; a query without them is refused, and the answer names the filter to add.";
   static readonly TABLE_LINES = GetOverviewOperation.buildTableLines();
 
   readonly name = GetOverviewOperation.NAME;
@@ -24,7 +24,7 @@ export class GetOverviewOperation implements OperationPort<GetOverviewInput> {
     const message = [
       "Better Investment Analysis: data on Brazilian assets, read with query_sql.",
       "Tools: get_overview, get_guide and query_sql. All three only read.",
-      "Markets and asset types: BR stocks, FIIs and ETFs (Yahoo prices and dividends, CVM filings, BCB macro series). US assets are planned.",
+      "Markets and asset types: BR stocks, FIIs, funds, indexes and currencies, and Tesouro bonds. US assets are planned.",
       "Tables:",
       ...GetOverviewOperation.TABLE_LINES.map((line) => `- ${line}`),
       GetOverviewOperation.FILTER_RULE,
@@ -39,16 +39,15 @@ export class GetOverviewOperation implements OperationPort<GetOverviewInput> {
 
   private static buildTableLines(): string[] {
     return [
-      "assets: one row per asset, with its name, currency and legal id when known. No filter.",
-      "quotes: daily prices, adj_close, volume and the is_stale and suspect_tick flags. Filter: market, ticker, asset_type.",
-      "splits: stock splits with the ratio. Filter: market, ticker, asset_type.",
-      "dividends: cash distributions by ex_date and kind. Filter: market, ticker, asset_type.",
-      "fundamentals: yearly metrics by metric name. Filter: market, ticker, asset_type.",
-      "fii_monthly: FII monthly revenue, expenses, cash and distributions. Filter: market, ticker, asset_type.",
-      "filings: the filings of a company with type, date and url. Filter: market, ticker, asset_type.",
-      "chunks: the text of filings by section and page. Filter: market, ticker, asset_type and filing_type or filing_id.",
-      "macro_series: monthly and daily macro series (ipca, cdi, selic, ptax). Filter: series.",
-      "asset_coverage, cache_runs: what is loaded, and the load runs. No filter.",
+      "asset: one row per asset (asset_id, market, asset_type, code, name, legal_id, isin, sector, currency). Filter: asset_id.",
+      "asset_quotes: daily prices with adj_close, volume and the is_stale and suspect_tick flags. Filter: asset_id.",
+      "asset_splits and asset_dividends: stock splits with the ratio, and cash distributions by ex_time and kind. Filter: asset_id.",
+      "asset_metrics: every number in long format (metric, value, unit): fundamental.*, statement.*, fii.*, fund.*, macro.value, treasury.*, fx.*. Filter: asset_id and metric.",
+      "asset_expectations: BCB Focus annual expectations by survey_time (mean, median, min, max). Filter: asset_id.",
+      "asset_filings and asset_filing_items: filings and disclosure documents (FRE, VLMO, CGVN) by document_type, with their rows. Filter: asset_id.",
+      "asset_filing_chunks: the text of filings by section and page. Filter: asset_id and document_type or filing_id.",
+      "asset_holdings and asset_attribute: fund holdings by block, and fund administrator, manager and type. Filter: asset_id.",
+      "asset_coverage, load_runs, load_files: what is loaded, when it expires, and the load runs and file versions. No filter.",
     ];
   }
 
@@ -58,7 +57,7 @@ export class GetOverviewOperation implements OperationPort<GetOverviewInput> {
       if (rows.length === 0) {
         return ["- nothing yet; the first query for an asset loads it."];
       }
-      return rows.map((row) => `- ${String(row.market)}:${String(row.ticker)} ${String(row.asset_type)} ${String(row.category)} from ${String(row.source)}, valid until ${String(row.expires_at)}`);
+      return rows.map((row) => `- ${String(row.asset_id)} ${String(row.category)}, ${String(row.first_date)} to ${String(row.last_date)}, valid until ${String(row.expires_at)}`);
     } catch {
       return ["- the loaded list cannot be read now; try query_sql with asset_coverage."];
     }

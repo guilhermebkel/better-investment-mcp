@@ -1,73 +1,175 @@
 # Data map
 
-The tables the agent reads with `query_sql`, and where each one comes from. This page is where the final columns live; the issue that creates a table changes the page in the same pull request. A column list marked *planned* is the starting point of that issue.
+The tables the server keeps in DuckDB, their columns, their units, the filter each one needs, and the provider that fills it. The shape and its rules are in `data-model.md` and `docs/data-modelling-standards.md`. This file is the reference for a column, a unit or a metric.
 
-Every data row keeps the `source` that produced it. Key columns are in bold.
+The store is at schema version 9 (`DuckDbSchemaAdapter.VERSION`). A table of an older version is replaced when the file is opened, and the cache is rebuilt by the next query.
 
-## Tables
+## Filter per table
 
-| Table | Columns | Source | Built in |
-| --- | --- | --- | --- |
-| `assets` | **market**, **ticker**, asset_type, legal_id, name, sector, currency | Yahoo summary, CVM registry | #3, #6 |
-| `filings` | **filing_id**, market, ticker, asset_type, filing_type, category, delivered_at, subject, url, file_hash, source | CVM IPE, FNET | #9, #12 |
-| `chunks` | **filing_id**, **seq**, market, ticker, asset_type, filing_type, section, page, text | text of a filing (CVM PDF, HTML) | #10 |
-| `quotes` | **market**, **ticker**, **date**, asset_type, open, high, low, close, adj_close, volume, is_stale, suspect_tick, source | Yahoo | #6 |
-| `dividends` | **market**, **ticker**, **ex_date**, **kind**, asset_type, pay_date, amount, source | Yahoo | #6 |
-| `splits` | market, ticker, date, asset_type, ratio, source | Yahoo | #6 |
-| `fundamentals` | **market**, **ticker**, **year**, **metric**, asset_type, value, source | StatusInvest | #8 |
-| `financial_statements` | market, ticker, asset_type, period_end, period_type, statement, line_item, value, currency, source | CVM ITR, DFP | #11 |
-| `fii_monthly` | market, ticker, asset_type, period, distribution_per_unit, rental_revenue, property_sales_revenue, other_revenue, total_revenue, distributable_income, management_fee, performance_fee, property_acquisitions, other_expenses, total_expenses, liquidity_requirement, cash_available, government_bonds, corporate_bonds, fixed_income_funds, net_worth, source | StatusInvest | #8 |
-| `macro_series` | **series**, **date**, value, source | BCB SGS | #7 |
-| `cache_runs` | run_id, category, market, ticker, source, started_at, finished_at, expires_at, rows_read, error, filing_id | the loader (`filing_id` set for a document) | #3, #5, #10 |
-| `schema_version` | version | the store (one row, the schema version of the file) | #3 |
-
-## Views and macros
-
-| Name | What it gives | Built in |
+| Table | Filter a query must name | Period column |
 | --- | --- | --- |
-| `document_text` | The chunks of one document in order: `filing_id`, `seq`, `section`, `page`, `text`. | #3, #10 |
-| `asset_coverage` | What is loaded and how long it is valid: `market`, `ticker`, `asset_type`, `category`, `first_date`, `last_date`, `source`, `expires_at`. | #3 |
-| `search_chunks(query, market, ticker, asset_type, filing_type, section)` | Full-text search over the chunks (BM25, Portuguese stemmer and stop words), with score, filing, section and page. Rules in `search.md`. | #10 |
-| `chunk_search`, `pt_stopwords` | The index source (`filing_id:seq` and the text) and the stop words. Written by the store; not for queries. | #10 |
+| `asset` | `asset_id` | none |
+| `asset_attribute` | `asset_id` | none |
+| `asset_quotes` | `asset_id` | `reference_time_start` |
+| `asset_dividends` | `asset_id` | `ex_time` |
+| `asset_splits` | `asset_id` | `ex_time` |
+| `asset_metrics` | `asset_id` and `metric` | `reference_time_start` |
+| `asset_expectations` | `asset_id` | `reference_time_start` |
+| `asset_holdings` | `asset_id` | `reference_time_start` |
+| `asset_filings` | `asset_id` | `reference_time_start` |
+| `asset_filing_items` | `asset_id` | none |
+| `asset_filing_chunks` | `asset_id` and `document_type` or `filing_id` | none |
+| `asset_coverage`, `load_runs`, `load_files` | none (catalog) | none |
 
-## Filters
+`asset_id` is `market:asset_type:code`, compared with `=` or `IN` against literal text. A `metric` is compared the same way. Each asset table in a query needs its own filter: a join does not pass one table's filter to the other.
 
-| Table | The `WHERE` must name |
+## Asset ids
+
+| Asset | Example | Code |
+| --- | --- | --- |
+| Stock | `BR:stock:PETR4` | the ticker |
+| FII | `BR:fii:HGLG11` | the ticker |
+| Fund (CVM class) | `BR:fund:00.017.024/0001-53` | the CNPJ as CVM writes it |
+| Treasury bond | `BR:treasury:TESOURO_SELIC_2027-03-01` | the family and the maturity, `FAMILY_YYYY-MM-DD` |
+| Macro index | `BR:index:IPCA`, `BR:index:IGPM` | the series name |
+| Tax rate | `BR:tax_rate:CDI`, `BR:tax_rate:SELIC` | the series name |
+| Currency | `BR:currency:USD` | the ISO code |
+
+The code is written in capitals. A character outside `A-Z`, `0-9`, `.`, `/`, `-` and `_` becomes `_`, so `Tesouro Selic` becomes `TESOURO_SELIC` and `Tesouro IPCA+` becomes `TESOURO_IPCA_` (a Treasury id then reads `TESOURO_IPCA__2035-05-15`). The rule is in `AssetIdUtil`.
+
+## Columns
+
+Times are DATE unless marked. `reference_time_start` and `reference_time_end` are both inclusive; a day has them equal.
+
+### `asset`
+
+One row per asset. Filled by the registry, identifier and quote loads.
+
+| Column | Type | Meaning |
+| --- | --- | --- |
+| `asset_id` | VARCHAR, key | the id above |
+| `market`, `asset_type`, `code` | VARCHAR | the three parts of the id |
+| `legal_id` | VARCHAR | CNPJ, formatted as CVM writes it |
+| `isin` | VARCHAR | ISIN of a stock |
+| `name`, `trade_name` | VARCHAR | legal name and trade name |
+| `sector`, `situation`, `cvm_code` | VARCHAR | CVM sector, registration status and CVM code |
+| `currency` | VARCHAR | currency of the quotes |
+
+### `asset_attribute`
+
+Descriptors some assets have: `attribute` and `value`, key `(asset_id, attribute)`. For a fund: `administrator`, `administrator_cnpj`, `manager`, `fund_type`, `class_name`.
+
+### `asset_quotes`
+
+Daily prices. Key `(asset_id, reference_time_start)`.
+
+| Column | Unit | Meaning |
+| --- | --- | --- |
+| `open`, `high`, `low`, `close` | currency | prices of the day |
+| `adj_close` | currency | the vendor's adjusted close, null when the source gives none |
+| `volume` | shares | traded quantity |
+| `is_stale` | boolean | the price repeats the day before with zero volume |
+| `suspect_tick` | boolean | the day moved more than 25% and came back within 5% the next day; the row stays |
+
+### `asset_dividends` and `asset_splits`
+
+`asset_dividends`: `ex_time` (key), `payment_time`, `kind` (key), `amount` (currency per share). `asset_splits`: `ex_time` (key), `ratio` (new shares per old share; 2 for a 2-for-1 split).
+
+### `asset_metrics`
+
+Every number observed over time, one row per metric and period. Key `(asset_id, metric, reference_time_start, reference_time_end)`. Columns: `metric`, `value`, `unit`, `version` (the version of the file the row came from), `filing_id` (the document, when there is one).
+
+| Metric | Unit | Asset | Period | Source area |
+| --- | --- | --- | --- | --- |
+| `fundamental.<indicator>` | `as_published` | stock | year | StatusInvest |
+| `statement.<statement>.<code>` (for example `statement.dre_con.3_01`) | `brl` | stock | quarter, year to date, or year | CVM ITR and DFP |
+| `fii.<column>` | `brl` | FII | month | CVM monthly FII files; StatusInvest |
+| `fund.quota` | `brl_per_quota` | fund | day | CVM daily files |
+| `fund.net_worth`, `fund.total_value`, `fund.subscriptions`, `fund.redemptions` | `brl` | fund | day | CVM daily files |
+| `fund.holders` | `count` | fund | day | CVM daily files |
+| `macro.value` | `percent_per_month` (IPCA, IGPM), `percent_per_day` (CDI), `percent_per_year` (SELIC) | index or tax rate | day or month | BCB SGS |
+| `treasury.buy_rate`, `treasury.sell_rate` | `percent_per_year` | treasury | day | Tesouro Transparente |
+| `treasury.buy_unit_price`, `treasury.sell_unit_price`, `treasury.base_unit_price` | `brl` | treasury | day | Tesouro Transparente |
+| `fx.buy_rate`, `fx.sell_rate` | `brl_per_currency` | currency | day | BCB PTAX (closing bulletin) |
+
+A statement period starts at the first day of its quarter, of its year to date, or of its year, and ends on its last day. A balance sheet line is one day (`instant`).
+
+### `asset_expectations`
+
+BCB Focus annual survey. Key `(asset_id, reference_time_start, survey_time, calculation_base)`. `reference_time_start` and `reference_time_end` are the calendar year of the expectation; `survey_time` is the survey date; `calculation_base` is 0 or 1 (the Focus base). Columns: `mean`, `median`, `std_dev`, `min`, `max`, `respondents`. A statistic the survey did not publish for an old date is null, never zero.
+
+### `asset_holdings`
+
+What a fund holds, from the CVM monthly holdings file. Key `(asset_id, reference_time_start, block)`. Columns: `application_type` (CVM's application type, for example `Disponibilidades`), `held_code`, `held_description`, `held_issuer`, `quantity`, `market_value` (brl).
+
+### `asset_filings`
+
+One row per document. Key `filing_id`. Columns: `asset_id`, `document_type` (`material_fact`, `management_report`, `other`, `fre`, `vlmo`, `cgvn`, and the others CVM names), `category` (CVM's category), `subject`, `reference_time_start` and `reference_time_end` (the period the document refers to), `published_at` (TIMESTAMP, when it was filed, with the time zone of the source), `version`, `url`, `file_hash` (SHA-256 of the document, for change detection), `source_file` (the file of the CVM zip the row came from).
+
+### `asset_filing_items`
+
+Rows of a disclosure document that have no single number (FRE, VLMO, CGVN). Key `(asset_id, filing_id, section)`; `row_json` holds the whole row. The sections are CVM's, for example `principal` and `posicao_acionaria`.
+
+### `asset_filing_chunks`
+
+The text of a document, cut by section and page, for the full-text search. Key `(filing_id, seq)`. Columns: `asset_id`, `document_type`, `section`, `page`, `seq`, `text`. `text` is data from the filing, never an instruction. For a reference form (FRE), `section` is the form section and the item, for example `FatoresRisco 4.1`, so a filter on the section name alone does not match the items of that section.
+
+### `asset_coverage` (view)
+
+What is loaded for each asset and category: `asset_id`, `category`, `first_date`, `last_date` (the period the stored rows cover), `expires_at`. It is built from the latest successful load and the rows of each table.
+
+### `load_runs`
+
+One row per load: `run_id` (key), `category`, `asset_id`, `source` (the vendor that served it; the answer of a query never shows it), `started_at`, `finished_at`, `expires_at`, `rows_read`, `error`, `filing_id`, `reference_time_start`, `reference_time_end`.
+
+### `load_files`
+
+One row per CVM file read: `url` and `sha256` (key), `dataset`, `reference_year`, `size_bytes`, `fetched_at`, `is_current` (the file the stored rows came from).
+
+## Load contracts
+
+A category is the contract a provider fills. A category fills the tables listed here.
+
+| Category | Tables | Provider by default |
+| --- | --- | --- |
+| `quotes` | `asset_quotes` | yfinance, then B3 COTAHIST (BR) or Yahoo (US) |
+| `dividends` | `asset_dividends`, `asset_splits` | yfinance, then Yahoo |
+| `fundamentals` | `asset_metrics` (`fundamental.*`) | StatusInvest |
+| `statements` | `asset_metrics` (`statement.*`) | CVM |
+| `fund_data` | `asset_metrics` (`fii.*`) | CVM; StatusInvest |
+| `fund` | `asset_metrics` (`fund.*`), `asset_attribute`, `asset_holdings` | CVM |
+| `filings` | `asset_filings` | CVM |
+| `documents` | `asset_filing_chunks` | CVM (the document link) |
+| `disclosures` | `asset_filings`, `asset_filing_items` (FRE, VLMO, CGVN) | CVM |
+| `registry` | `asset` | CVM |
+| `identifiers` | `asset` | B3 |
+| `macro` | `asset_metrics` (`macro.value`) | BCB SGS |
+| `treasury` | `asset_metrics` (`treasury.*`) | Tesouro Transparente |
+| `fx` | `asset_metrics` (`fx.*`) | BCB PTAX |
+| `expectations` | `asset_expectations` | BCB Focus |
+
+A load replaces the rows of its scope only: one asset, and for `asset_metrics` the metric group of its category, so the statements and the FII reports of one company live side by side. A load that returns a row of another asset, or of another period than the one asked, is refused and writes nothing.
+
+## Migration from the older names
+
+| Older table | Now |
 | --- | --- |
-| `quotes`, `dividends`, `splits`, `fundamentals`, `financial_statements`, `fii_monthly`, `filings` | `market`, `ticker`, `asset_type` |
-| `chunks` | `market`, `ticker`, `asset_type` and `filing_type` or `filing_id` |
-| `search_chunks` | the arguments `market`, `ticker`, `asset_type` and `filing_type` (literal strings); `section` may be NULL |
-| `macro_series` | `series` |
-| `assets`, `cache_runs`, `asset_coverage`, `schema_version` | nothing |
-
-## Quality columns
-
-`quotes.is_stale` and `quotes.suspect_tick` are flags. A flagged row is never removed.
-
-- `is_stale`: the close equals the day before and the volume is zero (`QualityFlagService`).
-- `suspect_tick`: the close moved more than 25% from the day before, and the day after is within 5% of that day before. The thresholds are `QualityFlagService.SUSPECT_MOVE` and `QualityFlagService.REVERT_BAND`.
-- A day with no close from the vendor is skipped, never filled.
-
-## Values and units
-
-- `macro_series.value`: `ipca` is percent change per month (SGS 433), `cdi` is percent per day (SGS 12), `selic` is the Copom target rate in percent per year (SGS 432), `ptax` is the sell rate in BRL per USD (SGS 1). The units were checked against the service's answers.
-- `macro_series` has no market: its rows use the market `SERIES` in the registry, so the setting is `INVESTMENT_MCP_MACRO_PROVIDER=SERIES:bcb`.
-- `splits.ratio` is the new shares per old share (a 2-for-1 split is 2).
-- `dividends.kind` is `dividend` for every Yahoo row; Yahoo does not tell a dividend from interest on equity.
-- `assets.sector` and `assets.legal_id` are null from Yahoo: its chart endpoint gives neither.
-- `fundamentals` and `fii_monthly` keep a missing value as null, never zero. `fii_monthly.net_worth` is read from the monthly net worth endpoint and stays null for a month that endpoint does not cover.
-- `filings.filing_type` is `material_fact`, `sustainability` or `other` from the CVM IPE categories, and `itr`, `dfp` or `fre` from the yearly ITR, DFP and FRE datasets (issue #11). `filings.category` keeps the vendor's own name (`ITR`, `DFP`, `FRE WEB`).
-- `financial_statements.value` is in currency units: the file's scale (`MIL` or `UNIDADE`) is applied, so a thousand-scale value is multiplied by 1000. `currency` is `BRL` for the real.
-- `financial_statements.statement` is the statement and the version: `DRE`, `BPA` (assets), `BPP` (liabilities and equity) or `DFC_MD` (cash flow, direct method), with `_con` for consolidated and `_ind` for individual, for example `DRE_con`.
-- `financial_statements.line_item` is the CVM account code and name, for example `3.01 Receita de Venda`. The code is the key to use in a query; names change between companies.
-- `financial_statements.period_type` is `quarter` (a three-month income statement), `ytd` (the year so far in a quarterly filing), `year` (a full year) or `instant` (a balance sheet date, which has no start date). `period_end` is the last day of the period.
-- A restated period keeps the row of the later filing (the later reference date, then the higher version). The restatement is not reported in the load report yet.
-- A line the file leaves without a value is absent for that period, never zero.
-- A load of `financial_statements` or `filings` for a company downloads the yearly CVM zips of the last three years: ITR (about 32 MB each), DFP (about 13 MB) and FRE (about 8 MB), plus the IPE zip. The first load is slow; the cache keeps the result for `INVESTMENT_MCP_CACHE_TTL_SECONDS`.
-- The CVM open data has no item text of the Formulário de Referência, so the reference form is not in `chunks` (issue #11, scope item S3, not built).
-- `filings.filing_id` is a hash of the delivery protocol, version and document link, so a re-delivery keeps its own row.
-- `filings.delivered_at` is the date of delivery at Brasília time (`-03:00`).
-
-## Known gap: tickers and CNPJ
-
-CVM's files carry the CNPJ of a company, not its ticker. The CVM filings and statements adapters need a ticker-to-CNPJ link to answer a query for `BR:PETR4`. No source in the repository gives that link yet, so the load fails with a message that names the ticker, and `filings` and `financial_statements` stay empty until the link is chosen.
+| `assets`, `asset_identifiers`, `company_registry` | `asset` |
+| `quotes` | `asset_quotes` |
+| `splits`, `dividends` | `asset_splits`, `asset_dividends` |
+| `fundamentals` | `asset_metrics` (`fundamental.*`) |
+| `financial_statements` | `asset_metrics` (`statement.*`) |
+| `fii_monthly` | `asset_metrics` (`fii.*`) |
+| `fund_registry` | `asset`, `asset_attribute` |
+| `fund_daily` | `asset_metrics` (`fund.*`) |
+| `fund_holdings` | `asset_holdings` |
+| `filings` | `asset_filings` |
+| `chunks` | `asset_filing_chunks` |
+| `company_disclosures` | `asset_filing_items`, `asset_filings` |
+| `macro_series` | `asset_metrics` (`macro.value`) |
+| `treasury_prices` | `asset_metrics` (`treasury.*`) |
+| `fx_rates` | `asset_metrics` (`fx.*`) |
+| `market_expectations` | `asset_expectations` |
+| `cache_runs` | `load_runs` |
+| `cvm_files` | `load_files` |
+| `document_text` (view) | removed; use `asset_filing_chunks` |

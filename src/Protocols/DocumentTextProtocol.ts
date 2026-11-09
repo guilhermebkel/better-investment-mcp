@@ -5,7 +5,7 @@ export type ExtractedSegment = {
 };
 
 export type ExtractedDocument = {
-  format: "pdf" | "html";
+  format: "pdf" | "html" | "form";
   pagesWithoutText: number;
   segments: ExtractedSegment[];
 };
@@ -20,4 +20,10 @@ export type ChunkRow = {
 export type HtmlReadState = {
   section: string | null;
   buffer: string[];
+};
+
+export type FormItem = {
+  section: string;
+  label: string;
+  content: string;
 };

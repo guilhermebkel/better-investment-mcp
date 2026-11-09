@@ -15,14 +15,26 @@ const readExamples = (topic: string): string[] => {
 
 const seedDatabase = async (database: DatabasePort): Promise<void> => {
   // Why: the examples run against a store with one fixture row per table they read, so a guide cannot teach a query that fails on the real schema.
-  await database.run("INSERT INTO assets (market, ticker, asset_type, legal_id, name, sector, currency) VALUES ('BR', 'PETR4', 'stock', NULL, 'Petrobras', NULL, 'BRL')");
-  await database.run("INSERT INTO quotes (market, ticker, asset_type, date, open, high, low, close, adj_close, volume, is_stale, suspect_tick, source) VALUES ('BR', 'PETR4', 'stock', DATE '2024-01-02', 1, 1, 1, 1, 1, 1, false, false, 'yahoo')");
-  await database.run("INSERT INTO dividends (market, ticker, asset_type, ex_date, pay_date, amount, kind, source) VALUES ('BR', 'KNRI11', 'fii', DATE '2024-01-15', NULL, 0.9, 'dividend', 'yahoo')");
-  await database.run("INSERT INTO fundamentals (market, ticker, asset_type, year, metric, value, source) VALUES ('BR', 'PETR4', 'stock', 2024, 'net_revenue', 300.5, 'statusinvest')");
-  await database.run("INSERT INTO fii_monthly (market, ticker, asset_type, period, distribution_per_unit, total_revenue, source) VALUES ('BR', 'KNRI11', 'fii', DATE '2024-01-01', 1.0, 11, 'statusinvest')");
-  await database.run("INSERT INTO filings (filing_id, market, ticker, asset_type, filing_type, category, delivered_at, subject, url, file_hash, source) VALUES ('f1', 'BR', 'PETR4', 'stock', 'other', 'Assembleia', TIMESTAMPTZ '2024-03-22 00:00:00-03', 'Ata', 'https://example.org', NULL, 'cvm')");
-  await database.run("INSERT INTO chunks (filing_id, market, ticker, asset_type, filing_type, section, page, seq, text) VALUES ('f1', 'BR', 'KNRI11', 'fii', 'other', 'Dividendos', 1, 1, 'Pagamento de dividendos')");
-  await database.run("INSERT INTO macro_series (series, date, value, source) VALUES ('ipca', DATE '2025-01-01', 0.16, 'bcb')");
+  await database.run("INSERT INTO asset (asset_id, market, asset_type, code, name) VALUES ('BR:stock:PETR4', 'BR', 'stock', 'PETR4', 'Petrobras')");
+  await database.run("INSERT INTO asset_quotes (asset_id, reference_time_start, reference_time_end, open, high, low, close, adj_close, volume, is_stale, suspect_tick) VALUES ('BR:stock:PETR4', DATE '2024-01-02', DATE '2024-01-02', 1, 1, 1, 1, 1, 1, false, false)");
+  await database.run("INSERT INTO asset_dividends (asset_id, ex_time, payment_time, kind, amount) VALUES ('BR:fii:KNRI11', DATE '2024-01-15', NULL, 'dividend', 0.9)");
+  await database.run(`INSERT INTO asset_metrics (asset_id, metric, reference_time_start, reference_time_end, value, unit) VALUES
+    ('BR:stock:PETR4', 'fundamental.roe', DATE '2024-01-01', DATE '2024-12-31', 0.12, 'as_published'),
+    ('BR:stock:PETR4', 'statement.dre_con.3_01', DATE '2024-07-01', DATE '2024-09-30', 300.5, 'brl'),
+    ('BR:fii:KNRI11', 'fii.net_worth', DATE '2025-01-01', DATE '2025-01-31', 1000000, 'brl'),
+    ('BR:index:IPCA', 'macro.value', DATE '2025-01-01', DATE '2025-01-31', 0.16, 'percent_per_month'),
+    ('BR:treasury:SELIC_2029-03-01', 'treasury.buy_rate', DATE '2026-11-06', DATE '2026-11-06', 0.02, 'percent_per_year'),
+    ('BR:treasury:SELIC_2029-03-01', 'treasury.base_unit_price', DATE '2026-11-06', DATE '2026-11-06', 14000.5, 'brl'),
+    ('BR:currency:USD', 'fx.buy_rate', DATE '2026-01-02', DATE '2026-01-02', 5.5, 'brl_per_currency'),
+    ('BR:currency:USD', 'fx.sell_rate', DATE '2026-01-02', DATE '2026-01-02', 5.6, 'brl_per_currency'),
+    ('BR:fund:00.017.024/0001-53', 'fund.quota', DATE '2026-11-06', DATE '2026-11-06', 10.2, 'brl_per_quota')`);
+  await database.run("INSERT INTO asset_expectations (asset_id, reference_time_start, reference_time_end, survey_time, calculation_base, mean, median, std_dev, min, max, respondents) VALUES ('BR:index:IPCA', DATE '2027-01-01', DATE '2027-12-31', DATE '2025-01-03', 0, 4.1, 4.0, 0.3, 3.5, 4.8, 40)");
+  await database.run("INSERT INTO asset_filings (filing_id, asset_id, document_type, category, subject, reference_time_start, reference_time_end, published_at, version, url, file_hash) VALUES ('f1', 'BR:stock:PETR4', 'material_fact', 'Fato Relevante', 'Ata', DATE '2024-03-22', DATE '2024-03-22', TIMESTAMPTZ '2024-03-22 00:00:00-03', 1, 'https://www.rad.cvm.gov.br/ENET/f1', NULL)");
+  await database.run("INSERT INTO asset_filing_chunks (filing_id, asset_id, document_type, section, page, seq, text) VALUES ('f1', 'BR:stock:PETR4', 'material_fact', 'Dividendos', 1, 1, 'Pagamento de dividendos e lucro líquido do exercício')");
+  // Why: search_chunks is built on the full-text extension, which the unit suite does not install; this stand-in has the same arguments and columns, so the example runs on the same schema.
+  await database.run(`CREATE OR REPLACE MACRO search_chunks(q_text, q_asset_id, q_document_type, q_section, q_mode) AS TABLE
+    SELECT 1.0 AS score, text, section, page FROM asset_filing_chunks
+    WHERE q_mode = 'text' AND asset_id = q_asset_id AND document_type = q_document_type AND (q_section IS NULL OR section = q_section) AND text ILIKE '%' || q_text || '%'`);
 };
 
 describe("GuideTexts.topicToText()", () => {

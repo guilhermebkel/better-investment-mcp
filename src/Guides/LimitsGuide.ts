@@ -4,10 +4,11 @@ export const LIMITS_GUIDE = `# Limits guide
 
 - An answer returns at most 1,024 rows and 50,000 characters. A cut is always reported with the number of rows and characters left out. Narrow the query to get the rest.
 - One query loads at most 50 assets. Filter fewer tickers when a query asks for more.
+- A load that runs longer than \`INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS\` (5 seconds by default) keeps running in the background. The answer then gives the rows already stored, a warning that they may be incomplete, and the load id; run the query again to read the rows once the load has finished.
 
 ## Cache
 
-- Loaded data is kept in a local DuckDB file, valid for the time that get_overview reports.
+- Loaded data is kept in a local DuckDB file, valid until the time that get_overview reports.
 - A load runs the first time a query asks for an asset, or after its time is over.
 - The server keeps only its own cache file. Deleting it loses nothing: the next query loads the data again.
 

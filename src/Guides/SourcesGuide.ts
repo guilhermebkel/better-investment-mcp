@@ -1,15 +1,18 @@
 export const SOURCES_GUIDE = `# Sources guide
 
-Each row keeps the source that produced it, in the source column. Each answer also names what was loaded, from which source, and whether a fallback served it.
+Each answer says what was loaded, with its period and the error if any.
 
-## Which vendor serves what
+## Which public provider serves what
 
-- Yahoo Finance (source yahoo): quotes, splits, dividends and the asset summary (assets) for BR and US tickers. Unofficial, for personal use, no service guarantee.
-- BCB SGS (source bcb): macro_series for the series ipca, cdi, selic and ptax. Open data.
-- StatusInvest (source statusinvest): fundamentals and fii_monthly. The site may block the requests; a blocked load says so and writes nothing.
-- CVM (source cvm): filings for a company, from the yearly IPE file. Open data under ODbL. Filing types: material_fact, sustainability and other. Not every ticker has a CVM company yet.
+- Quotes: Yahoo Finance through yfinance, for BR and US tickers. For a BR ticker that yfinance fails on, B3's daily file (COTAHIST) is the fallback; it has no adjusted close. Yahoo is unofficial, for personal use, with no service guarantee.
+- Dividends and splits: Yahoo Finance through yfinance, for BR and US tickers.
+- Fundamentals: StatusInvest. The site may block the requests; a blocked load says so and writes nothing.
+- Statements, company filings, fund files and FRE, VLMO, CGVN: CVM open data.
+- Company and fund registry, and the B3 identifiers (CNPJ, ISIN): CVM and B3.
+- Macro series and PTAX exchange rates: BCB open data. Market expectations (Focus): BCB open data.
+- Treasury bonds: Tesouro Transparente, one bond per asset_id (family and maturity, for example SELIC_2029-03-01).
 
-## Quality columns
+## Quality flags
 
 - quotes.is_stale: the price repeats the day before with zero volume.
 - quotes.suspect_tick: one day moved more than 25% and came back within 5% the next day. The row stays.
@@ -17,8 +20,10 @@ Each row keeps the source that produced it, in the source column. Each answer al
 
 ## Units
 
-- macro_series.value: ipca is percent per month, cdi is percent per day, selic is percent per year, ptax is BRL per USD.
-- Amounts are plain numbers in currency units.
+- macro: the unit column says it: percent_per_month for IPCA and IGPM, percent_per_day for CDI, percent_per_year for SELIC.
+- treasury.buy_rate and sell_rate are percent per year; the unit prices are reais per bond.
+- fx: brl_per_currency. Fund quota: brl_per_quota. Statements and FII reports: brl.
+- fundamental: as_published, the unit the source gave.
 
 ## See also
 

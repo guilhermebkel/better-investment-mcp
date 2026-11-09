@@ -7,6 +7,22 @@ const FIXTURES = join(import.meta.dirname, "..", "Testing", "fixtures", "cvm", "
 const readFixture = (name: string): Uint8Array => new Uint8Array(readFileSync(join(FIXTURES, name)));
 
 describe("DocumentTextService.extract()", () => {
+  it("reads the PDF inside a zip that holds one, as a periodic report does (ITR)", async () => {
+    const zipPath = join(import.meta.dirname, "..", "Testing", "fixtures", "fre", "pdf-zip-sample.zip");
+    const extracted = await DocumentTextService.extract(new Uint8Array(readFileSync(zipPath)));
+
+    expect(extracted.format).toBe("pdf");
+    expect(extracted.segments).toContainEqual(expect.objectContaining({ section: null, page: 1 }));
+    expect(extracted.segments.map((segment) => segment.text).join(" ")).toContain("Secao 1. Lucro liquido do exercicio");
+  });
+
+  it("reads a reference form zip through the form reader", async () => {
+    const fixture = join(import.meta.dirname, "..", "Testing", "fixtures", "fre", "form-sample.zip");
+    const extracted = await DocumentTextService.extract(new Uint8Array(readFileSync(fixture)));
+
+    expect(extracted.format).toBe("form");
+  });
+
   it("reads a PDF page by page and counts the pages with no text", async () => {
     const extracted = await DocumentTextService.extract(readFixture("material-fact-sample.pdf"));
 

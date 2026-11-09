@@ -5,13 +5,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { OperationDependencies } from "@/Protocols/OperationProtocol.ts";
-import { LoaderService } from "@/Services/LoaderService.ts";
-import { ProviderRegistryService } from "@/Services/ProviderRegistryService.ts";
 import { SqlGuardService } from "@/Services/SqlGuardService.ts";
 import { StoreService } from "@/Services/StoreService.ts";
 import { McpServerSurface } from "@/Surfaces/McpServerSurface.ts";
 
 const TEMP_PREFIX = join(tmpdir(), "mcp-server-test-");
+const loaderStub = { ensure: () => Promise.resolve([]) };
 const USAGE_NOTICE = "Usage notice: the output describes and locates information. It is not investment advice, a recommendation or an analysis of what to buy or sell.";
 
 describe("McpServerSurface.build()", () => {
@@ -26,10 +25,7 @@ describe("McpServerSurface.build()", () => {
     const dependencies: OperationDependencies = {
       querySql: {
         guard: new SqlGuardService(store.writer),
-        loader: new LoaderService(store, new ProviderRegistryService(
-          { INVESTMENT_MCP_LOG_LEVEL: "error", INVESTMENT_MCP_CACHE_TTL_SECONDS: 60 },
-          ProviderRegistryService.buildEmptyCatalog(),
-        )),
+        loader: loaderStub,
         openReader: () => store.openReader(),
       },
       overview: { cacheTtlSeconds: 60, readLoaded: () => Promise.resolve([]) },
@@ -109,10 +105,10 @@ describe("McpServerSurface.build()", () => {
 
   describe("when query_sql is called without the filters of a data table", () => {
     it("refuses it with the table, the missing filter and an example", async () => {
-      const result = await client.callTool({ name: "query_sql", arguments: { sql: "SELECT close FROM quotes" } });
+      const result = await client.callTool({ name: "query_sql", arguments: { sql: "SELECT close FROM asset_quotes" } });
 
       expect(result.isError).toBe(true);
-      expect(JSON.stringify(result)).toContain("quotes needs a WHERE filter on market, ticker, asset_type");
+      expect(JSON.stringify(result)).toContain("asset_quotes needs a WHERE filter on asset_id");
     });
   });
 

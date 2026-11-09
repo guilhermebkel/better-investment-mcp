@@ -44,3 +44,15 @@ export const ConstantExpressionSchema = z.looseObject({
 });
 
 export const EqualityNodeSchema = z.looseObject({ left: z.unknown(), right: z.unknown() });
+
+export const OperatorCastSchema = z.looseObject({
+  type: z.literal("OPERATOR_CAST"),
+  child: z.unknown(),
+});
+
+export const BetweenNodeSchema = z.looseObject({
+  type: z.literal("COMPARE_BETWEEN"),
+  input: z.unknown(),
+  lower: z.unknown(),
+  upper: z.unknown(),
+});

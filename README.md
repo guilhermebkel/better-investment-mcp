@@ -13,7 +13,7 @@ The server exposes <!-- tools:count -->3<!-- /tools:count --> tools. All of them
 <!-- tools:list -->
 - `get_overview`: the server's usage notice.
 - `get_guide`: the guide for one topic of `query_sql`. The guide texts come later.
-- `query_sql`: one `SELECT` over the data tables. Every data table needs filters on `market`, `ticker` and `asset_type`; a query without them is refused with the filter to add. The rules are in `docs/product/sql-guard.md`.
+- `query_sql`: one `SELECT` over the data tables. Every asset table needs a filter on `asset_id` (`market:asset_type:code`, for example `BR:stock:PETR4`), and `asset_metrics` also needs `metric`; a query without them is refused with the filter to add. The tables are in `docs/product/data-map.md`, the rules in `docs/product/sql-guard.md`.
 <!-- /tools:list -->
 
 ## Install
@@ -41,29 +41,44 @@ Every setting is an environment variable. The server reads them once at start an
 | `INVESTMENT_MCP_LOG_LEVEL` | `info` | `error`, `info` or `debug`. Log lines go to stderr. |
 | `INVESTMENT_MCP_CACHE_DIR` | the system temporary directory | Where the DuckDB cache file is kept. Created when missing. |
 | `INVESTMENT_MCP_CACHE_TTL_SECONDS` | `86400` | How long a loaded piece of data stays valid, in seconds. |
-| `INVESTMENT_MCP_QUOTES_PROVIDER` | unset | Quote source per market, for example `BR:yahoo`. Unset, the category loads nothing. |
-| `INVESTMENT_MCP_DIVIDENDS_PROVIDER` | unset | Dividend source per market. Same rule. |
-| `INVESTMENT_MCP_FUNDAMENTALS_PROVIDER` | unset | Fundamentals source per market. Same rule. |
-| `INVESTMENT_MCP_STATEMENTS_PROVIDER` | unset | Financial statements source per market. Same rule. |
-| `INVESTMENT_MCP_FUND_DATA_PROVIDER` | unset | FII monthly data source per market. Same rule. |
-| `INVESTMENT_MCP_FILINGS_PROVIDER` | unset | Filings list source per market. Same rule. |
-| `INVESTMENT_MCP_DOCUMENTS_PROVIDER` | unset | Document download source per market. Same rule. |
-| `INVESTMENT_MCP_MACRO_PROVIDER` | unset | Macro series source. The series have no market, so the value is `SERIES:bcb`. |
+| `INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS` | `5` | How long a query waits for a load before it answers with the rows already stored and a load id. The load keeps running in the background. |
+| `INVESTMENT_MCP_QUOTES_PROVIDER` | `BR:yfinance>b3,US:yfinance>yahoo` | Quote source per market. For Brazil the fallback is B3 COTAHIST, which has no adjusted close. Set it only to replace the default. |
+| `INVESTMENT_MCP_DIVIDENDS_PROVIDER` | `BR:yfinance>yahoo,US:yfinance>yahoo` | Dividend source per market. Set it only to replace the default. |
+| `INVESTMENT_MCP_FUNDAMENTALS_PROVIDER` | `BR:statusinvest` | Fundamentals source per market. Set it only to replace the default. |
+| `INVESTMENT_MCP_STATEMENTS_PROVIDER` | `BR:cvm` | Financial statements source per market, for example `BR:cvm`. Set it only to replace the default. |
+| `INVESTMENT_MCP_FUND_DATA_PROVIDER` | `BR:cvm` | FII monthly data source per market, for example `BR:cvm`. Set it only to replace the default. |
+| `INVESTMENT_MCP_FILINGS_PROVIDER` | `BR:cvm` | Filings list source per market, for example `BR:cvm`. Set it only to replace the default. |
+| `INVESTMENT_MCP_DOCUMENTS_PROVIDER` | `BR:cvm` | Document download source per market. Set it only to replace the default. |
+| `INVESTMENT_MCP_MACRO_PROVIDER` | `BR:bcb` | Macro series source (IPCA, IGPM, CDI, SELIC). Set it only to replace the default. |
+| `INVESTMENT_MCP_TREASURY_PROVIDER` | `BR:tesouro` | Tesouro Direto source, one bond per asset. Set it only to replace the default. |
+| `INVESTMENT_MCP_EXPECTATIONS_PROVIDER` | `BR:bcb` | Market expectations source (BCB Focus). Set it only to replace the default. |
+| `INVESTMENT_MCP_IDENTIFIERS_PROVIDER` | `BR:b3` | CNPJ and ISIN of a ticker, from B3. The value is `BR:b3`. Set it only to replace the default. |
+| `INVESTMENT_MCP_REGISTRY_PROVIDER` | `BR:cvm` | Company registry of a stock, from CVM. The value is `BR:cvm`. Set it only to replace the default. |
+| `INVESTMENT_MCP_FX_PROVIDER` | `BR:bcb` | Closing PTAX rate per currency. Set it only to replace the default. |
+| `INVESTMENT_MCP_DISCLOSURES_PROVIDER` | `BR:cvm` | Company disclosures (FRE, VLMO, CGVN). Set it only to replace the default. |
+| `INVESTMENT_MCP_FUND_PROVIDER` | `BR:cvm` | Fund registry, daily figures and holdings, keyed by CNPJ. Set it only to replace the default. |
 
-A provider variable names the vendor for each market: `BR:yahoo` uses one vendor, and `BR:yahoo>statusinvest` uses a second vendor only when the first fails. The vendors are added with their adapters.
+A provider variable is optional: each category has a default (in the table), and a second vendor after `>` is the fallback, used when the first one fails. A provider variable names the vendor for each market: `BR:yahoo` uses one vendor, and `BR:yahoo>statusinvest` uses a second vendor only when the first fails. The vendors are added with their adapters.
 
 ## Data sources
 
-| Vendor | Gives | Terms |
+| Vendor | Gives | Notes |
 | --- | --- | --- |
-| Yahoo Finance | quotes, dividends, splits, asset summary | Built. |
-| BCB SGS | macro series (ipca, cdi, selic, ptax) | Open data. |
-| StatusInvest | fundamentals, FII monthly data | Built. |
-| CVM | filings list (IPE) | Open data under the ODbL (see below). A ticker needs a CNPJ link that no source gives yet. |
+| Yahoo Finance | quotes, dividends, splits, asset summary | Unofficial. Personal use, no service guarantee. |
+| BCB SGS | macro series (ipca, cdi, selic, ptax, igpm) | Open data. |
+| Tesouro Transparente | Tesouro Direto prices and rates, daily history from 2004 | Open data. One download of the file per bond family loaded. |
+| BCB Focus (Olinda) | annual market expectations: ipca, selic, pib_total, cambio | Open data. |
+| BCB PTAX (Olinda) | closing rate per currency and day (USD, EUR) | Open data. |
+| B3 listing and COTAHIST | CNPJ and ISIN of a ticker; daily quotes of the current and the previous year | Public site routes. The COTAHIST file is about 90 MB per year, so its first load takes minutes. |
+| CVM company and fund files | company registry (sector), fund registry, daily quota and holdings | Open data. |
+| CVM FRE, VLMO and CGVN | reference form, securities holdings and governance rows of a company, by section, date and version | Open data. Each yearly zip is streamed; the last three years are read. |
+| yfinance (Python library) | quotes, dividends and splits, as an alternative to Yahoo | Needs `python3` and `pip install yfinance` on the machine. Unofficial. |
+| StatusInvest | fundamentals, FII monthly data | Blocked: the site answers with a Cloudflare challenge, which the server does not bypass. |
+| CVM | filings list (IPE) | Open data. A ticker needs a CNPJ link that no source gives yet. |
 | CVM | ITR, DFP, Formulário de Referência | Not built (issue #11). |
 | FNET | FII management reports | Built only if a spike passes. |
 
-The `source` of every row names the vendor that produced it.
+Each load records the vendor that produced it in `load_runs`. The answer of `query_sql` does not name it.
 
 ## Development
 
@@ -76,4 +91,4 @@ The `source` of every row names the vendor that produced it.
 
 ## Licenses
 
-The code is MIT (see `LICENSE`). Runtime dependencies use MIT, ISC, Apache-2.0, BSD or BlueOak licenses; `pnpm check:licenses` checks them. Data comes from third parties under their own terms, listed above.
+The code is MIT (see `LICENSE`). Runtime dependencies use MIT, ISC, Apache-2.0, BSD or BlueOak licenses; `pnpm check:licenses` checks them.

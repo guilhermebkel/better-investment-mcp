@@ -14,9 +14,14 @@ What goes in `docs/` and where everything else goes.
 | --- | --- |
 | `docs/product/architecture.md` | product doc |
 | `docs/product/data-map.md` | product doc |
+| `docs/product/data-model.md` | product doc |
 | `docs/product/adding-an-operation.md` | product doc |
 | `docs/product/adding-a-source.md` | product doc |
 | `docs/product/releasing.md` | product doc |
+
+## Data modelling
+
+The rules for the names and shapes of the data are in `docs/data-modelling-standards.md`. Every new table or column follows them.
 
 ## What a standard never contains
 

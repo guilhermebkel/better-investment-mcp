@@ -4,10 +4,10 @@ How the text of a filing becomes chunks, and how `search_chunks` finds them (iss
 
 ## What is loaded, and when
 
-A document is loaded only when a query asks for `chunks` with a `filing_id` or a `filing_type`. The loader never downloads every filing of a company. The steps for one filing:
+A document is loaded only when a query asks for `asset_filing_chunks` with a `filing_id` or a `document_type`. The loader never downloads every filing of a company. The steps for one filing:
 
 1. The filing list of the asset is loaded first (`filings`, from CVM IPE; see `data-map.md`).
-2. The filings that match the `filing_id` or the `filing_type` are picked.
+2. The filings that match the `filing_id` or the `document_type` are picked.
 3. A filing that was downloaded within its expiry (`INVESTMENT_MCP_CACHE_TTL_SECONDS`) is not downloaded again; it is reported `fresh`.
 4. Otherwise the document is downloaded from `www.rad.cvm.gov.br` with a size limit of 20 MiB and a timeout of 60 seconds. A download that is too large, times out, or is not a PDF stores nothing and reports the error.
 5. The SHA-256 of the bytes is compared with `filings.file_hash`. If it is the same, the stored chunks are kept. If not, the chunks of the filing are replaced, and the hash is written, in one transaction.
@@ -18,7 +18,10 @@ A document is loaded only when a query asks for `chunks` with a `filing_id` or a
 - A PDF is read page by page (`unpdf`). A page with no text is counted and reported in the answer (`pagesWithoutText`); it is not read. OCR is not available.
 - An HTML page is read by block. A heading (`h1` to `h4`) starts a section; the text under it is one segment per paragraph. Scripts, styles and the head are dropped.
 - The format is read from the bytes, not from the content type. CVM sends PDFs with `text/html`.
-- For CVM, only a PDF is stored. The CVM site sometimes answers 200 with an HTML error page; that page is refused (`CvmDocumentAdapter`).
+- A zip that holds PDF entries (the periodic report, ITR) is read as its PDFs, page by page; with one PDF the chunks have no section, with several each section is the file name.
+- A CVM reference form (FRE) is a zip with one XML. Its items are PDFs inside the XML, read the same way (ADR 0024): each chunk's `section` is the form section and the item number, for example `FatoresRisco 4.1`, and its `page` is the page of that item's PDF. A blank slot of the form is skipped. The XML is read as cp1252, although it declares UTF-8.
+- A document is read from the link the filing names, on any http or https host; the size limit (20 MiB) and the timeout (60 seconds) still apply. The server does not check the host of a document link.
+- For CVM, only a PDF or a form zip is stored. The CVM site sometimes answers 200 with an HTML error page; that page is refused (`CvmDocumentAdapter`).
 
 ## Chunking rules
 
@@ -39,12 +42,12 @@ A document is loaded only when a query asks for `chunks` with a `filing_id` or a
 
 ```sql
 SELECT text, score, filing_id, section, page
-FROM search_chunks('lucro líquido', 'BR', 'PETR4', 'stock', 'material_fact', NULL)
+FROM search_chunks('lucro líquido', 'BR:stock:PETR4', 'material_fact', NULL, 'text')
 ORDER BY score DESC
 ```
 
-- Arguments, in order: the query text, `market`, `ticker`, `asset_type`, `filing_type`, `section`. The last one is NULL for no section.
-- The macro's arguments count as filters for the SQL guard (`docs/product/sql-guard.md`). A query that passes `NULL` for market, ticker, asset_type or filing_type is refused with the missing filter.
+- Arguments, in order: the query text, `asset_id`, `document_type`, `section` and `mode`. `section` is NULL for no section; `mode` is `'text'`, the only one for now (ADR 0023).
+- The macro's arguments count as filters for the SQL guard (`docs/product/sql-guard.md`). A query that passes `NULL` for `asset_id` or `document_type` is refused with the missing filter.
 - The score is BM25 from the index. Rows are not sorted by the macro; add `ORDER BY score DESC`.
 - A query that matches nothing returns zero rows, and the answer says the filing was indexed.
 - If the extension cannot be installed, the load reports `indexError` in `loaded`, the chunks are still stored, and `search_chunks` fails with DuckDB's error.

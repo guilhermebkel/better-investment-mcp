@@ -1,47 +1,43 @@
 import type { DatabasePort } from "@/Protocols/DatabaseProtocol.ts";
 
-const ASSET_KEY = "market VARCHAR NOT NULL, ticker VARCHAR NOT NULL, asset_type VARCHAR NOT NULL";
-const FII_COLUMNS = [
-  "distribution_per_unit", "rental_revenue", "property_sales_revenue", "other_revenue", "total_revenue",
-  "distributable_income", "management_fee", "performance_fee", "property_acquisitions", "other_expenses",
-  "total_expenses", "liquidity_requirement", "cash_available", "government_bonds", "corporate_bonds",
-  "fixed_income_funds", "net_worth",
-].map((column) => `${column} DOUBLE`).join(", ");
+const ASSET_ID_COLUMN = "asset_id VARCHAR NOT NULL";
+const REFERENCE_COLUMNS = "reference_time_start DATE NOT NULL, reference_time_end DATE NOT NULL";
 
 export class DuckDbSchemaAdapter {
-  static readonly VERSION = 2;
+  static readonly VERSION = 9;
 
   static readonly STATEMENTS: readonly string[] = [
     "CREATE TABLE schema_version (version INTEGER NOT NULL);",
     `INSERT INTO schema_version (version) VALUES (${DuckDbSchemaAdapter.VERSION});`,
-    `CREATE TABLE assets (${ASSET_KEY}, legal_id VARCHAR, name VARCHAR, sector VARCHAR, currency VARCHAR, PRIMARY KEY (market, ticker));`,
-    `CREATE TABLE filings (filing_id VARCHAR PRIMARY KEY, ${ASSET_KEY}, filing_type VARCHAR, category VARCHAR, delivered_at TIMESTAMPTZ, subject VARCHAR, url VARCHAR, file_hash VARCHAR, source VARCHAR NOT NULL);`,
-    `CREATE TABLE chunks (filing_id VARCHAR NOT NULL, ${ASSET_KEY}, filing_type VARCHAR NOT NULL, section VARCHAR, page INTEGER, seq INTEGER NOT NULL, text VARCHAR NOT NULL, PRIMARY KEY (filing_id, seq));`,
-    `CREATE TABLE quotes (${ASSET_KEY}, date DATE NOT NULL, open DOUBLE, high DOUBLE, low DOUBLE, close DOUBLE, adj_close DOUBLE, volume DOUBLE, is_stale BOOLEAN, suspect_tick BOOLEAN, source VARCHAR NOT NULL, PRIMARY KEY (market, ticker, date));`,
-    `CREATE TABLE dividends (${ASSET_KEY}, ex_date DATE NOT NULL, pay_date DATE, amount DOUBLE, kind VARCHAR NOT NULL, source VARCHAR NOT NULL, PRIMARY KEY (market, ticker, ex_date, kind));`,
-    `CREATE TABLE splits (${ASSET_KEY}, date DATE NOT NULL, ratio DOUBLE, source VARCHAR NOT NULL);`,
-    `CREATE TABLE fundamentals (${ASSET_KEY}, year INTEGER NOT NULL, metric VARCHAR NOT NULL, value DOUBLE, source VARCHAR NOT NULL, PRIMARY KEY (market, ticker, year, metric));`,
-    `CREATE TABLE financial_statements (${ASSET_KEY}, period_end DATE NOT NULL, period_type VARCHAR NOT NULL, statement VARCHAR NOT NULL, line_item VARCHAR NOT NULL, value DOUBLE, currency VARCHAR, source VARCHAR NOT NULL);`,
-    `CREATE TABLE fii_monthly (${ASSET_KEY}, period DATE NOT NULL, ${FII_COLUMNS}, source VARCHAR NOT NULL, PRIMARY KEY (market, ticker, period));`,
-    "CREATE TABLE macro_series (series VARCHAR NOT NULL, date DATE NOT NULL, value DOUBLE, source VARCHAR NOT NULL, PRIMARY KEY (series, date));",
-    "CREATE TABLE cache_runs (run_id VARCHAR PRIMARY KEY, category VARCHAR NOT NULL, market VARCHAR NOT NULL, ticker VARCHAR NOT NULL, source VARCHAR NOT NULL, started_at TIMESTAMPTZ NOT NULL, finished_at TIMESTAMPTZ, expires_at TIMESTAMPTZ, rows_read BIGINT, error VARCHAR, filing_id VARCHAR);",
-    "CREATE VIEW document_text AS SELECT filing_id, seq, section, page, text FROM chunks ORDER BY filing_id, seq;",
+    `CREATE TABLE asset (${ASSET_ID_COLUMN}, market VARCHAR NOT NULL, asset_type VARCHAR NOT NULL, code VARCHAR NOT NULL, legal_id VARCHAR, isin VARCHAR, name VARCHAR, trade_name VARCHAR, sector VARCHAR, situation VARCHAR, cvm_code VARCHAR, currency VARCHAR, PRIMARY KEY (asset_id));`,
+    `CREATE TABLE asset_attribute (${ASSET_ID_COLUMN}, attribute VARCHAR NOT NULL, value VARCHAR, PRIMARY KEY (asset_id, attribute));`,
+    `CREATE TABLE asset_quotes (${ASSET_ID_COLUMN}, ${REFERENCE_COLUMNS}, open DOUBLE, high DOUBLE, low DOUBLE, close DOUBLE, adj_close DOUBLE, volume DOUBLE, is_stale BOOLEAN, suspect_tick BOOLEAN, PRIMARY KEY (asset_id, reference_time_start));`,
+    `CREATE TABLE asset_dividends (${ASSET_ID_COLUMN}, ex_time DATE NOT NULL, payment_time DATE, kind VARCHAR NOT NULL, amount DOUBLE, PRIMARY KEY (asset_id, ex_time, kind));`,
+    `CREATE TABLE asset_splits (${ASSET_ID_COLUMN}, ex_time DATE NOT NULL, ratio DOUBLE, PRIMARY KEY (asset_id, ex_time));`,
+    `CREATE TABLE asset_metrics (${ASSET_ID_COLUMN}, metric VARCHAR NOT NULL, ${REFERENCE_COLUMNS}, value DOUBLE, unit VARCHAR NOT NULL, version INTEGER, filing_id VARCHAR, PRIMARY KEY (asset_id, metric, reference_time_start, reference_time_end));`,
+    `CREATE TABLE asset_expectations (${ASSET_ID_COLUMN}, ${REFERENCE_COLUMNS}, survey_time DATE NOT NULL, calculation_base INTEGER NOT NULL, mean DOUBLE, median DOUBLE, std_dev DOUBLE, min DOUBLE, max DOUBLE, respondents INTEGER, PRIMARY KEY (asset_id, reference_time_start, survey_time, calculation_base));`,
+    `CREATE TABLE asset_holdings (${ASSET_ID_COLUMN}, ${REFERENCE_COLUMNS}, block VARCHAR NOT NULL, application_type VARCHAR, held_code VARCHAR, held_description VARCHAR, held_issuer VARCHAR, quantity DOUBLE, market_value DOUBLE);`,
+    `CREATE TABLE asset_filings (filing_id VARCHAR PRIMARY KEY, ${ASSET_ID_COLUMN}, document_type VARCHAR NOT NULL, category VARCHAR, subject VARCHAR, reference_time_start DATE, reference_time_end DATE, published_at TIMESTAMPTZ, version INTEGER, url VARCHAR, file_hash VARCHAR, source_file VARCHAR);`,
+    `CREATE TABLE asset_filing_items (${ASSET_ID_COLUMN}, filing_id VARCHAR NOT NULL, section VARCHAR NOT NULL, row_json VARCHAR NOT NULL);`,
+    `CREATE TABLE asset_filing_chunks (filing_id VARCHAR NOT NULL, ${ASSET_ID_COLUMN}, document_type VARCHAR NOT NULL, section VARCHAR, page INTEGER, seq INTEGER NOT NULL, text VARCHAR NOT NULL, PRIMARY KEY (filing_id, seq));`,
+    "CREATE TABLE load_runs (run_id VARCHAR PRIMARY KEY, category VARCHAR NOT NULL, asset_id VARCHAR NOT NULL, source VARCHAR NOT NULL, started_at TIMESTAMPTZ NOT NULL, finished_at TIMESTAMPTZ, expires_at TIMESTAMPTZ, rows_read BIGINT, error VARCHAR, filing_id VARCHAR, reference_time_start DATE, reference_time_end DATE);",
+    "CREATE TABLE load_files (url VARCHAR NOT NULL, dataset VARCHAR NOT NULL, reference_year INTEGER NOT NULL, sha256 VARCHAR NOT NULL, size_bytes BIGINT NOT NULL, fetched_at TIMESTAMPTZ NOT NULL, is_current BOOLEAN NOT NULL, PRIMARY KEY (url, sha256));",
     [
       "CREATE VIEW asset_coverage AS",
       "WITH latest_run AS (",
-      "  SELECT category, market, ticker, source, expires_at,",
-      "    row_number() OVER (PARTITION BY category, market, ticker ORDER BY finished_at DESC) AS run_rank",
-      "  FROM cache_runs WHERE error IS NULL AND finished_at IS NOT NULL",
+      "  SELECT category, asset_id, expires_at,",
+      "    row_number() OVER (PARTITION BY category, asset_id ORDER BY finished_at DESC) AS run_rank",
+      "  FROM load_runs WHERE error IS NULL AND finished_at IS NOT NULL",
       "), period_span AS (",
-      "  SELECT 'quotes' AS category, market, ticker, asset_type, min(date) AS first_date, max(date) AS last_date FROM quotes GROUP BY market, ticker, asset_type",
-      "  UNION ALL SELECT 'dividends', market, ticker, asset_type, min(ex_date), max(ex_date) FROM dividends GROUP BY market, ticker, asset_type",
-      "  UNION ALL SELECT 'fund_data', market, ticker, asset_type, min(period), max(period) FROM fii_monthly GROUP BY market, ticker, asset_type",
-      "  UNION ALL SELECT 'statements', market, ticker, asset_type, min(period_end), max(period_end) FROM financial_statements GROUP BY market, ticker, asset_type",
-      "  UNION ALL SELECT 'filings', market, ticker, asset_type, min(CAST(delivered_at AS DATE)), max(CAST(delivered_at AS DATE)) FROM filings GROUP BY market, ticker, asset_type",
+      // Why: a metric is named by its group, and the group names the category the loader fills it under (the same map as the SQL guard).
+      "  SELECT 'quotes' AS category, asset_id, min(reference_time_start) AS first_date, max(reference_time_end) AS last_date FROM asset_quotes GROUP BY asset_id",
+      "  UNION ALL SELECT 'dividends', asset_id, min(ex_time), max(ex_time) FROM asset_dividends GROUP BY asset_id",
+      "  UNION ALL SELECT 'expectations', asset_id, min(reference_time_start), max(reference_time_end) FROM asset_expectations GROUP BY asset_id",
+      "  UNION ALL SELECT 'filings', asset_id, min(reference_time_start), max(reference_time_end) FROM asset_filings GROUP BY asset_id",
+      "  UNION ALL SELECT CASE split_part(metric, '.', 1) WHEN 'statement' THEN 'statements' WHEN 'fundamental' THEN 'fundamentals' WHEN 'fii' THEN 'fund_data' WHEN 'fund' THEN 'fund' WHEN 'macro' THEN 'macro' WHEN 'treasury' THEN 'treasury' WHEN 'fx' THEN 'fx' END, asset_id, min(reference_time_start), max(reference_time_end) FROM asset_metrics GROUP BY 1, 2",
       ")",
-      "SELECT latest_run.market, latest_run.ticker, period_span.asset_type, latest_run.category,",
-      "  period_span.first_date, period_span.last_date, latest_run.source, latest_run.expires_at",
-      "FROM latest_run LEFT JOIN period_span USING (category, market, ticker) WHERE latest_run.run_rank = 1;",
+      "SELECT latest_run.asset_id, latest_run.category, period_span.first_date, period_span.last_date, latest_run.expires_at",
+      "FROM latest_run LEFT JOIN period_span USING (category, asset_id) WHERE latest_run.run_rank = 1;",
     ].join("\n"),
   ];
 

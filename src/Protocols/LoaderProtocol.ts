@@ -1,6 +1,8 @@
 import type { ChunkRow } from "@/Protocols/DocumentTextProtocol.ts";
+import type { PeriodWindow } from "@/Protocols/PeriodProtocol.ts";
 import type { ProviderResult } from "@/Protocols/ProviderProtocol.ts";
 import type { Requirement } from "@/Protocols/SqlGuardProtocol.ts";
+import type { CacheCategory } from "@/Protocols/CacheProtocol.ts";
 
 export type LoadStatus = "fresh" | "loaded" | "failed";
 
@@ -22,6 +24,8 @@ export type LoadedEntry = {
   filingId?: string;
   pagesWithoutText?: number;
   indexError?: string;
+  requestedPeriod?: PeriodWindow;
+  periodicity?: string;
 };
 
 export type FilingRow = {
@@ -39,6 +43,7 @@ export type LoaderPort = { ensure(requirements: readonly Requirement[]): Promise
 export type FetchAttempt = {
   result: ProviderResult | undefined;
   errorMessage: string | undefined;
+  isFallbackBlocked: boolean;
 };
 
 export type FetchOutcome = FetchAttempt & {
@@ -54,3 +59,10 @@ export type DownloadOutcome = {
   pagesWithoutText: number;
   errorMessage?: string;
 };
+
+export type SqlScope = {
+  sql: string;
+  values: string[];
+};
+
+export type ScopeRule = (category: CacheCategory) => SqlScope;

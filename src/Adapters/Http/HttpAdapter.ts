@@ -1,8 +1,12 @@
 import { HttpFailureError } from "@/Errors/HttpFailureError.ts";
 import { HttpRefusedError } from "@/Errors/HttpRefusedError.ts";
+import { createWriteStream } from "node:fs";
+import { Readable, Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import type { FieldNameToValue, HeaderNameToValue, HttpAttempt, HttpOptions, HttpPort } from "@/Protocols/HttpProtocol.ts";
 
 const TOO_MANY_REQUESTS = 429;
+const UNKNOWN_ERROR = "unknown error";
 const SERVER_ERROR_MIN = 500;
 const REDIRECT_MIN = 300;
 const REDIRECT_MAX = 399;
@@ -13,10 +17,15 @@ const MAX_RESPONSE_MIB = 5;
 export class HttpAdapter implements HttpPort {
   static readonly DEFAULT_MAX_BYTES = MAX_RESPONSE_MIB * BYTES_PER_MIB;
   static readonly DEFAULT_TIMEOUT_MS = 20_000;
+  static buildOverLimitMessage(maxBytes: number): string {
+    return `the response is larger than ${maxBytes} bytes`;
+  }
+
   static readonly DEFAULT_RETRY_DELAY_MS = 1000;
   static readonly USER_AGENT = "PostmanRuntime/7.44.1";
 
   private readonly allowedHosts: ReadonlySet<string>;
+  private readonly isAnyHostAllowed: boolean;
   private readonly headers: HeaderNameToValue;
   private readonly maxBytes: number;
   private readonly timeoutMs: number;
@@ -24,6 +33,7 @@ export class HttpAdapter implements HttpPort {
 
   constructor(options: HttpOptions) {
     this.allowedHosts = new Set(options.allowedHosts);
+    this.isAnyHostAllowed = options.isAnyHostAllowed ?? false;
     this.headers = options.headers ?? {};
     this.maxBytes = options.maxBytes ?? HttpAdapter.DEFAULT_MAX_BYTES;
     this.timeoutMs = options.timeoutMs ?? HttpAdapter.DEFAULT_TIMEOUT_MS;
@@ -47,7 +57,7 @@ export class HttpAdapter implements HttpPort {
       await response.body?.cancel();
       return response.headers.getSetCookie();
     } catch (error) {
-      const detail = error instanceof Error ? error.message : "unknown error";
+      const detail = error instanceof Error ? error.message : UNKNOWN_ERROR;
       throw new HttpFailureError(`the request failed: ${detail}`);
     }
   }
@@ -63,6 +73,46 @@ export class HttpAdapter implements HttpPort {
 
   async getBytes(url: string): Promise<Uint8Array> {
     return this.request(url, { method: "GET" });
+  }
+
+  async downloadToFile(url: string, filePath: string): Promise<number> {
+    // Why: a large file goes to disk in chunks, so only one chunk of it is in memory at a time; the size cap still applies to the bytes written.
+    this.checkHost(url);
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: "GET",
+        redirect: "manual",
+        headers: this.buildHeaders({}),
+        signal: AbortSignal.timeout(this.timeoutMs),
+      });
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : UNKNOWN_ERROR;
+      throw new HttpFailureError(`the request failed: ${detail}`);
+    }
+    if (response.status >= REDIRECT_MIN && response.status <= REDIRECT_MAX) {
+      throw new HttpRefusedError("the vendor redirected the request, and redirects are not followed");
+    }
+    if (response.status > SUCCESS_MAX || response.body === null) {
+      throw new HttpFailureError(`the vendor answered with status ${response.status}`, response.status);
+    }
+    const declared = Number(response.headers.get("content-length") ?? Number.NaN);
+    if (declared > this.maxBytes) {
+      throw new HttpRefusedError(HttpAdapter.buildOverLimitMessage(this.maxBytes));
+    }
+    let total = 0;
+    const limit = new Transform({
+      transform: (chunk: Buffer, _encoding, done) => {
+        total += chunk.byteLength;
+        if (total > this.maxBytes) {
+          done(new HttpRefusedError(HttpAdapter.buildOverLimitMessage(this.maxBytes)));
+          return;
+        }
+        done(null, chunk);
+      },
+    });
+    await pipeline(Readable.fromWeb(response.body), limit, createWriteStream(filePath));
+    return total;
   }
 
   private async request(url: string, init: {
@@ -85,6 +135,10 @@ export class HttpAdapter implements HttpPort {
   }
 
   private checkHost(url: string): void {
+    // Why: a document link is taken as the filing names it, so the host is not checked for that download; the size limit and the timeout still apply.
+    if (this.isAnyHostAllowed) {
+      return;
+    }
     const host = new URL(url).hostname;
     if (!this.allowedHosts.has(host)) {
       throw new HttpRefusedError(`${host} is not in the host list of this adapter`);
@@ -110,7 +164,7 @@ export class HttpAdapter implements HttpPort {
         signal: AbortSignal.timeout(this.timeoutMs),
       });
     } catch (error) {
-      const detail = error instanceof Error ? error.message : "unknown error";
+      const detail = error instanceof Error ? error.message : UNKNOWN_ERROR;
       return { isAnswered: false, reason: `the request failed: ${detail}` };
     }
     if (response.status >= REDIRECT_MIN && response.status <= REDIRECT_MAX) {
@@ -131,7 +185,7 @@ export class HttpAdapter implements HttpPort {
   private async readBody(response: Response): Promise<Uint8Array> {
     const declared = Number(response.headers.get("content-length") ?? Number.NaN);
     if (declared > this.maxBytes) {
-      throw new HttpRefusedError(`the response is larger than ${this.maxBytes} bytes`);
+      throw new HttpRefusedError(HttpAdapter.buildOverLimitMessage(this.maxBytes));
     }
     const chunks: Uint8Array[] = [];
     let total = 0;
@@ -140,7 +194,7 @@ export class HttpAdapter implements HttpPort {
       for await (const chunk of body) {
         total += chunk.byteLength;
         if (total > this.maxBytes) {
-          throw new HttpRefusedError(`the response is larger than ${this.maxBytes} bytes`);
+          throw new HttpRefusedError(HttpAdapter.buildOverLimitMessage(this.maxBytes));
         }
         chunks.push(chunk);
       }

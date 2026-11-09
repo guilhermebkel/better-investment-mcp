@@ -5,6 +5,7 @@ import type { KnownMarket, YahooChart, YahooChartResult, YahooDay, YahooSession 
 import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow, TableToRows } from "@/Protocols/ProviderProtocol.ts";
 import { YahooChartSchema } from "@/Schemas/YahooSchema.ts";
 import { QualityFlagService } from "@/Services/QualityFlagService.ts";
+import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 
 const MS_PER_SECOND = 1000;
 const ISO_DATE_LENGTH = 10;
@@ -76,19 +77,21 @@ export class YahooAdapter<Category extends "quotes" | "dividends"> implements Pr
     if (result === undefined) {
       return {};
     }
-    const key = { market, ticker, asset_type: assetType };
+    const assetId = AssetIdUtil.build({ market, assetType, code: ticker });
+    const key = { asset_id: assetId };
     const assetRow: ProviderRow = {
       ...key,
-      legal_id: null,
+      market,
+      asset_type: assetType,
+      code: ticker,
       name: result.meta.longName ?? result.meta.shortName ?? null,
-      sector: null,
       currency: result.meta.currency ?? null,
     };
     return {
-      assets: [assetRow],
-      quotes: YahooAdapter.buildQuoteRows(result, key),
-      dividends: YahooAdapter.buildDividendRows(result, key),
-      splits: YahooAdapter.buildSplitRows(result, key),
+      asset: [assetRow],
+      asset_quotes: YahooAdapter.buildQuoteRows(result, key),
+      asset_dividends: YahooAdapter.buildDividendRows(result, key),
+      asset_splits: YahooAdapter.buildSplitRows(result, key),
     };
   }
 
@@ -204,7 +207,8 @@ export class YahooAdapter<Category extends "quotes" | "dividends"> implements Pr
     const flags = QualityFlagService.buildFlags(points);
     return days.map((day, position) => ({
       ...key,
-      date: YahooAdapter.formatDate(day.timestamp),
+      reference_time_start: YahooAdapter.formatDate(day.timestamp),
+      reference_time_end: YahooAdapter.formatDate(day.timestamp),
       open: quote.open[day.index] ?? null,
       high: quote.high[day.index] ?? null,
       low: quote.low[day.index] ?? null,
@@ -213,7 +217,6 @@ export class YahooAdapter<Category extends "quotes" | "dividends"> implements Pr
       volume: quote.volume[day.index] ?? null,
       is_stale: flags[position]?.isStale ?? false,
       suspect_tick: flags[position]?.isSuspectTick ?? false,
-      source: YahooAdapter.VENDOR,
     }));
   }
 
@@ -221,11 +224,10 @@ export class YahooAdapter<Category extends "quotes" | "dividends"> implements Pr
     // Why: Yahoo does not tell a dividend from interest on equity (JCP), so every row is kept as kind "dividend".
     return Object.values(result.events?.dateToDividend ?? {}).map((event) => ({
       ...key,
-      ex_date: YahooAdapter.formatDate(event.date),
-      pay_date: null,
+      ex_time: YahooAdapter.formatDate(event.date),
+      payment_time: null,
       amount: event.amount,
       kind: "dividend",
-      source: YahooAdapter.VENDOR,
     }));
   }
 
@@ -233,9 +235,8 @@ export class YahooAdapter<Category extends "quotes" | "dividends"> implements Pr
     // Why: the ratio is new shares per old share, so a 2-for-1 split is 2.
     return Object.values(result.events?.dateToSplit ?? {}).map((event) => ({
       ...key,
-      date: YahooAdapter.formatDate(event.date),
+      ex_time: YahooAdapter.formatDate(event.date),
       ratio: event.numerator / event.denominator,
-      source: YahooAdapter.VENDOR,
     }));
   }
 

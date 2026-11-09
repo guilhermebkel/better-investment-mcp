@@ -42,20 +42,21 @@ describe("StoreService.open()", () => {
       const rows = await store.writer.readRows("SELECT table_name FROM information_schema.tables WHERE table_schema = 'main' ORDER BY table_name");
 
       expect(rows.map((row) => row.table_name)).toStrictEqual([
+        "asset",
+        "asset_attribute",
         "asset_coverage",
-        "assets",
-        "cache_runs",
-        "chunks",
-        "dividends",
-        "document_text",
-        "fii_monthly",
-        "filings",
-        "financial_statements",
-        "fundamentals",
-        "macro_series",
-        "quotes",
+        "asset_dividends",
+        "asset_expectations",
+        "asset_filing_chunks",
+        "asset_filing_items",
+        "asset_filings",
+        "asset_holdings",
+        "asset_metrics",
+        "asset_quotes",
+        "asset_splits",
+        "load_files",
+        "load_runs",
         "schema_version",
-        "splits",
       ]);
     });
 
@@ -76,7 +77,7 @@ describe("StoreService.open()", () => {
       store = await StoreService.open(buildEnv());
 
       expect(stderr).toHaveBeenCalledWith(expect.stringContaining("\"event\":\"store_replaced\""));
-      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 2 }]);
+      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 9 }]);
     });
   });
 
@@ -87,19 +88,19 @@ describe("StoreService.open()", () => {
       store = await StoreService.open(buildEnv());
 
       expect(stderr).toHaveBeenCalledWith(expect.stringContaining("\"reason\":\"it cannot be opened\""));
-      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 2 }]);
+      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 9 }]);
     });
   });
 
   describe("when the file is current", () => {
     it("keeps the rows of the file across a restart", async () => {
       store = await StoreService.open(buildEnv());
-      await store.writer.run("INSERT INTO assets (market, ticker, asset_type) VALUES ('BR', 'PETR4', 'stock')");
+      await store.writer.run("INSERT INTO asset (asset_id, market, asset_type, code) VALUES ('BR:stock:PETR4', 'BR', 'stock', 'PETR4')");
       store.close();
 
       store = await StoreService.open(buildEnv());
 
-      expect(await store.writer.readRows("SELECT ticker FROM assets")).toStrictEqual([{ ticker: "PETR4" }]);
+      expect(await store.writer.readRows("SELECT code FROM asset")).toStrictEqual([{ code: "PETR4" }]);
       const databaseFile = join(directory, DATABASE_FILE);
       expect(existsSync(databaseFile)).toBe(true);
     });
@@ -121,27 +122,24 @@ describe("StoreService.open()", () => {
   describe("when a read-only reader is opened on the file", () => {
     it("shows the asset coverage of a finished run with its period and expiry", async () => {
       store = await StoreService.open(buildEnv(), () => START_MS);
-      await store.writer.run("INSERT INTO assets (market, ticker, asset_type) VALUES ('BR', 'PETR4', 'stock')");
+      await store.writer.run("INSERT INTO asset (asset_id, market, asset_type, code) VALUES ('BR:stock:PETR4', 'BR', 'stock', 'PETR4')");
       await store.writer.run(
-        "INSERT INTO quotes (market, ticker, asset_type, date, close, source) VALUES ('BR', 'PETR4', 'stock', DATE '2026-11-02', 30.5, 'yahoo'), ('BR', 'PETR4', 'stock', DATE '2026-11-06', 31.0, 'yahoo')",
+        "INSERT INTO asset_quotes (asset_id, reference_time_start, reference_time_end, close) VALUES ('BR:stock:PETR4', DATE '2026-11-02', DATE '2026-11-02', 30.5), ('BR:stock:PETR4', DATE '2026-11-06', DATE '2026-11-06', 31.0)",
       );
-      const runId = await store.cache.startRun({ category: "quotes", market: "BR", ticker: "PETR4", source: "yahoo" });
+      const runId = await store.cache.startRun({ category: "quotes", assetId: "BR:stock:PETR4", source: "yahoo" });
       await store.cache.finishRun(runId, { rowsRead: 2 });
 
       const reader = await store.openReader();
       const rows = await reader.readRows(
-        "SELECT category, market, ticker, asset_type, CAST(first_date AS VARCHAR) AS firstDate, CAST(last_date AS VARCHAR) AS lastDate, source, CAST(epoch_ms(expires_at) AS VARCHAR) AS expiresAtMs FROM asset_coverage",
+        "SELECT category, asset_id, CAST(first_date AS VARCHAR) AS firstDate, CAST(last_date AS VARCHAR) AS lastDate, CAST(epoch_ms(expires_at) AS VARCHAR) AS expiresAtMs FROM asset_coverage",
       );
       reader.close();
 
       expect(rows).toStrictEqual([{
         category: "quotes",
-        market: "BR",
-        ticker: "PETR4",
-        asset_type: "stock",
+        asset_id: "BR:stock:PETR4",
         firstDate: "2026-11-02",
         lastDate: "2026-11-06",
-        source: "yahoo",
         expiresAtMs: String(START_MS + 60_000),
       }]);
     });

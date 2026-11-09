@@ -56,6 +56,24 @@ describe("EnvUtil.read()", () => {
     });
   });
 
+  describe("when the background threshold is set", () => {
+    it("defaults to five seconds", () => {
+      expect(EnvUtil.read().INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS).toBe(5);
+    });
+
+    it("reads a positive number of seconds", () => {
+      vi.stubEnv("INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS", "12");
+
+      expect(EnvUtil.read().INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS).toBe(12);
+    });
+
+    it.each(["0", "-1", "abc", "2.5"])("refuses %s and names the variable", (value) => {
+      vi.stubEnv("INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS", value);
+
+      expect(() => EnvUtil.read()).toThrow(/INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS must be a positive integer\./);
+    });
+  });
+
   describe("when a provider or the cache directory is set", () => {
     it("keeps the text as it is", () => {
       vi.stubEnv("INVESTMENT_MCP_QUOTES_PROVIDER", "BR:yahoo,US:yahoo");

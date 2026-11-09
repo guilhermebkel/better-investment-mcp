@@ -12,7 +12,7 @@ const FIRST_PAGE = 1;
 const NEXT = 1;
 const buildSearchSql = (query: string, section: string | null = null): string => {
   const sectionArgument = section === null ? "NULL" : `'${section}'`;
-  return `SELECT text, section, page, score FROM search_chunks('${query}', 'BR', 'PETR4', 'stock', 'material_fact', ${sectionArgument}) ORDER BY score DESC`;
+  return `SELECT text, section, page, score FROM search_chunks('${query}', 'BR:stock:PETR4', 'material_fact', ${sectionArgument}, 'text') ORDER BY score DESC`;
 };
 
 describe("FullTextIndexService.buildIndex()", () => {
@@ -27,7 +27,7 @@ describe("FullTextIndexService.buildIndex()", () => {
       () => Date.now(),
     );
     await store.writer.run(
-      "INSERT INTO filings (filing_id, market, ticker, asset_type, filing_type, category, delivered_at, subject, url, file_hash, source) VALUES ('f1', 'BR', 'PETR4', 'stock', 'material_fact', 'Fato Relevante', TIMESTAMPTZ '2026-03-01 00:00:00-03', 'Fato', 'https://www.rad.cvm.gov.br/x', 'h', 'cvm')",
+      "INSERT INTO asset_filings (filing_id, asset_id, document_type, category, reference_time_start, reference_time_end, published_at, subject, url, file_hash) VALUES ('f1', 'BR:stock:PETR4', 'material_fact', 'Fato Relevante', DATE '2026-03-01', DATE '2026-03-01', TIMESTAMPTZ '2026-03-01 00:00:00-03', 'Fato', 'https://www.rad.cvm.gov.br/x', 'h')",
     );
     const rows: [number, string | null, number, string][] = [
       [FIRST_SEQ, "Resultado", FIRST_PAGE, "O lucro líquido do trimestre foi de R$ 25 milhões."],
@@ -36,7 +36,7 @@ describe("FullTextIndexService.buildIndex()", () => {
     ];
     for (const [seq, section, page, text] of rows) {
       await store.writer.run(
-        "INSERT INTO chunks (filing_id, market, ticker, asset_type, filing_type, section, page, seq, text) VALUES ('f1', 'BR', 'PETR4', 'stock', 'material_fact', ?, ?, ?, ?)",
+        "INSERT INTO asset_filing_chunks (filing_id, asset_id, document_type, section, page, seq, text) VALUES ('f1', 'BR:stock:PETR4', 'material_fact', ?, ?, ?, ?)",
         [section, page, seq, text],
       );
     }
@@ -108,7 +108,7 @@ describe("FullTextIndexService.buildIndex()", () => {
       await expect(reader.readRows("SELECT * FROM read_csv('/etc/hostname')")).rejects.toThrow();
       await expect(reader.readRows("SELECT * FROM read_csv('https://example.org/data.csv')")).rejects.toThrow();
       await expect(reader.readRows("SELECT getenv('HOME') AS home")).rejects.toThrow();
-      await expect(reader.run("INSERT INTO chunks (filing_id) VALUES ('x')")).rejects.toThrow("read-only");
+      await expect(reader.run("INSERT INTO asset_filing_chunks (filing_id) VALUES ('x')")).rejects.toThrow("read-only");
     } finally {
       reader.close();
     }
@@ -116,7 +116,7 @@ describe("FullTextIndexService.buildIndex()", () => {
 
   it("is rebuilt from the chunks, so a new chunk is found after the rebuild", async () => {
     await store.writer.run(
-      "INSERT INTO chunks (filing_id, market, ticker, asset_type, filing_type, section, page, seq, text) VALUES ('f1', 'BR', 'PETR4', 'stock', 'material_fact', 'Riscos', 4, 4, 'O risco cambial aumentou.')",
+      "INSERT INTO asset_filing_chunks (filing_id, asset_id, document_type, section, page, seq, text) VALUES ('f1', 'BR:stock:PETR4', 'material_fact', 'Riscos', 4, 4, 'O risco cambial aumentou.')",
     );
     await FullTextIndexService.buildIndex(store.writer);
 

@@ -1,15 +1,19 @@
 import type { CacheCategory } from "@/Protocols/CacheProtocol.ts";
+import type { PeriodBounds, PeriodConstraint } from "@/Protocols/PeriodProtocol.ts";
+import type { AssetIdParts } from "@/Protocols/AssetIdProtocol.ts";
 
 export type DataTable
-  = "quotes"
-    | "splits"
-    | "dividends"
-    | "fundamentals"
-    | "financial_statements"
-    | "fii_monthly"
-    | "filings"
-    | "chunks"
-    | "macro_series";
+  = "asset"
+    | "asset_attribute"
+    | "asset_quotes"
+    | "asset_dividends"
+    | "asset_splits"
+    | "asset_metrics"
+    | "asset_expectations"
+    | "asset_holdings"
+    | "asset_filings"
+    | "asset_filing_items"
+    | "asset_filing_chunks";
 
 export type Requirement = {
   table: DataTable;
@@ -19,6 +23,7 @@ export type Requirement = {
   assetType?: string;
   filingId?: string;
   filingType?: string;
+  period?: PeriodBounds;
 };
 
 export type GuardAccepted = {
@@ -82,8 +87,27 @@ export type MacroReading = {
   constraints: Constraint[];
 };
 
-export type AssetKey = {
-  market: string;
-  ticker: string;
-  assetType: string;
+export type RefScope = {
+  isSingleRef: boolean;
+  constraints: Constraint[];
+  periodConstraints: PeriodConstraint[];
 };
+
+export type NodeShape = {
+  type: unknown;
+  children: unknown[];
+};
+
+export type AssetReading = {
+  parts: AssetIdParts[];
+  invalid: string[];
+};
+
+export type CategoryReading = {
+  categories: CacheCategory[];
+  problems: string[];
+};
+
+export type MetricGroup = "statement" | "fundamental" | "fii" | "fund" | "macro" | "treasury" | "fx";
+
+export type SearchMode = "text";

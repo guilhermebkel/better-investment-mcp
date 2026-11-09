@@ -796,13 +796,6 @@
               },
               {
                 "group": [
-                  "child_process",
-                  "node:child_process"
-                ],
-                "message": "No shell and no child process in the server: nothing runs commands on the host."
-              },
-              {
-                "group": [
                   "@/**/Testing/**"
                 ],
                 "message": "Production code must not import test doubles: only tests may import src/Testing/."
@@ -851,13 +844,6 @@
                   "@duckdb/node-api"
                 ],
                 "message": "Import DuckDB only in src/Adapters/DuckDb/."
-              },
-              {
-                "group": [
-                  "child_process",
-                  "node:child_process"
-                ],
-                "message": "No shell and no child process in the server: nothing runs commands on the host."
               },
               {
                 "group": [
@@ -925,13 +911,6 @@
               },
               {
                 "group": [
-                  "child_process",
-                  "node:child_process"
-                ],
-                "message": "No shell and no child process in the server: nothing runs commands on the host."
-              },
-              {
-                "group": [
                   "@/**/Schemas/**",
                   "@/**/Utils/**",
                   "@/**/Adapters/**",
@@ -992,13 +971,6 @@
                   "@duckdb/node-api"
                 ],
                 "message": "Import DuckDB only in src/Adapters/DuckDb/."
-              },
-              {
-                "group": [
-                  "child_process",
-                  "node:child_process"
-                ],
-                "message": "No shell and no child process in the server: nothing runs commands on the host."
               },
               {
                 "group": [
@@ -1064,13 +1036,6 @@
               },
               {
                 "group": [
-                  "child_process",
-                  "node:child_process"
-                ],
-                "message": "No shell and no child process in the server: nothing runs commands on the host."
-              },
-              {
-                "group": [
                   "@/**/Adapters/**",
                   "@/**/Services/**",
                   "@/**/Operations/**",
@@ -1129,13 +1094,6 @@
                   "@duckdb/node-api"
                 ],
                 "message": "Import DuckDB only in src/Adapters/DuckDb/."
-              },
-              {
-                "group": [
-                  "child_process",
-                  "node:child_process"
-                ],
-                "message": "No shell and no child process in the server: nothing runs commands on the host."
               },
               {
                 "group": [
@@ -1198,13 +1156,6 @@
               },
               {
                 "group": [
-                  "child_process",
-                  "node:child_process"
-                ],
-                "message": "No shell and no child process in the server: nothing runs commands on the host."
-              },
-              {
-                "group": [
                   "@/**/Operations/**",
                   "@/**/Surfaces/**",
                   "@/**/Setup/**"
@@ -1255,13 +1206,6 @@
                   "@modelcontextprotocol/sdk/**"
                 ],
                 "message": "Import the MCP SDK only in src/Setup/ and src/Surfaces/."
-              },
-              {
-                "group": [
-                  "child_process",
-                  "node:child_process"
-                ],
-                "message": "No shell and no child process in the server: nothing runs commands on the host."
               },
               {
                 "group": [
@@ -1324,13 +1268,6 @@
               },
               {
                 "group": [
-                  "child_process",
-                  "node:child_process"
-                ],
-                "message": "No shell and no child process in the server: nothing runs commands on the host."
-              },
-              {
-                "group": [
                   "@/**/Surfaces/**",
                   "@/**/Setup/**"
                 ],
@@ -1379,13 +1316,6 @@
                   "@duckdb/node-api"
                 ],
                 "message": "Import DuckDB only in src/Adapters/DuckDb/."
-              },
-              {
-                "group": [
-                  "child_process",
-                  "node:child_process"
-                ],
-                "message": "No shell and no child process in the server: nothing runs commands on the host."
               },
               {
                 "group": [
@@ -1439,13 +1369,6 @@
               },
               {
                 "group": [
-                  "child_process",
-                  "node:child_process"
-                ],
-                "message": "No shell and no child process in the server: nothing runs commands on the host."
-              },
-              {
-                "group": [
                   "@/**/Testing/**"
                 ],
                 "message": "Production code must not import test doubles: only tests may import src/Testing/."
@@ -1493,13 +1416,6 @@
                   "@duckdb/node-api"
                 ],
                 "message": "Import DuckDB only in src/Adapters/DuckDb/."
-              },
-              {
-                "group": [
-                  "child_process",
-                  "node:child_process"
-                ],
-                "message": "No shell and no child process in the server: nothing runs commands on the host."
               }
             ]
           }

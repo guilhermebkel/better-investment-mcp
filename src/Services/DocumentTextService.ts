@@ -1,10 +1,12 @@
-import { extractText } from "unpdf";
 import { HTMLElement, NodeType, parse } from "node-html-parser";
 import type { ExtractedDocument, ExtractedSegment, HtmlReadState } from "@/Protocols/DocumentTextProtocol.ts";
+import { ZipDocumentService } from "@/Services/ZipDocumentService.ts";
+import { PdfTextService } from "@/Services/PdfTextService.ts";
+import { TextUtil } from "@/Utils/TextUtil.ts";
+import { ZipFileUtil } from "@/Utils/ZipFileUtil.ts";
 
 const PDF_SIGNATURE = "%PDF";
 const HTML_HINT = /<\s*(?:html|body|p|div|h[1-6]|table)\b/iu;
-const WHITESPACE = /\s+/gu;
 const MARKUP_DECLARATION = /^\s*<!/u;
 const DROPPED_ELEMENTS = "head, title, script, style, noscript";
 const HEADING_TAGS = ["H1", "H2", "H3", "H4"] as const;
@@ -15,8 +17,11 @@ const BLOCK_TAGS = [
 export class DocumentTextService {
   static async extract(bytes: Uint8Array): Promise<ExtractedDocument> {
     // Why: the format is read from the bytes, not from the content type, because CVM sends PDFs as text/html.
+    if (ZipFileUtil.isZip(bytes)) {
+      return ZipDocumentService.extract(bytes);
+    }
     if (DocumentTextService.isPdf(bytes)) {
-      return DocumentTextService.extractPdf(bytes);
+      return PdfTextService.extract(bytes);
     }
     const text = new TextDecoder("utf-8").decode(bytes);
     if (HTML_HINT.test(text)) {
@@ -26,7 +31,7 @@ export class DocumentTextService {
   }
 
   static normalize(text: string): string {
-    return text.replace(WHITESPACE, " ").trim();
+    return TextUtil.normalize(text);
   }
 
   private static isHeading(tag: string): boolean {
@@ -39,16 +44,6 @@ export class DocumentTextService {
 
   private static isPdf(bytes: Uint8Array): boolean {
     return new TextDecoder("latin1").decode(bytes.subarray(0, PDF_SIGNATURE.length)) === PDF_SIGNATURE;
-  }
-
-  private static async extractPdf(bytes: Uint8Array): Promise<ExtractedDocument> {
-    const { text } = await extractText(bytes, { mergePages: false });
-    const pages = text.map((pageText) => DocumentTextService.normalize(pageText));
-    // Why: a page with no text is usually a scanned image; it is counted and reported, never silently dropped (OCR is out of scope).
-    const segments: ExtractedSegment[] = pages.flatMap((pageText, index) => {
-      return pageText === "" ? [] : [{ section: null, page: index + 1, text: pageText }];
-    });
-    return { format: "pdf", pagesWithoutText: pages.filter((pageText) => pageText === "").length, segments };
   }
 
   private static extractHtml(html: string): ExtractedSegment[] {

@@ -24,7 +24,7 @@ The server has three tools and all of them are read-only: `get_overview`, `get_g
 
 - **Only a `SELECT` runs (planned #4).** A statement of any other kind, more than one statement, `PRAGMA`, `COPY`, `ATTACH`, `INSTALL` and `LOAD` are refused before anything runs.
 - **The connection is read-only and has external access (files, network) disabled (planned #3).** The refusal does not depend on the SQL guard alone.
-- **Every data table is filtered by `market`, `ticker` and `asset_type` with equality or `IN` with literal values (planned #4).** `macro_series` is filtered by `series`; `chunks` also needs `filing_type` or `filing_id`; the catalog tables `assets`, `cache_runs` and `asset_coverage` need no filter. A query whose filters cannot be read is refused, never guessed.
+- **Every asset table is filtered by `asset_id` with equality or `IN` with literal values.** `asset_metrics` also needs `metric`; `asset_filing_chunks` also needs `document_type` or `filing_id`. The rule is tested in `src/Services/SqlGuardService.test.ts` (ADR 0021).
 - **A refusal names the table, what is missing and a corrected example (planned #4).** The reader is a model that cannot ask a question.
 - **The server loads what is missing before it runs the query (planned #5).** The answer carries a `loaded` report: per category and asset, the source, the rows, the period and the error if any.
 - **An empty result for an asset that could not be loaded says so (planned #4).** It must not look like "no data".

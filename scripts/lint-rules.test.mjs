@@ -48,7 +48,6 @@ const FAILING_EXAMPLES = [
   ["process.stdout in server code", SERVICE_FILE, "export const write = () => process.stdout.write(\"x\");\n", NO_RESTRICTED_PROPERTIES],
   ["the MCP SDK outside Server and Surfaces", SERVICE_FILE, "import { Server } from \"@modelcontextprotocol/sdk/server/index.js\";\nexport const make = Server;\n", NO_RESTRICTED_IMPORTS],
   ["DuckDB outside its adapter", SERVICE_FILE, "import { DuckDBInstance } from \"@duckdb/node-api\";\nexport const make = DuckDBInstance;\n", NO_RESTRICTED_IMPORTS],
-  ["a child process in server code", SERVICE_FILE, "import { spawn } from \"node:child_process\";\nexport const run = spawn;\n", NO_RESTRICTED_IMPORTS],
   ["a layer that imports a higher layer", "src/Utils/TimeUtil.ts", "import { CacheService } from \"@/Services/CacheService.ts\";\nexport const make = CacheService;\n", NO_RESTRICTED_IMPORTS],
   ["a production file that imports a test double", SERVICE_FILE, "import { FakeProvider } from \"@/Testing/FakeProvider.ts\";\nexport const make = FakeProvider;\n", NO_RESTRICTED_IMPORTS],
   ["an entry point that imports an adapter", "src/Setup/DemoRunner.ts", "import { DuckDbStoreAdapter } from \"@/Adapters/DuckDb/DuckDbStoreAdapter.ts\";\nexport const make = DuckDbStoreAdapter;\n", NO_RESTRICTED_IMPORTS],

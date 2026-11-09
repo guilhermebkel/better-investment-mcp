@@ -5,7 +5,7 @@ No tool changes anything outside the server. Data that is missing is downloaded 
 ## Considered options
 
 - Write tools (add an asset, refresh the cache by hand): rejected. The server loads what a query needs, so the agent never has to ask for a load.
-- A persistent database that the user manages: rejected. It would hold a copy of CVM data, which is under ODbL, and it would need migration and backup rules.
+- A persistent database that the user manages: rejected. It would hold a copy of CVM data, and it would need migration and backup rules.
 
 ## Consequences
 

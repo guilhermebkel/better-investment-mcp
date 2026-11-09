@@ -1,11 +1,13 @@
-export type CacheCategory = "quotes" | "dividends" | "fundamentals" | "statements" | "fund_data" | "filings" | "documents" | "macro";
+import type { PeriodWindow } from "@/Protocols/PeriodProtocol.ts";
+
+export type CacheCategory = "quotes" | "dividends" | "fundamentals" | "statements" | "fund_data" | "filings" | "documents" | "macro" | "treasury" | "expectations" | "identifiers" | "registry" | "fx" | "fund" | "disclosures";
 
 export type CacheRunStart = {
   category: CacheCategory;
-  market: string;
-  ticker: string;
+  assetId: string;
   source: string;
   filingId?: string;
+  period?: PeriodWindow;
 };
 
 export type CacheRunOutcome = {
