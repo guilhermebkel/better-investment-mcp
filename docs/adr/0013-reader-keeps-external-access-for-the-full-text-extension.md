@@ -12,7 +12,7 @@ Issue #10 searches the documents with DuckDB's full-text extension (`fts`). The 
   - `SET disabled_filesystems = 'LocalFileSystem'`, so no query reads a local file (`read_csv`, `read_text`) or attaches one (`ATTACH`, `COPY`).
   - The connection stays `READ_ONLY`, so no query writes.
 - A failure to load `fts` on the reader is not an error for the store: only `search_chunks` fails, and the other queries run.
-- Tested in `DuckDbAdapter.test.ts` (writes, local files, attach) and `scripts/fulltext-search.integration.test.ts` (search results, the reader against a URL, an environment variable and a write; it installs the extension, so it runs with `pnpm test:integration`).
+- Tested in `DuckDbAdapter.test.ts` (writes, local files, attach) and `integration/fulltext-search.integration.test.ts` (search results, the reader against a URL, an environment variable and a write; it installs the extension, so it runs with `pnpm test:integration`).
 
 ## Consequences
 

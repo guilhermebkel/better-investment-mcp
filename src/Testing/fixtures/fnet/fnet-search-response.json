@@ -1,0 +1,71 @@
+{
+  "data": [
+    {
+      "id": 1352825,
+      "versao": 1,
+      "tipoDocumento": "Aviso de Modificação de Oferta",
+      "categoriaDocumento": "Oferta Pública de Distribuição de Cotas",
+      "dataEntrega": "15/10/2026 19:27",
+      "dataReferencia": "15/10/2026",
+      "descricaoFundo": "PÁTRIA LOG - FUNDO DE INVESTIMENTO IMOBILIÁRIO - RESPONSABILIDADE LIMITADA",
+      "descricaoModalidade": "Apresentação",
+      "descricaoStatus": "Ativo com visualização",
+      "situacaoDocumento": "A",
+      "status": "AC"
+    },
+    {
+      "id": 1352822,
+      "versao": 1,
+      "tipoDocumento": "Instrumento Particular de Emissão de Cotas",
+      "categoriaDocumento": "Atos de Deliberação do Administrador",
+      "dataEntrega": "15/10/2026 19:25",
+      "dataReferencia": "15/10/2026",
+      "descricaoFundo": "PÁTRIA LOG - FUNDO DE INVESTIMENTO IMOBILIÁRIO - RESPONSABILIDADE LIMITADA",
+      "descricaoModalidade": "Apresentação",
+      "descricaoStatus": "Ativo com visualização",
+      "situacaoDocumento": "A",
+      "status": "AC"
+    },
+    {
+      "id": 1352479,
+      "versao": 1,
+      "tipoDocumento": "Informe Mensal Estruturado ",
+      "categoriaDocumento": "Informes Periódicos",
+      "dataEntrega": "15/10/2026 18:19",
+      "dataReferencia": "30/09/2026",
+      "descricaoFundo": "PÁTRIA LOG - FUNDO DE INVESTIMENTO IMOBILIÁRIO - RESPONSABILIDADE LIMITADA",
+      "descricaoModalidade": "Apresentação",
+      "descricaoStatus": "Ativo com visualização",
+      "situacaoDocumento": "A",
+      "status": "AC"
+    },
+    {
+      "id": 1348097,
+      "versao": 1,
+      "tipoDocumento": "Relatório Gerencial",
+      "categoriaDocumento": "Relatórios",
+      "dataEntrega": "13/10/2026 19:23",
+      "dataReferencia": "30/09/2026",
+      "descricaoFundo": "PÁTRIA LOG - FUNDO DE INVESTIMENTO IMOBILIÁRIO - RESPONSABILIDADE LIMITADA",
+      "descricaoModalidade": "Apresentação",
+      "descricaoStatus": "Ativo com visualização",
+      "situacaoDocumento": "A",
+      "status": "AC"
+    },
+    {
+      "id": 1342659,
+      "versao": 1,
+      "tipoDocumento": "",
+      "categoriaDocumento": "Fato Relevante",
+      "dataEntrega": "07/10/2026 21:48",
+      "dataReferencia": "07/10/2026",
+      "descricaoFundo": "PÁTRIA LOG - FUNDO DE INVESTIMENTO IMOBILIÁRIO - RESPONSABILIDADE LIMITADA",
+      "descricaoModalidade": "Apresentação",
+      "descricaoStatus": "Ativo com visualização",
+      "situacaoDocumento": "A",
+      "status": "AC"
+    }
+  ],
+  "recordsTotal": 5,
+  "recordsFiltered": 5
+}

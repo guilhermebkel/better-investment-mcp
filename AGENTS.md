@@ -22,15 +22,17 @@ Folders are created when the first file needs them.
 - `src/types/`: ambient declarations (`*.d.ts`).
 - `site/`: the GitHub Pages landing page, served at `better-investment-mcp.guilherr.me`. `.github/workflows/pages.yml` publishes it on every push to `main` that touches it. Not part of the npm package.
 - `design/`: the brand kit (logo, web icons, deck, guidelines); see `design/README.md`. Not part of the npm package.
-- `scripts/`: the harness (lint, checks, package smoke test, source drift check) and the integration tests.
+- `scripts/`: the harness (lint, checks, package smoke test, source drift check).
+- `integration/`: the integration tests, the ones that reach a real service or a real process (`pnpm test:integration`).
 - Tests sit next to the file they test (`*.test.ts`, `*.test.mjs`).
 
 ## Commands
 
     nvm use
-    pnpm ensure-deps   # runs pnpm install when node_modules is missing or package.json / pnpm-lock.yaml changed since the last install (also at the start of pnpm check and pnpm check:changed)
+    pnpm ensure-deps   # the one setup command: runs pnpm install when node_modules is missing or stale; installs the Python tools of requirements-tools.txt into .venv; checks the system tools (tesseract with the por and eng languages, ghostscript) and, when one is missing, prints the one command to run and fails. Also at the start of pnpm check and pnpm check:changed.
+    source .venv/bin/activate   # after pnpm ensure-deps, so python3 is the venv (yfinance and the PDF tools run under python3)
     pnpm test
-    pnpm test:integration # integration tests (scripts/*.integration.test.{mjs,ts}; the full-text one installs the DuckDB extension)
+    pnpm test:integration # integration tests (integration/*.integration.test.ts; the full-text one installs the DuckDB extension)
     pnpm check:pack    # the package holds only what it should and is under the size limit (needs pnpm build)
     pnpm check:licenses # every package the bundle reads has an allowed license
     pnpm source:drift  # fails when a data provider in docs/product/architecture.md is not classified in scripts/source-coverage.json
@@ -76,6 +78,7 @@ Read the doc for the situation; run the command when there is one. The index doe
 - Branch names are `<type>/<short-name>` in lowercase kebab-case, where `<type>` is `feat` (new behavior), `fix` (bug fix) or `chore` (anything else: docs, refactor, tooling, dependencies). For issue work the name starts with the issue number: `feat/<n>-short-slug`.
 - The pull request body starts with `Closes #<n>`; one pull request closes one issue. If the scope changed while working, update the issue body to match.
 - Code, tools, parameters and docs are in English.
+- A dependency that is not an npm package (a Python package, a system binary or language pack, an apk or apt package) is pinned in the setup and in the Dockerfile, and `pnpm ensure-deps` installs or checks it. The Python pins are in `requirements-tools.txt`, which the Dockerfile reads too; a system tool is named in `scripts/ensure-tools.mjs` and in the Dockerfile. A dependency added without both is not done.
 - Rules that cannot fail (read-only access, the SQL guard, output limits, secret masking) live in code with a test, never only in a description or a prompt.
 - The server never writes to the outside world. It writes only to its own temporary cache file.
 - In HTTP mode (`INVESTMENT_MCP_TRANSPORT=http`) the server also listens for MCP clients on `INVESTMENT_MCP_HTTP_HOST` and `INVESTMENT_MCP_HTTP_PORT`. Every `/mcp` request needs the bearer token, which is required on every address and is never returned or logged (`docs/adr/0025-docker-runs-stdio-or-http.md`).

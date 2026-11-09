@@ -2,11 +2,13 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": [
     "src/**/*.test.ts",
-    "scripts/*.mjs"
+    "scripts/*.mjs",
+    "integration/**/*.test.ts"
   ],
   "project": [
     "src/**/*.ts",
-    "scripts/**/*.mjs"
+    "scripts/**/*.mjs",
+    "integration/**/*.ts"
   ],
   "ignoreExportsUsedInFile": true
 }

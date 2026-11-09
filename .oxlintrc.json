@@ -20,6 +20,7 @@
   "ignorePatterns": [
     "dist/",
     "node_modules/",
+    ".venv/",
     "coverage/",
     "lint-fixtures-*/"
   ],

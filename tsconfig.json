@@ -19,6 +19,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "scripts", "tsup.config.ts"],
+  "include": ["src", "scripts", "integration", "tsup.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

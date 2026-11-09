@@ -2,6 +2,7 @@
 .github
 .env*
 node_modules
+.venv
 dist
 coverage
 docs

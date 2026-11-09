@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { ensureTools } from "./ensure-tools.mjs";
 
 export const INSTALL_MARKER_PATHS = ["node_modules/.modules.yaml", "node_modules/.pnpm/lock.yaml"];
 export const LOCK_INPUT_PATHS = ["package.json", "pnpm-lock.yaml"];
@@ -42,11 +43,19 @@ const runPnpmInstall = ({ spawn = (args) => spawnSync("pnpm", args, { stdio: "in
   return result.status ?? 1;
 };
 
-export const ensureDeps = ({ isUpToDate = isDepsUpToDate, install = runPnpmInstall } = {}) => {
-  if (isUpToDate()) {
-    return 0;
+export const ensureDeps = ({
+  isUpToDate = isDepsUpToDate,
+  install = runPnpmInstall,
+  setupTools = ensureTools,
+} = {}) => {
+  if (!isUpToDate()) {
+    const installed = install();
+    if (installed !== 0) {
+      return installed;
+    }
   }
-  return install();
+  // Why: the Python and system tools the server runs are part of the setup, so one command gives a working checkout.
+  return setupTools();
 };
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
