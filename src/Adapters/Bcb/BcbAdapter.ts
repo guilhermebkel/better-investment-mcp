@@ -45,8 +45,8 @@ export class BcbAdapter implements ProviderPort<"macro"> {
       (candidate) => candidate.name === request.ticker && candidate.assetType === request.assetType,
     );
     if (definition === undefined) {
-      const known = BcbAdapter.SERIES.map((candidate) => candidate.name).join(", ");
-      throw new Error(`unknown series ${request.ticker}; the known series are ${known}`);
+      const known = BcbAdapter.SERIES.map((candidate) => `${candidate.assetType}:${candidate.name}`).join(", ");
+      throw new Error(`unknown series ${request.assetType}:${request.ticker}; the known series are ${known}`);
     }
     const dateToValue = new Map<string, number | null>();
     // Why: each window is read in turn and merged by date; a date with two different values stops the load.

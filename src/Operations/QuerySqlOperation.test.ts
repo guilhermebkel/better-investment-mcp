@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const QUERY_NOW_MS = Date.parse("2026-11-08T12:00:00Z");
+import { OutputLimitService } from "@/Services/OutputLimitService.ts";
 import { QuerySqlOperation } from "@/Operations/QuerySqlOperation.ts";
 import { LoaderService } from "@/Services/LoaderService.ts";
 import { ProviderRegistryService } from "@/Services/ProviderRegistryService.ts";
@@ -77,10 +78,8 @@ describe("QuerySqlOperation.execute()", () => {
     it("loads it, then answers with its rows and the loaded report", async () => {
       const result = await operation.execute({ sql: PETR4_SQL });
 
-      expect(result).toMatchObject({
-        isError: false,
-        structuredResult: { rows: [{ asset_id: PETR4_ASSET_ID, close: 31 }], truncated: false },
-      });
+      expect(result).toMatchObject({ isError: false, structuredResult: { returnedRows: 1, truncated: false } });
+      expect(result.message).toContain(JSON.stringify({ asset_id: PETR4_ASSET_ID, close: 31 }));
       expect(provider.calls).toBe(1);
     });
 
@@ -105,7 +104,7 @@ describe("QuerySqlOperation.execute()", () => {
       const result = await operation.execute({ sql: PETR4_SQL });
 
       expect(provider.calls).toBe(1);
-      expect(result.structuredResult?.rows).toStrictEqual([{ asset_id: PETR4_ASSET_ID, close: 31 }]);
+      expect(result.structuredResult).not.toHaveProperty("rows");
     });
   });
 
@@ -164,8 +163,48 @@ describe("QuerySqlOperation.execute()", () => {
 
       const result = await bigOperation.execute({ sql: "SELECT close FROM asset_quotes WHERE asset_id = 'BR:stock:PETR4' AND reference_time_start BETWEEN '2020-01-01' AND '2026-12-31'" });
 
-      expect(result.structuredResult).toMatchObject({ truncated: true, remainingRows: 76 });
-      expect(result.structuredResult?.rows).toHaveLength(1024);
+      expect(result.structuredResult).toMatchObject({ truncated: true, remainingRows: 76, returnedRows: 1024 });
+    });
+
+    it("keeps the rows in the text within the output budget, and leaves them out of the structured content", async () => {
+      // Why: a quote is one row per day, so each row gets its own day.
+      const rows = Array.from({ length: 1100 }, (_, index) => {
+        const day = new Date(Date.UTC(2020, 0, 1) + index * 86_400_000).toISOString().slice(0, 10);
+        // Why: wide rows, so the character budget is what cuts the answer, not the row limit.
+        return {
+          asset_id: PETR4_ASSET_ID,
+          reference_time_start: day,
+          reference_time_end: day,
+          open: index * Math.E,
+          high: index * Math.SQRT2,
+          low: index * Math.LN2,
+          close: index * Math.PI,
+          adj_close: index * Math.LN10,
+        };
+      });
+      const wideProvider = new FakeProvider({
+        vendor: FAKE_VENDOR,
+        markets: [BR_MARKET],
+        category: "quotes",
+        assetTypes: [STOCK],
+        respond: () => Promise.resolve({ source: FAKE_VENDOR, tables: { asset_quotes: rows } }),
+      });
+      const registry = new ProviderRegistryService(
+        { INVESTMENT_MCP_LOG_LEVEL: "error", INVESTMENT_MCP_CACHE_TTL_SECONDS: 60, INVESTMENT_MCP_QUOTES_PROVIDER: `BR:${FAKE_VENDOR}` },
+        { ...ProviderRegistryService.buildEmptyCatalog(), quotes: { [FAKE_VENDOR]: wideProvider } },
+      );
+      const operation = new QuerySqlOperation({
+        guard: new SqlGuardService(store.writer),
+        loader: new LoaderService(store, registry),
+        openReader: () => store.openReader(),
+      });
+
+      const result = await operation.execute({ sql: "SELECT close FROM asset_quotes WHERE asset_id = 'BR:stock:PETR4' AND reference_time_start BETWEEN '2020-01-01' AND '2026-12-31'" });
+
+      // Why: the rows are the text; the budget applies to them, and the structured content carries only the counts.
+      expect(result.structuredResult).not.toHaveProperty("rows");
+      expect(result.structuredResult?.truncated).toBe(true);
+      expect(result.message.length).toBeLessThanOrEqual(OutputLimitService.DEFAULT_LIMITS.maxChars + 1000);
     });
   });
   describe("documents", () => {
@@ -218,8 +257,7 @@ describe("QuerySqlOperation.execute()", () => {
       const result = await ask("SELECT text FROM asset_filing_chunks WHERE asset_id = 'BR:stock:PETR4' AND document_type = 'material_fact' AND text ILIKE '%PWNED%'");
 
       expect(result.isError).toBe(false);
-      const rows: unknown = result.structuredResult?.rows;
-      expect(JSON.stringify(rows)).toContain(INSTRUCTION);
+      expect(result.message).toContain(INSTRUCTION);
     });
 
     it("says the filing was indexed when a query has no matching row (AC7)", async () => {
@@ -274,6 +312,73 @@ describe("QuerySqlOperation.execute()", () => {
       expect(answer.message).toContain("0 rows.");
       expect(answer.message).toContain(`Published periodicity: ${PERIODICITY}.`);
       expect(answer.message).toContain(`Reference period loaded: ${MONTH_START} to ${MONTH_END}.`);
+    });
+  });
+
+  describe("for a load that failed", () => {
+    const MONTH_START = "2024-05-01";
+    const MONTH_END = "2024-05-31";
+    const MONTH_SQL = `SELECT value FROM asset_metrics WHERE ${FILTER} AND metric = 'statement.dre_con.3_01' AND reference_time_start BETWEEN '${MONTH_START}' AND '${MONTH_END}'`;
+
+    it("does not say the period was loaded when the load failed", async () => {
+      const directory = mkdtempSync(TEMP_PREFIX);
+      vi.spyOn(process.stderr, "write").mockReturnValue(true);
+      const store = await StoreService.open(
+        { INVESTMENT_MCP_LOG_LEVEL: "error", INVESTMENT_MCP_CACHE_DIR: directory, INVESTMENT_MCP_CACHE_TTL_SECONDS: 60 },
+        () => START_MS,
+      );
+      const loader = {
+        ensure: () => Promise.resolve([{
+          market: BR_MARKET,
+          ticker: PETR4_TICKER,
+          category: "statements" as const,
+          status: "failed" as const,
+          isFallback: false,
+          rowsWritten: 0,
+          error: "the provider is down",
+          requestedPeriod: { from: MONTH_START, to: MONTH_END },
+        }]),
+      };
+      const operation = new QuerySqlOperation({
+        loader,
+        guard: new SqlGuardService(store.writer),
+        openReader: () => store.openReader(),
+      });
+      const answer = await operation.execute({ sql: MONTH_SQL });
+      store.close();
+      rmSync(directory, { recursive: true, force: true });
+      expect(answer.message).not.toContain("Reference period loaded");
+    });
+  });
+
+  describe("for an empty answer from a fund table", () => {
+    it("says the table holds fund data only, when the query asks a stock", async () => {
+      const directory = mkdtempSync(TEMP_PREFIX);
+      vi.spyOn(process.stderr, "write").mockReturnValue(true);
+      const store = await StoreService.open(
+        { INVESTMENT_MCP_LOG_LEVEL: "error", INVESTMENT_MCP_CACHE_DIR: directory, INVESTMENT_MCP_CACHE_TTL_SECONDS: 60 },
+        () => START_MS,
+      );
+      const operation = new QuerySqlOperation({
+        loader: { ensure: () => Promise.resolve([]) },
+        guard: new SqlGuardService(store.writer),
+        openReader: () => store.openReader(),
+      });
+      const answer = await operation.execute({ sql: `SELECT * FROM asset_attribute WHERE asset_id = '${PETR4_ASSET_ID}'` });
+      store.close();
+      rmSync(directory, { recursive: true, force: true });
+      expect(answer.message).toContain("hold fund data only");
+    });
+  });
+
+  describe("describeError()", () => {
+    it("names a missing search index and the way back", () => {
+      const message = QuerySqlOperation.describeError(new Error("Catalog Error: Table Function with name search_chunks does not exist!"));
+      expect(message).toContain("search_chunks is not available: the full-text index is not built.");
+    });
+
+    it("passes any other error through unchanged", () => {
+      expect(QuerySqlOperation.describeError(new Error("Parser Error: syntax error"))).toBe("Parser Error: syntax error");
     });
   });
 

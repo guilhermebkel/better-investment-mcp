@@ -18,11 +18,21 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Fixed
 
+- `query_sql` sends its rows once, in the text, within the 50,000-character limit. The structured content carries the counts, the truncation and the loaded report, not the rows. Before, the rows were sent twice, so a full answer was about twice the limit.
+- An empty answer from `asset_attribute` or `asset_holdings` for a stock says those tables hold fund data only. A fund asked of a fund category points to its CNPJ, `BR:fund:<CNPJ>`.
+- A reference form (FRE) is stored once per version. Its main section names the document as `ID_DOC` and its item sections as `ID_Documento`; the adapter read only the second, so one form was stored twice, and the copy without the link failed with "the filing has no link".
+- A CVM link that answers with a web page is named as such, with the link and the advice to try again, and the load error names the document kind (for example `fre filing …`).
+- A fund or an FII asked of the company registry says the registry covers stocks only, and where that asset's data is.
+- The answer of `query_sql` names only the periods that loaded; a failed load's period is no longer reported as loaded.
+- A missing search index is named (`search_chunks is not available`) instead of DuckDB's catalog error.
+- The unknown-series and unknown-indicator errors name the asset type, so `tax_rate:CDI` is not reported as absent from a list that has it.
+- A period load no longer fails with `Failed to bind value` when the provider also sends a table with no period column (such as `asset_splits` from yfinance). That error hid the quotes and dividends of every asset once the period check passed.
 - The BCB macro series and the Focus expectations return only the period asked for, as the Yahoo and yfinance adapters already did. Before, the whole history reached the loader, which refused it.
 - The Docker image installs `python3` and `yfinance` (pinned to 1.8.0) in a virtualenv, so the yfinance source works in the container. Before, the image had no Python, so the quotes and dividends fell back to the rate-limited Yahoo adapter. The Python tools stay out of the final image: pip and the build tools are in a build stage.
 
 ### Added
 
+- `get_guide` (sql and search topics) has more examples: stock splits, ITR filings by date, ranked search by a vacancy passage and by a section. Every example is checked against the SQL guard and the schema by the test suite.
 - HTTP mode for Docker and for a server on your own machine (`INVESTMENT_MCP_TRANSPORT=http`): Streamable HTTP at `/mcp` and `GET /health` on `INVESTMENT_MCP_HTTP_HOST` and `INVESTMENT_MCP_HTTP_PORT` (`127.0.0.1:3100` by default). Every `/mcp` request needs `Authorization: Bearer` with `INVESTMENT_MCP_HTTP_TOKEN`, which must be at least 8 characters and is required on every address (ADR 0025).
 - The `health` command and a Docker `HEALTHCHECK` in the image, which exposes port 3100. `init` prints the Docker HTTP configuration next to the stdio one.
 - `pnpm smoke` and the CI Docker job check HTTP mode too: `/health`, 401 without the token, and the three tools.
