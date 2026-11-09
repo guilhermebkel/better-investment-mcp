@@ -22,7 +22,8 @@ Folders are created when the first file needs them.
 - `src/types/`: ambient declarations (`*.d.ts`).
 - `site/`: the GitHub Pages landing page, served at `better-investment-mcp.guilherr.me`. `.github/workflows/pages.yml` publishes it on every push to `main` that touches it. Not part of the npm package.
 - `design/`: the brand kit (logo, web icons, deck, guidelines); see `design/README.md`. Not part of the npm package.
-- `scripts/`: the harness (lint, checks, package smoke test, source drift check) and the integration tests.
+- `scripts/`: the harness (lint, checks, package smoke test, source drift check).
+- `integration/`: the integration tests, the ones that reach a real service or a real process (`pnpm test:integration`).
 - Tests sit next to the file they test (`*.test.ts`, `*.test.mjs`).
 
 ## Commands
@@ -31,7 +32,7 @@ Folders are created when the first file needs them.
     pnpm ensure-deps   # the one setup command: runs pnpm install when node_modules is missing or stale; installs the Python tools of requirements-tools.txt into .venv; checks the system tools (tesseract with the por and eng languages, ghostscript) and, when one is missing, prints the one command to run and fails. Also at the start of pnpm check and pnpm check:changed.
     source .venv/bin/activate   # after pnpm ensure-deps, so python3 is the venv (yfinance and the PDF tools run under python3)
     pnpm test
-    pnpm test:integration # integration tests (scripts/*.integration.test.{mjs,ts}; the full-text one installs the DuckDB extension)
+    pnpm test:integration # integration tests (integration/*.integration.test.ts; the full-text one installs the DuckDB extension)
     pnpm check:pack    # the package holds only what it should and is under the size limit (needs pnpm build)
     pnpm check:licenses # every package the bundle reads has an allowed license
     pnpm source:drift  # fails when a data provider in docs/product/architecture.md is not classified in scripts/source-coverage.json
