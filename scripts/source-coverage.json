@@ -26,7 +26,7 @@
     },
     "DocumentProvider": {
       "status": "implemented",
-      "reason": "Filing documents (PDF and HTML) from CVM through www.rad.cvm.gov.br, and the FII reports from FNET (fnet.bmfbovespa.com.br) when CVM links them (#28); the CVM document adapter (#10) downloads them per filing, with a size limit and a host list."
+      "reason": "Filing documents (PDF and HTML) from CVM through www.rad.cvm.gov.br (#10), and FII management reports from FNET (fnet.bmfbovespa.com.br, #12); each document link is read as the filing names it, on any http or https host, with a size limit and a timeout."
     },
     "MacroProvider": {
       "status": "implemented",

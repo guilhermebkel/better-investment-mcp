@@ -11,6 +11,8 @@ import { CvmRegistryAdapter } from "@/Adapters/Cvm/CvmRegistryAdapter.ts";
 import { BcbPtaxAdapter } from "@/Adapters/Bcb/BcbPtaxAdapter.ts";
 import { CvmStatementAdapter } from "@/Adapters/Cvm/CvmStatementAdapter.ts";
 import { CvmTickerAdapter } from "@/Adapters/Cvm/CvmTickerAdapter.ts";
+import { FnetAdapter } from "@/Adapters/Fnet/FnetAdapter.ts";
+import { FnetDocumentAdapter } from "@/Adapters/Fnet/FnetDocumentAdapter.ts";
 import { HttpAdapter } from "@/Adapters/Http/HttpAdapter.ts";
 import { StatusInvestAdapter } from "@/Adapters/StatusInvest/StatusInvestAdapter.ts";
 import { TesouroAdapter } from "@/Adapters/Tesouro/TesouroAdapter.ts";
@@ -30,6 +32,14 @@ export class VendorCatalogService {
       allowedHosts: [CvmAdapter.HOST],
       maxBytes: CvmAdapter.MAX_FILE_BYTES,
       timeoutMs: CVM_FILE_TIMEOUT_MS,
+    });
+    // Why: FNET listings are read from the FNET host (ADR 0015); a document link is read as the filing names it, with the size limit and timeout.
+    const fnetHttp = new HttpAdapter({ allowedHosts: [FnetAdapter.HOST], maxBytes: FnetAdapter.MAX_FILE_BYTES });
+    const fnetDocumentHttp = new HttpAdapter({
+      allowedHosts: [],
+      isAnyHostAllowed: true,
+      maxBytes: FnetDocumentAdapter.MAX_DOCUMENT_BYTES,
+      timeoutMs: FnetDocumentAdapter.TIMEOUT_MS,
     });
     const cvmDocumentHttp = new HttpAdapter({
       allowedHosts: [],
@@ -73,9 +83,15 @@ export class VendorCatalogService {
         statusinvest: new StatusInvestAdapter("fund_data", statusInvestHttp),
         cvm: new CvmFundMonthlyAdapter(cvmHttp, cvmTicker.resolveCnpj),
       },
-      filings: { cvm: new CvmAdapter(cvmHttp, cvmTicker.resolveCnpj) },
+      filings: {
+        cvm: new CvmAdapter(cvmHttp, cvmTicker.resolveCnpj),
+        fnet: new FnetAdapter(fnetHttp, cvmTicker.resolveCnpj),
+      },
       statements: { cvm: new CvmStatementAdapter(cvmHttp, cvmTicker.resolveCnpj) },
-      documents: { cvm: new CvmDocumentAdapter(cvmDocumentHttp) },
+      documents: {
+        cvm: new CvmDocumentAdapter(cvmDocumentHttp),
+        fnet: new FnetDocumentAdapter(fnetDocumentHttp),
+      },
       macro: { bcb: new BcbAdapter(bcbHttp) },
       treasury: { tesouro: new TesouroAdapter(tesouroHttp) },
       expectations: { bcb: new BcbFocusAdapter(focusHttp) },

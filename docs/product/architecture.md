@@ -68,7 +68,7 @@ One interface per data category, one adapter per vendor (`docs/adr/0005-one-prov
 | BCB SGS | macro series | #7 | Built. Open data. |
 | StatusInvest | fundamentals, FII monthly data | #8 | Built, but blocked by the site from this server. |
 | CVM | filings list (IPE, ITR, DFP, FRE, the eventual fund file), ITR and DFP statements, FII monthly files, the company list that maps stock tickers to CNPJ | #9, #11, #28 | Built. The primary source of what it carries, with the version and the file of each row. A stock ticker maps through the company list; a FII ticker maps through a short curated list; any other ticker is pending. The reference form (FRE) has no item text in the open data. |
-| FNET | FII management reports (PDF text, through the CVM link) | #12, #28 | Built for the documents linked from the CVM eventual fund file. The host is recorded apart from the CVM origin (P5). |
+| FNET | FII management reports: listing by CNPJ and PDF text (ADR 0015); the CVM eventual fund file also links them | #12, #28 | Built, opt-in with `BR:fnet`. A load needs the CNPJ of the fund, which the CVM company list gives. |
 
 ## Layers
 

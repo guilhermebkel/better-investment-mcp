@@ -1,6 +1,6 @@
 # FNET documents are read through the CVM link
 
-Date: 2026-11-08.
+Date: 2026-11-08. Status: superseded by ADR 0015 (2026-11-09): the owner approved the FNET listing, and the CVM links are read as well.
 
 The FII management reports listed in the CVM eventual fund file (issue #28, AC3) link to FNET, which hosts the PDFs. Reading their text (issue #12) needs the server to download from FNET.
 
