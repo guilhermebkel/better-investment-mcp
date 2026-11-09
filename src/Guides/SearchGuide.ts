@@ -21,6 +21,16 @@ Text of the material facts of a company, first chunks:
 SELECT filing_id, seq, section, page, text FROM asset_filing_chunks WHERE asset_id = 'BR:stock:PETR4' AND document_type = 'material_fact' ORDER BY filing_id, seq LIMIT 20
 \`\`\`
 
+Ranked passages of a FII's management reports about vacancy, best match first:
+\`\`\`sql
+SELECT text, score, page FROM search_chunks('vacância física', 'BR:fii:KNRI11', 'management_report', NULL, 'text') ORDER BY score DESC LIMIT 5
+\`\`\`
+
+Passages of a material fact inside one section, when the document has sections:
+\`\`\`sql
+SELECT text, score, section, page FROM search_chunks('lucro', 'BR:stock:PETR4', 'material_fact', 'Dividendos', 'text') ORDER BY score DESC
+\`\`\`
+
 Chunks of a FII that mention dividends, by a word in the filing:
 \`\`\`sql
 SELECT filing_id, seq, section, page, text FROM asset_filing_chunks WHERE asset_id = 'BR:fii:KNRI11' AND document_type = 'other' AND text ILIKE '%dividendos%' LIMIT 20

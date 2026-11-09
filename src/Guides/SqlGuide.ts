@@ -65,6 +65,18 @@ Loaded assets, with their period and expiry:
 SELECT asset_id, category, first_date, last_date, expires_at FROM asset_coverage
 \`\`\`
 
+Stock splits of a company, newest first:
+\`\`\`sql
+SELECT ex_time, ratio FROM asset_splits WHERE asset_id = 'BR:stock:PETR4' ORDER BY ex_time DESC
+\`\`\`
+
+Quarterly reports (ITR) filed since November 2025:
+\`\`\`sql
+SELECT published_at, reference_time_start, subject FROM asset_filings WHERE asset_id = 'BR:stock:PETR4' AND document_type = 'itr' AND published_at >= TIMESTAMPTZ '2025-11-01 00:00:00-03' ORDER BY published_at DESC
+\`\`\`
+
+A wrong metric name returns no rows, not an error: check the name in the data map before you read a gap as missing data.
+
 ## Notes
 
 - Quote rows flagged is_stale or suspect_tick stay in the table; read the flags before you trust a day.
