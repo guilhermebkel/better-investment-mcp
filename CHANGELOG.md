@@ -17,6 +17,9 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Added
 
+- HTTP mode for Docker and for a server on your own machine (`INVESTMENT_MCP_TRANSPORT=http`): Streamable HTTP at `/mcp` and `GET /health` on `INVESTMENT_MCP_HTTP_HOST` and `INVESTMENT_MCP_HTTP_PORT` (`127.0.0.1:3100` by default). Every `/mcp` request needs `Authorization: Bearer` with `INVESTMENT_MCP_HTTP_TOKEN`, which must be at least 8 characters and is required on every address (ADR 0025).
+- The `health` command and a Docker `HEALTHCHECK` in the image, which exposes port 3100. `init` prints the Docker HTTP configuration next to the stdio one.
+- `pnpm smoke` and the CI Docker job check HTTP mode too: `/health`, 401 without the token, and the three tools.
 - The PDF inside a CVM periodic report zip (ITR) is read page by page, so its text can be searched (`search_chunks` with the document type `itr`).
 - The text of a CVM reference form (FRE) is searchable: its items are read from the PDFs inside the form's XML, one section and item per chunk (ADR 0024).
 - Loads that outlive `INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS` (5 seconds by default) continue in the background. `query_sql` answers with the rows already stored, a warning that they may be incomplete, and the load id; The client follows it by running the query again (ADR 0022). A load that was running at a restart is closed as interrupted.

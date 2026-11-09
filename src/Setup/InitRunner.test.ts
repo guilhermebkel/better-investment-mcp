@@ -32,6 +32,18 @@ describe("InitRunner.run()", () => {
     expect(stderr).toHaveBeenCalledWith(expect.stringContaining("\"-v\", \"better-investment-analysis-cache:/cache\""));
   });
 
+  it("prints the Docker HTTP command with a placeholder token, never a value from the environment", () => {
+    vi.stubEnv("INVESTMENT_MCP_HTTP_TOKEN", "fake-secret-value-456");
+    const stderr = vi.spyOn(process.stderr, "write").mockReturnValue(true);
+
+    InitRunner.run();
+
+    expect(stderr).toHaveBeenCalledWith(expect.stringContaining("-e INVESTMENT_MCP_TRANSPORT=http -e INVESTMENT_MCP_HTTP_HOST=0.0.0.0"));
+    expect(stderr).toHaveBeenCalledWith(expect.stringContaining("\"url\": \"http://127.0.0.1:3100/mcp\""));
+    expect(stderr).toHaveBeenCalledWith(expect.stringContaining("your-long-random-secret"));
+    expect(stderr).not.toHaveBeenCalledWith(expect.stringContaining("fake-secret-value-456"));
+  });
+
   it("never prints a secret from the environment", () => {
     vi.stubEnv("INVESTMENT_MCP_CACHE_DIR", "fake-secret-value-123");
     const stderr = vi.spyOn(process.stderr, "write").mockReturnValue(true);

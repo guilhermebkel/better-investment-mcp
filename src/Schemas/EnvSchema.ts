@@ -12,6 +12,21 @@ const LogLevelSchema = OptionalTextSchema.pipe(
 // Why: the background threshold is the time a query waits for a load before it answers with the rows already stored.
 export const DEFAULT_BACKGROUND_AFTER_SECONDS = 5;
 
+export const DEFAULT_HTTP_HOST = "127.0.0.1";
+export const DEFAULT_HTTP_PORT = 3100;
+const MIN_HTTP_TOKEN_LENGTH = 8;
+
+const TransportSchema = OptionalTextSchema.pipe(
+  z.enum(["stdio", "http"], { error: "INVESTMENT_MCP_TRANSPORT must be stdio or http." }).optional(),
+).transform((transport) => transport ?? "stdio");
+
+// Why: the token is the only thing that stands between the HTTP port and the server, so a short one is refused at start.
+const HttpTokenSchema = OptionalTextSchema.pipe(
+  z.string()
+    .min(MIN_HTTP_TOKEN_LENGTH, { error: `INVESTMENT_MCP_HTTP_TOKEN must be at least ${MIN_HTTP_TOKEN_LENGTH} characters.` })
+    .optional(),
+);
+
 const parsePositiveInteger = (name: string, defaultValue: number) => z
   .string()
   .optional()
@@ -47,4 +62,8 @@ export const RawEnvSchema: z.ZodType<Env> = z.object({
   INVESTMENT_MCP_FX_PROVIDER: OptionalTextSchema,
   INVESTMENT_MCP_FUND_PROVIDER: OptionalTextSchema,
   INVESTMENT_MCP_DISCLOSURES_PROVIDER: OptionalTextSchema,
+  INVESTMENT_MCP_TRANSPORT: TransportSchema,
+  INVESTMENT_MCP_HTTP_HOST: OptionalTextSchema.transform((host) => host ?? DEFAULT_HTTP_HOST),
+  INVESTMENT_MCP_HTTP_PORT: parsePositiveInteger("INVESTMENT_MCP_HTTP_PORT", DEFAULT_HTTP_PORT),
+  INVESTMENT_MCP_HTTP_TOKEN: HttpTokenSchema,
 });
