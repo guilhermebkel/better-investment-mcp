@@ -17,6 +17,11 @@ const FORBIDDEN_403 = "the vendor answered with status 403";
 const EMPTY_MONTHS = "{\"listMonth\":[]}";
 const STOCK = { market: "BR", ticker: "PETR4", assetType: "stock" };
 const FII = { market: "BR", ticker: "KNRI11", assetType: "fii" };
+const AS_PUBLISHED = "as_published";
+const PETR4_ASSET = "BR:stock:PETR4";
+const JAN_2024 = "2024-01-01";
+const FEB_2024 = "2024-02-01";
+const NET_WORTH = "fii.net_worth";
 const NO_PAUSE = { pause: () => Promise.resolve(), pauseMs: 0 };
 
 const readFixture = (name: string): string => readFileSync(join(FIXTURES, name), "utf8");
@@ -55,16 +60,16 @@ const buildHttpFailing = (error: Error): HttpPort => ({
 });
 
 describe("StatusInvestAdapter.fetchTables()", () => {
-  it("fills one row per year and metric with source statusinvest, and keeps a missing value null (AC2, AC6)", async () => {
+  it("fills one metric row per year and indicator, and keeps a missing value null (AC2, AC6)", async () => {
     const indicators = readFixture("indicatorhistorical-petr4.json");
     const { http } = buildHttpAnswering({ "/acao/indicatorhistorical": () => Promise.resolve(indicators) });
     const result = await new StatusInvestAdapter("fundamentals", http, NO_PAUSE).fetchTables(STOCK);
 
     expect(result.source).toBe("statusinvest");
-    expect(result.tables.fundamentals).toStrictEqual([
-      { market: "BR", ticker: "PETR4", asset_type: "stock", year: 2024, metric: "net_revenue", value: 300.5, source: "statusinvest" },
-      { market: "BR", ticker: "PETR4", asset_type: "stock", year: 2023, metric: "net_revenue", value: null, source: "statusinvest" },
-      { market: "BR", ticker: "PETR4", asset_type: "stock", year: 2024, metric: "net_income", value: 100, source: "statusinvest" },
+    expect(result.tables.asset_metrics).toStrictEqual([
+      { asset_id: PETR4_ASSET, metric: "fundamental.net_revenue", reference_time_start: JAN_2024, reference_time_end: "2024-12-31", value: 300.5, unit: AS_PUBLISHED },
+      { asset_id: PETR4_ASSET, metric: "fundamental.net_revenue", reference_time_start: "2023-01-01", reference_time_end: "2023-12-31", value: null, unit: AS_PUBLISHED },
+      { asset_id: PETR4_ASSET, metric: "fundamental.net_income", reference_time_start: JAN_2024, reference_time_end: "2024-12-31", value: 100, unit: AS_PUBLISHED },
     ]);
   });
 
@@ -74,7 +79,7 @@ describe("StatusInvestAdapter.fetchTables()", () => {
       .rejects.toThrow("the response format changed");
   });
 
-  it("joins the four sections by month, with the documented columns and source statusinvest (AC3)", async () => {
+  it("joins the four sections by month, with the documented columns (AC3)", async () => {
     const { http } = buildHttpAnswering({
       [provents]: () => Promise.resolve(readFixture("companytickerprovents-knri11.json")),
       [receitas]: () => Promise.resolve(readFixture("getreceitas-knri11.json")),
@@ -83,15 +88,22 @@ describe("StatusInvestAdapter.fetchTables()", () => {
       [patrimonio]: () => Promise.resolve(readFixture("getpatrimonioliquido-knri11.json")),
     });
     const result = await new StatusInvestAdapter("fund_data", http, NO_PAUSE).fetchTables(FII);
-    const [january, february] = result.tables.fii_monthly ?? [];
+    const readMetricAt = (metric: string, month: string): Record<string, unknown> | undefined => {
+      const rows = result.tables.asset_metrics ?? [];
+      return rows.find((row) => row.metric === metric && row.reference_time_start === month);
+    };
 
-    expect(result.tables.fii_monthly).toHaveLength(2);
-    expect(january).toMatchObject({
-      market: "BR", ticker: "KNRI11", asset_type: "fii", period: "2024-01-01",
-      distribution_per_unit: 1, rental_revenue: 10, total_revenue: 11, management_fee: 1,
-      liquidity_requirement: 5, cash_available: 2, net_worth: 1000, source: "statusinvest",
-    });
-    expect(february).toMatchObject({ period: "2024-02-01", distribution_per_unit: 1, property_sales_revenue: 2, net_worth: 1010 });
+    expect(new Set((result.tables.asset_metrics ?? []).map((row) => row.reference_time_start)).size).toBe(2);
+    expect(readMetricAt("fii.distribution_per_unit", JAN_2024)).toMatchObject({ asset_id: "BR:fii:KNRI11", value: 1, unit: "brl" });
+    expect(readMetricAt("fii.rental_revenue", JAN_2024)).toMatchObject({ value: 10 });
+    expect(readMetricAt("fii.total_revenue", JAN_2024)).toMatchObject({ value: 11 });
+    expect(readMetricAt("fii.management_fee", JAN_2024)).toMatchObject({ value: 1 });
+    expect(readMetricAt("fii.liquidity_requirement", JAN_2024)).toMatchObject({ value: 5 });
+    expect(readMetricAt("fii.cash_available", JAN_2024)).toMatchObject({ value: 2 });
+    expect(readMetricAt(NET_WORTH, JAN_2024)).toMatchObject({ value: 1000 });
+    expect(readMetricAt("fii.distribution_per_unit", FEB_2024)).toMatchObject({ value: 1 });
+    expect(readMetricAt("fii.property_sales_revenue", FEB_2024)).toMatchObject({ value: 2 });
+    expect(readMetricAt(NET_WORTH, FEB_2024)).toMatchObject({ value: 1010 });
   });
 
   it("leaves net worth null for a month the net worth section does not cover (AC6)", async () => {
@@ -103,7 +115,7 @@ describe("StatusInvestAdapter.fetchTables()", () => {
       [patrimonio]: () => Promise.resolve(EMPTY_MONTHS),
     });
     const result = await new StatusInvestAdapter("fund_data", http, NO_PAUSE).fetchTables(FII);
-    expect(result.tables.fii_monthly?.[0]).toMatchObject({ net_worth: null });
+    expect(result.tables.asset_metrics?.find((row) => row.metric === NET_WORTH)).toMatchObject({ value: null });
   });
 
   it("retries a 403 and keeps the data when the retry passes (AC5)", async () => {
@@ -124,7 +136,7 @@ describe("StatusInvestAdapter.fetchTables()", () => {
     };
     const result = await new StatusInvestAdapter("fundamentals", http, { pause: recordPause, pauseMs: 1000 }).fetchTables(STOCK);
     expect(attempts).toBe(2);
-    expect(result.tables.fundamentals).toHaveLength(3);
+    expect(result.tables.asset_metrics).toHaveLength(3);
     expect(pauses).toStrictEqual([1000, 5000]);
   });
 
@@ -154,7 +166,8 @@ describe("StatusInvestAdapter.fetchTables()", () => {
       [patrimonio]: () => Promise.resolve(EMPTY_MONTHS),
     });
     const result = await new StatusInvestAdapter("fund_data", http, NO_PAUSE).fetchTables(FII);
-    expect(result.tables.fii_monthly?.[0]).toMatchObject({ rental_revenue: null, total_revenue: 0 });
+    expect(result.tables.asset_metrics?.find((row) => row.metric === "fii.rental_revenue")).toMatchObject({ value: null });
+    expect(result.tables.asset_metrics?.find((row) => row.metric === "fii.total_revenue")).toMatchObject({ value: 0 });
   });
 
   it("names the field when a monthly section lacks a mapped field (AC4)", async () => {

@@ -7,6 +7,7 @@ import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 
 const FIXTURES = join(import.meta.dirname, "..", "..", "Testing", "fixtures", "cvm-registry");
 const FUND = "00.017.024/0001-53";
+const DAY_2026_11_03 = "2026-11-03";
 const NOT_FOUND = 404;
 const NOT_USED = "not used";
 const NOW = new Date(Date.UTC(2026, 11, 15));
@@ -41,33 +42,37 @@ describe("CvmFundAdapter.fetchTables()", () => {
     expect(CvmFundAdapter.listRecentMonths(NOW, 3)).toStrictEqual(["202609", "202610", "202611"]);
   });
 
-  it("writes the fund's registry from CVM's fund file", async () => {
+  it("writes the fund's registry from CVM's fund file: the asset, its attributes and its net worth", async () => {
     const adapter = new CvmFundAdapter(buildHttp(), CVM_BASE, () => NOW);
 
-    const result = await adapter.fetchTables({ market: "FUND", ticker: FUND });
+    const result = await adapter.fetchTables({ market: "BR", assetType: "fund", ticker: FUND });
 
-    expect(result.tables.fund_registry?.[0]).toMatchObject({ cnpj: FUND, fund_type: "FIF", net_worth: 470247.46, source: "cvm" });
+    expect(result.tables.asset?.[0]).toMatchObject({ asset_id: `BR:fund:${FUND}`, market: "BR", asset_type: "fund", code: FUND });
+    expect(result.tables.asset_attribute).toContainEqual({ asset_id: `BR:fund:${FUND}`, attribute: "fund_type", value: "FIF" });
+    expect(result.tables.asset_metrics).toContainEqual(expect.objectContaining({ metric: "fund.net_worth", value: 470247.46, unit: "brl" }));
   });
 
-  it("writes the daily quota of the fund only, and the holdings of its block, with their file", async () => {
+  it("writes the daily figures of the fund as one metric row each, with the unit of each, and the holdings of its block", async () => {
     const adapter = new CvmFundAdapter(buildHttp(), CVM_BASE, () => NOW);
 
-    const result = await adapter.fetchTables({ market: "FUND", ticker: FUND });
+    const result = await adapter.fetchTables({ market: "BR", assetType: "fund", ticker: FUND });
+    const readDayMetric = (metric: string): unknown => (result.tables.asset_metrics ?? [])
+      .find((row) => row.metric === metric && row.reference_time_start === DAY_2026_11_03);
 
-    expect(result.tables.fund_daily).toStrictEqual([{
-      cnpj: FUND, date: "2026-11-03", quota: 45.3607553, net_worth: 1228659.83, total_value: 1131424.27,
-      subscriptions: 0, redemptions: 0, holders: 1, source: "cvm",
-    }]);
-    expect(result.tables.fund_holdings?.[0]).toMatchObject({
-      cnpj: FUND, block: "8", asset_category: "Outros", source_file: "cda_fi_BLC_8_202610.csv", market_value: 103535.34,
+    expect(readDayMetric("fund.quota")).toStrictEqual({ asset_id: `BR:fund:${FUND}`, metric: "fund.quota", reference_time_start: DAY_2026_11_03, reference_time_end: DAY_2026_11_03, value: 45.3607553, unit: "brl_per_quota" });
+    expect(readDayMetric("fund.net_worth")).toMatchObject({ value: 1228659.83, unit: "brl" });
+    expect(readDayMetric("fund.holders")).toMatchObject({ value: 1, unit: "count" });
+    expect(result.tables.asset_holdings?.[0]).toMatchObject({
+      asset_id: `BR:fund:${FUND}`, block: "8", application_type: "Disponibilidades", market_value: 103535.34,
     });
+    expect(result.tables.asset_holdings?.[0]).not.toHaveProperty("source_file");
   });
 
   it("refuses a key that is not a CNPJ, without a request", async () => {
     const urls: string[] = [];
     const adapter = new CvmFundAdapter(buildHttp(urls), CVM_BASE, () => NOW);
 
-    await expect(adapter.fetchTables({ market: "FUND", ticker: "HGLG11" })).rejects.toThrow("is not a CNPJ");
+    await expect(adapter.fetchTables({ market: "BR", assetType: "fund", ticker: "HGLG11" })).rejects.toThrow("is not a CNPJ");
     expect(urls).toStrictEqual([]);
   });
 });

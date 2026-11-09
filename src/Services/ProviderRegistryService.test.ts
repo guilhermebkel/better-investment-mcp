@@ -90,11 +90,11 @@ describe("ProviderRegistryService.buildEmptyCatalog()", () => {
   it("uses the public source of each category without any variable", () => {
     const registry = new ProviderRegistryService(NO_SETTINGS, VendorCatalogService.build());
 
-    expect(registry.resolve("macro", "SERIES", undefined).primary.vendor).toBe("bcb");
+    expect(registry.resolve("macro", "BR", "index").primary.vendor).toBe("bcb");
     expect(registry.resolve("statements", "BR", "stock").primary.vendor).toBe("cvm");
     expect(registry.resolve("identifiers", "BR", "fii").primary.vendor).toBe("b3");
-    expect(registry.resolve("fx", "FX", undefined).primary.vendor).toBe("bcb");
-    expect(registry.resolve("fund", "FUND", undefined).primary.vendor).toBe("cvm");
+    expect(registry.resolve("fx", "BR", "currency").primary.vendor).toBe("bcb");
+    expect(registry.resolve("fund", "BR", "fund").primary.vendor).toBe("cvm");
   });
 
   it("lets a variable replace the default when it is set", () => {

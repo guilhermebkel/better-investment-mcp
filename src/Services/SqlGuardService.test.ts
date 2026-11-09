@@ -7,133 +7,59 @@ import { SqlGuardService } from "@/Services/SqlGuardService.ts";
 import { StoreService } from "@/Services/StoreService.ts";
 
 const TEMP_PREFIX = join(tmpdir(), "sql-guard-test-");
-const SEPTEMBER_2024 = "2024-09-30";
 const ONLY_SELECT = "Only a SELECT statement runs";
-const QUOTES_NEEDS_TICKER = "quotes needs a WHERE filter on ticker";
+const NEEDS_ASSET_ID = "needs a WHERE filter on asset_id";
+const PETR4 = { market: "BR", ticker: "PETR4", assetType: "stock" } as const;
+const VALE3 = { market: "BR", ticker: "VALE3", assetType: "stock" } as const;
 
 const ACCEPTED: [string, string, Requirement[]][] = [
-  ["a single asset with =", "SELECT close FROM quotes WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock'", [
-    { table: "quotes", category: "quotes", market: "BR", ticker: "PETR4", assetType: "stock" },
+  ["a single asset with =", "SELECT close FROM asset_quotes WHERE asset_id = 'BR:stock:PETR4'", [
+    { table: "asset_quotes", category: "quotes", ...PETR4, period: {} },
   ]],
-  ["an IN list gives one requirement per value", "SELECT close FROM quotes WHERE market = 'BR' AND ticker IN ('PETR4', 'VALE3') AND asset_type = 'stock'", [
-    { table: "quotes", category: "quotes", market: "BR", ticker: "PETR4", assetType: "stock" },
-    { table: "quotes", category: "quotes", market: "BR", ticker: "VALE3", assetType: "stock" },
+  ["an IN list gives one requirement per asset", "SELECT close FROM asset_quotes WHERE asset_id IN ('BR:stock:PETR4', 'BR:stock:VALE3')", [
+    { table: "asset_quotes", category: "quotes", ...PETR4, period: {} },
+    { table: "asset_quotes", category: "quotes", ...VALE3, period: {} },
   ]],
-  ["an aggregation with GROUP BY", "SELECT avg(close) FROM quotes WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' GROUP BY ticker", [
-    { table: "quotes", category: "quotes", market: "BR", ticker: "PETR4", assetType: "stock" },
+  ["an aggregation with GROUP BY", "SELECT avg(close) FROM asset_quotes WHERE asset_id = 'BR:stock:PETR4' GROUP BY asset_id", [
+    { table: "asset_quotes", category: "quotes", ...PETR4, period: {} },
   ]],
-  ["a join where both sides are filtered", "SELECT q.close, d.amount FROM quotes q JOIN dividends d ON d.market = q.market AND d.ticker = q.ticker AND d.asset_type = q.asset_type "
-  + "WHERE q.market = 'BR' AND q.ticker = 'PETR4' AND q.asset_type = 'stock' AND d.market = 'BR' AND d.ticker = 'PETR4' AND d.asset_type = 'stock'", [
-    { table: "quotes", category: "quotes", market: "BR", ticker: "PETR4", assetType: "stock" },
-    { table: "dividends", category: "dividends", market: "BR", ticker: "PETR4", assetType: "stock" },
+  ["a join from asset to its quotes, each side filtered by asset_id", "SELECT q.close FROM asset a JOIN asset_quotes q USING (asset_id) WHERE a.asset_id = 'BR:stock:PETR4' AND q.asset_id = 'BR:stock:PETR4'", [
+    { table: "asset", category: "registry", ...PETR4 },
+    { table: "asset_quotes", category: "quotes", ...PETR4, period: {} },
   ]],
-  ["a self join of two assets", "SELECT a.close, b.close FROM quotes a JOIN quotes b ON a.date = b.date "
-  + "WHERE a.market = 'BR' AND a.ticker = 'PETR4' AND a.asset_type = 'stock' AND b.market = 'BR' AND b.ticker = 'VALE3' AND b.asset_type = 'stock'", [
-    { table: "quotes", category: "quotes", market: "BR", ticker: "PETR4", assetType: "stock" },
-    { table: "quotes", category: "quotes", market: "BR", ticker: "VALE3", assetType: "stock" },
+  ["a metric of a statement loads the statements category", "SELECT value FROM asset_metrics WHERE asset_id = 'BR:stock:PETR4' AND metric = 'statement.dre_con.3_01'", [
+    { table: "asset_metrics", category: "statements", ...PETR4, period: {} },
   ]],
-  ["a CTE whose body is filtered", "WITH c AS (SELECT close FROM quotes WHERE market = 'BR' AND ticker = 'VALE3' AND asset_type = 'stock') SELECT avg(close) FROM c", [
-    { table: "quotes", category: "quotes", market: "BR", ticker: "VALE3", assetType: "stock" },
+  ["metrics of two groups load two categories", "SELECT value FROM asset_metrics WHERE asset_id = 'BR:stock:PETR4' AND metric IN ('fundamental.roe', 'statement.dre_con.3_01')", [
+    { table: "asset_metrics", category: "fundamentals", ...PETR4, period: {} },
+    { table: "asset_metrics", category: "statements", ...PETR4, period: {} },
   ]],
-  ["a window function", "SELECT ticker, close, avg(close) OVER (ORDER BY date ROWS 5 PRECEDING) FROM quotes WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock'", [
-    { table: "quotes", category: "quotes", market: "BR", ticker: "PETR4", assetType: "stock" },
+  ["a macro index with its metric", "SELECT value FROM asset_metrics WHERE asset_id = 'BR:index:IPCA' AND metric = 'macro.value'", [
+    { table: "asset_metrics", category: "macro", market: "BR", ticker: "IPCA", assetType: "index", period: {} },
   ]],
-  ["financial_statements with a BETWEEN period", "SELECT line_item, value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND period_end BETWEEN '2024-01-01' AND '2024-12-31'", [
-    { table: "financial_statements", category: "statements", market: "BR", ticker: "PETR4", assetType: "stock", period: { from: "2024-01-01", to: "2024-12-31" } },
+  ["a document list by its document type", "SELECT filing_id FROM asset_filings WHERE asset_id = 'BR:stock:PETR4'", [
+    { table: "asset_filings", category: "filings", ...PETR4, period: {} },
   ]],
-  ["financial_statements with a >= bound given as a DATE literal", "SELECT value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND period_end >= DATE '2024-07-01'", [
-    { table: "financial_statements", category: "statements", market: "BR", ticker: "PETR4", assetType: "stock", period: { from: "2024-07-01" } },
+  ["a period on quotes, with its bounds", "SELECT close FROM asset_quotes WHERE asset_id = 'BR:stock:PETR4' AND reference_time_start BETWEEN '2024-01-01' AND '2024-06-30'", [
+    { table: "asset_quotes", category: "quotes", ...PETR4, period: { from: "2024-01-01", to: "2024-06-30" } },
   ]],
-  ["a period bound with the column on the right", "SELECT value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND '2024-06-30' >= period_end", [
-    { table: "financial_statements", category: "statements", market: "BR", ticker: "PETR4", assetType: "stock", period: { to: "2024-06-30" } },
-  ]],
-  ["a period equal to one date", "SELECT value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND period_end = '2024-09-30'", [
-    { table: "financial_statements", category: "statements", market: "BR", ticker: "PETR4", assetType: "stock", period: { from: SEPTEMBER_2024, to: SEPTEMBER_2024 } },
-  ]],
-  ["a period IN list of dates gives the window of the list", "SELECT value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND period_end IN ('2024-09-30', '2024-03-31')", [
-    { table: "financial_statements", category: "statements", market: "BR", ticker: "PETR4", assetType: "stock", period: { from: "2024-03-31", to: "2024-09-30" } },
-  ]],
-  ["two bounds on one column keep the narrowest", "SELECT value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND period_end >= '2023-01-01' AND period_end >= '2024-01-01' AND period_end <= '2025-12-31' AND period_end <= '2024-12-31'", [
-    { table: "financial_statements", category: "statements", market: "BR", ticker: "PETR4", assetType: "stock", period: { from: "2024-01-01", to: "2024-12-31" } },
-  ]],
-  ["a period inside an OR is not read as a bound", "SELECT value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND (period_end = '2024-03-31' OR period_end = '2024-06-30')", [
-    { table: "financial_statements", category: "statements", market: "BR", ticker: "PETR4", assetType: "stock", period: {} },
-  ]],
-  ["a period that is not a date is not read as a bound", "SELECT value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND period_end >= 'abc'", [
-    { table: "financial_statements", category: "statements", market: "BR", ticker: "PETR4", assetType: "stock", period: {} },
-  ]],
-  ["fii_monthly with a month range", "SELECT net_worth FROM fii_monthly WHERE market = 'BR' AND ticker = 'IRDM11' AND asset_type = 'fii' AND period >= '2025-01-01' AND period <= '2025-06-30'", [
-    { table: "fii_monthly", category: "fund_data", market: "BR", ticker: "IRDM11", assetType: "fii", period: { from: "2025-01-01", to: "2025-06-30" } },
-  ]],
-  ["filings by the reference date", "SELECT filing_type FROM filings WHERE market = 'BR' AND ticker = 'IRDM11' AND asset_type = 'fii' AND reference_date = '2025-10-31'", [
-    { table: "filings", category: "filings", market: "BR", ticker: "IRDM11", assetType: "fii", period: { from: "2025-10-31", to: "2025-10-31" } },
-  ]],
-  ["a catalog table without filters", "SELECT name FROM assets", []],
-  ["asset_coverage without filters", "SELECT * FROM asset_coverage", []],
-  ["macro_series with its series", "SELECT value FROM macro_series WHERE series = 'SELIC'", [
-    { table: "macro_series", category: "macro", market: "SERIES", ticker: "SELIC" },
-  ]],
-  ["treasury_prices with two bond families", "SELECT buy_rate FROM treasury_prices WHERE bond_type IN ('Tesouro Selic', 'Tesouro IPCA+')", [
-    { table: "treasury_prices", category: "treasury", market: "TDIR", ticker: "Tesouro Selic" },
-    { table: "treasury_prices", category: "treasury", market: "TDIR", ticker: "Tesouro IPCA+" },
-  ]],
-  ["market_expectations with one indicator", "SELECT median_value FROM market_expectations WHERE indicator = 'ipca'", [
-    { table: "market_expectations", category: "expectations", market: "FOCUS", ticker: "ipca" },
-  ]],
-  ["chunks with filing_type", "SELECT text FROM chunks WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND filing_type = 'ITR'", [
-    { table: "chunks", category: "documents", market: "BR", ticker: "PETR4", assetType: "stock", filingType: "ITR" },
-  ]],
-  ["chunks with filing_id", "SELECT text FROM chunks WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND filing_id = 'abc'", [
-    { table: "chunks", category: "documents", market: "BR", ticker: "PETR4", assetType: "stock", filingId: "abc" },
-  ]],
-  ["search_chunks with its six arguments", "SELECT text FROM search_chunks('lucro líquido', 'BR', 'PETR4', 'stock', 'material_fact', NULL)", [
-    { table: "chunks", category: "documents", market: "BR", ticker: "PETR4", assetType: "stock", filingType: "material_fact" },
-  ]],
-  ["FII monthly data", "SELECT net_worth FROM fii_monthly WHERE market = 'BR' AND ticker = 'KNRI11' AND asset_type = 'fii'", [
-    { table: "fii_monthly", category: "fund_data", market: "BR", ticker: "KNRI11", assetType: "fii", period: {} },
-  ]],
-  ["a UNION of two filtered selects", "SELECT close FROM quotes WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' "
-  + "UNION ALL SELECT close FROM quotes WHERE market = 'BR' AND ticker = 'VALE3' AND asset_type = 'stock'", [
-    { table: "quotes", category: "quotes", market: "BR", ticker: "PETR4", assetType: "stock" },
-    { table: "quotes", category: "quotes", market: "BR", ticker: "VALE3", assetType: "stock" },
-  ]],
-  ["an IN list over two markets", "SELECT close FROM quotes WHERE market IN ('BR', 'US') AND ticker = 'AAPL' AND asset_type = 'stock'", [
-    { table: "quotes", category: "quotes", market: "BR", ticker: "AAPL", assetType: "stock" },
-    { table: "quotes", category: "quotes", market: "US", ticker: "AAPL", assetType: "stock" },
-  ]],
-  ["a literal on the left of =", "SELECT close FROM quotes WHERE 'BR' = market AND 'PETR4' = ticker AND 'stock' = asset_type", [
-    { table: "quotes", category: "quotes", market: "BR", ticker: "PETR4", assetType: "stock" },
-  ]],
-  ["an OR whose branches both name the ticker", "SELECT close FROM quotes WHERE market = 'BR' AND asset_type = 'stock' AND (ticker = 'PETR4' OR ticker = 'VALE3')", [
-    { table: "quotes", category: "quotes", market: "BR", ticker: "PETR4", assetType: "stock" },
-    { table: "quotes", category: "quotes", market: "BR", ticker: "VALE3", assetType: "stock" },
-  ]],
+  ["a catalog table without filters", "SELECT name FROM load_runs", []],
+  ["the coverage view without filters", "SELECT * FROM asset_coverage", []],
 ];
 
 const REFUSED: [string, string, string][] = [
-  ["a period that starts after it ends", "SELECT value FROM financial_statements WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock' AND period_end >= '2025-01-01' AND period_end <= '2024-01-01'", "starts after it ends"],
-  ["no filter at all", "SELECT close FROM quotes", "quotes needs a WHERE filter on market, ticker, asset_type"],
-  ["asset_type missing", "SELECT close FROM quotes WHERE market = 'BR' AND ticker = 'PETR4'", "quotes needs a WHERE filter on asset_type"],
-  ["a join with one side filtered", "SELECT q.close FROM quotes q JOIN dividends d ON d.ticker = q.ticker "
-  + "WHERE q.market = 'BR' AND q.ticker = 'PETR4' AND q.asset_type = 'stock'", "dividends (as d) needs a WHERE filter on market, ticker, asset_type"],
-  ["chunks without filing_type or filing_id", "SELECT text FROM chunks WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock'", "chunks needs a WHERE filter on filing_type or filing_id"],
-  ["macro_series without series", "SELECT value FROM macro_series", "macro_series needs a WHERE filter on series"],
-  ["treasury_prices without bond_type", "SELECT buy_rate FROM treasury_prices", "treasury_prices needs a WHERE filter on bond_type"],
-  ["market_expectations without indicator", "SELECT median_value FROM market_expectations", "market_expectations needs a WHERE filter on indicator"],
   ["two statements", "SELECT 1; SELECT 2", "Send exactly one SELECT statement per query"],
   ["PRAGMA", "PRAGMA version", ONLY_SELECT],
-  ["COPY", "COPY quotes TO 'out.csv'", ONLY_SELECT],
+  ["COPY", "COPY asset_quotes TO 'out.csv'", ONLY_SELECT],
   ["ATTACH", "ATTACH 'other.duckdb' AS other", ONLY_SELECT],
-  ["a function over the ticker", "SELECT close FROM quotes WHERE lower(ticker) = 'petr4' AND market = 'BR' AND asset_type = 'stock'", QUOTES_NEEDS_TICKER],
-  ["a ticker taken from a subquery", "SELECT close FROM quotes WHERE market = 'BR' AND ticker = (SELECT 'PETR4') AND asset_type = 'stock'", QUOTES_NEEDS_TICKER],
-  ["an OR that hides the ticker", "SELECT close FROM quotes WHERE market = 'BR' AND asset_type = 'stock' AND (ticker = 'PETR4' OR close > 10)", QUOTES_NEEDS_TICKER],
-  ["document_text", "SELECT text FROM document_text", "document_text has no market, ticker or asset_type column"],
-  ["search_chunks without a ticker", "SELECT * FROM search_chunks('lucro', 'BR', NULL, 'stock', 'material_fact', NULL)", "needs a WHERE filter on ticker"],
-  ["search_chunks with a column as the query", "SELECT * FROM search_chunks(text, 'BR', 'PETR4', 'stock', 'material_fact', NULL)", "needs the query text as a literal string"],
-  ["a table function", "SELECT * FROM read_text('/etc/hosts')", "read_text(...) is not available in query_sql yet"],
-  ["search_chunks with four arguments", "SELECT * FROM search_chunks('lucro', 'PETR4', 'itr', NULL)", "search_chunks takes 6 arguments"],
-  ["a CTE named like a data table", "WITH quotes AS (SELECT 1 AS close) SELECT * FROM quotes", "A WITH name cannot be the name of a data table: rename quotes"],
-  ["a syntax error", "SELEC 1", "The query has a syntax error"],
+  ["no filter at all", "SELECT close FROM asset_quotes", "asset_quotes " + NEEDS_ASSET_ID],
+  ["a filter on sector instead of asset_id", "SELECT close FROM asset a JOIN asset_quotes q USING (asset_id) WHERE a.sector = 'Energia'", "asset_quotes (as q) needs a WHERE filter on asset_id"],
+  ["a LIKE on asset_id", "SELECT close FROM asset_quotes WHERE asset_id LIKE 'BR:stock:%'", "asset_quotes " + NEEDS_ASSET_ID],
+  ["an asset_id in the old form", "SELECT close FROM asset_quotes WHERE asset_id = 'PETR4'", "asset_id PETR4 is not market:asset_type:code"],
+  ["a metric with an unknown group", "SELECT value FROM asset_metrics WHERE asset_id = 'BR:stock:PETR4' AND metric = 'foo.bar'", "metric group foo is not known"],
+  ["metrics without a metric filter", "SELECT value FROM asset_metrics WHERE asset_id = 'BR:stock:PETR4'", "asset_metrics needs a WHERE filter on metric"],
+  ["a join where one side has no asset_id", "SELECT q.close, d.ex_time FROM asset_quotes q JOIN asset_dividends d ON d.kind = q.asset_id WHERE q.asset_id = 'BR:stock:PETR4'", "asset_dividends (as d) needs a WHERE filter on asset_id"],
+  ["chunks without document_type or filing_id", "SELECT text FROM asset_filing_chunks WHERE asset_id = 'BR:stock:PETR4'", "asset_filing_chunks needs a WHERE filter on document_type or filing_id"],
 ];
 
 describe("SqlGuardService.checkSql()", () => {

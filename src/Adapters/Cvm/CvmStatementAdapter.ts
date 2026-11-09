@@ -9,10 +9,12 @@ import type {
   CvmStatementScan,
   StatementSource,
 } from "@/Protocols/CvmProtocol.ts";
-import type { ProviderPort, ProviderRequest, ProviderResult } from "@/Protocols/ProviderProtocol.ts";
+import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
 import { PeriodService } from "@/Services/PeriodService.ts";
 import { CvmUtil } from "@/Utils/CvmUtil.ts";
+import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 import { ZipFileUtil } from "@/Utils/ZipFileUtil.ts";
+import type { PeriodStartRule } from "@/Protocols/CvmProtocol.ts";
 
 const THOUSAND = 1000;
 const ONE = 1;
@@ -36,6 +38,24 @@ const STATEMENT_ENTRIES: readonly CvmStatementEntry[] = [
 const SCALE_TO_FACTOR: Readonly<Record<CvmScale, number>> = { MIL: THOUSAND, UNIDADE: ONE };
 const FORMAT_ERROR = "the response format changed: a CVM statement file is not the one the adapter reads; no row was written";
 const DATASET_PREFIX = "cia_aberta-doc-";
+
+// Why: a quarter starts two months before its last month; a year or a year to date starts in January; an instant is its own day.
+const MONTHS_BEFORE_QUARTER_END = 2;
+const FIRST_MONTH = 1;
+const ISO_DATE_LENGTH = 10;
+
+const buildFirstDay = (year: number, month: number): string => {
+  return new Date(Date.UTC(year, month - 1, 1)).toISOString().slice(0, ISO_DATE_LENGTH);
+};
+
+const buildYearStart: PeriodStartRule = (year) => buildFirstDay(year, FIRST_MONTH);
+
+const PERIOD_TYPE_TO_START: Readonly<Partial<Record<CvmPeriodType, PeriodStartRule>>> = {
+  instant: (_year, _month, periodEnd) => periodEnd,
+  quarter: (year, month) => buildFirstDay(year, month - MONTHS_BEFORE_QUARTER_END),
+  ytd: (year) => buildFirstDay(year, FIRST_MONTH),
+  year: buildYearStart,
+};
 
 export class CvmStatementAdapter extends CvmBaseAdapter implements ProviderPort<"statements"> {
   static readonly VENDOR = "cvm";
@@ -68,7 +88,40 @@ export class CvmStatementAdapter extends CvmBaseAdapter implements ProviderPort<
       }
     }
     const rows = [...scan.keyToCandidate.values()].map((candidate) => candidate.row);
-    return { source: CvmStatementAdapter.VENDOR, tables: { financial_statements: rows }, files: scan.files };
+    const metrics = CvmStatementAdapter.buildMetrics(rows);
+    return { source: CvmStatementAdapter.VENDOR, tables: { asset_metrics: metrics }, files: scan.files };
+  }
+
+  static buildMetrics(rows: ProviderRow[]): ProviderRow[] {
+    // Why: a statement line is one metric of its statement (statement.<statement>.<code>); its period is the quarter, the year or the year to date it covers, and a balance sheet line is a single day.
+    return rows.flatMap((row) => {
+      const value = row.value;
+      if (typeof value !== "number") {
+        return [];
+      }
+      const assetId = AssetIdUtil.build({
+        market: String(row.market), assetType: String(row.asset_type), code: String(row.ticker),
+      });
+      const end = String(row.period_end);
+      const code = String(row.line_item).split(" ")[0] ?? "";
+      const metric = `statement.${String(row.statement).toLowerCase()}.${code.replace(/\./gu, "_")}`;
+      return [{
+        asset_id: assetId,
+        reference_time_start: CvmStatementAdapter.startOf(String(row.period_type), end),
+        reference_time_end: end,
+        unit: String(row.currency ?? "BRL").toLowerCase(),
+        version: row.version ?? null,
+        metric,
+        value,
+      }];
+    });
+  }
+
+  static startOf(periodType: string, periodEnd: string): string {
+    const [year = 0, month = 1] = periodEnd.split("-").map(Number);
+    // Why: a period type the table does not hold is read as a year.
+    const rule = PERIOD_TYPE_TO_START[periodType as CvmPeriodType];
+    return (rule ?? buildYearStart)(year, month, periodEnd);
   }
 
   private async collectKind(kind: CvmPeriodicKind, year: number, scan: CvmStatementScan): Promise<void> {

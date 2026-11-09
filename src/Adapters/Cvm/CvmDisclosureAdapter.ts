@@ -1,9 +1,10 @@
 import type { LegalIdLookup } from "@/Protocols/CvmProtocol.ts";
 import type { CvmDisclosureDataset } from "@/Protocols/CvmDisclosureProtocol.ts";
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
-import type { ProviderFile, ProviderPort, ProviderRequest, ProviderResult, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
+import type { ProviderFile, ProviderPort, ProviderRequest, ProviderResult, ProviderRow, TableToRows } from "@/Protocols/ProviderProtocol.ts";
 import { CvmAdapter } from "@/Adapters/Cvm/CvmAdapter.ts";
 import { PeriodService } from "@/Services/PeriodService.ts";
+import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 import { CsvUtil } from "@/Utils/CsvUtil.ts";
 import { CvmUtil } from "@/Utils/CvmUtil.ts";
 import { ZipFileUtil } from "@/Utils/ZipFileUtil.ts";
@@ -63,7 +64,40 @@ export class CvmDisclosureAdapter implements ProviderPort<"disclosures"> {
         rows.push(...(found ?? []));
       }
     }
-    return { source: CvmDisclosureAdapter.VENDOR, tables: { company_disclosures: rows }, files };
+    return { source: CvmDisclosureAdapter.VENDOR, tables: CvmDisclosureAdapter.buildTables(rows), files };
+  }
+
+  static buildTables(rows: ProviderRow[]): TableToRows {
+    // Why: a document is one asset_filings row, and each section of it is one asset_filing_items row; a document that has several sections is written once.
+    const filingIdToRow = new Map<string, ProviderRow>();
+    const items: ProviderRow[] = [];
+    for (const row of rows) {
+      const assetId = String(row.asset_id);
+      const reference = row.reference_date ?? null;
+      const version = row.version ?? null;
+      const documentId = row.document_id ?? `${String(reference)}:${String(version)}`;
+      const filingId = `${String(row.dataset)}:${assetId}:${String(documentId)}`;
+      items.push({
+        asset_id: assetId, filing_id: filingId, section: String(row.section), row_json: String(row.row_json),
+      });
+      if (!filingIdToRow.has(filingId)) {
+        filingIdToRow.set(filingId, {
+          filing_id: filingId,
+          asset_id: assetId,
+          document_type: String(row.dataset),
+          category: null,
+          subject: null,
+          reference_time_start: reference,
+          reference_time_end: reference,
+          published_at: null,
+          version: version === null ? null : Number(version),
+          url: null,
+          file_hash: null,
+          source_file: row.source_file ?? null,
+        });
+      }
+    }
+    return { asset_filings: [...filingIdToRow.values()], asset_filing_items: items };
   }
 
   private buildUrl(dataset: CvmDisclosureDataset, year: number): string {
@@ -91,6 +125,7 @@ export class CvmDisclosureAdapter implements ProviderPort<"disclosures"> {
         }
         rows.push({
           section,
+          asset_id: AssetIdUtil.build({ market: request.market, assetType: "stock", code: request.ticker }),
           market: request.market,
           ticker: request.ticker,
           asset_type: "stock",

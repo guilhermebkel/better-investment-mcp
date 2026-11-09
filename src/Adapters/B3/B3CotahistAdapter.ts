@@ -7,6 +7,7 @@ import { ZipFileUtil } from "@/Utils/ZipFileUtil.ts";
 import { HttpFailureError } from "@/Errors/HttpFailureError.ts";
 import type { CotahistField } from "@/Protocols/B3Protocol.ts";
 import { QualityFlagService } from "@/Services/QualityFlagService.ts";
+import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 
 const BYTES_PER_MIB = 1_048_576;
 const MAX_FILE_MIB = 150;
@@ -87,7 +88,7 @@ export class B3CotahistAdapter implements ProviderPort<"quotes"> {
     for (let reference = year - YEARS_BACK; reference <= year; reference += 1) {
       rows.push(...await this.readYear(reference, request));
     }
-    rows.sort((left, right) => String(left.date).localeCompare(String(right.date)));
+    rows.sort((left, right) => String(left.reference_time_start).localeCompare(String(right.reference_time_start)));
     const points = rows.map((row) => ({ close: Number(row.close), volume: Number(row.volume) }));
     const flags = QualityFlagService.buildFlags(points);
     const flagged = rows.map((row, index) => ({
@@ -95,7 +96,7 @@ export class B3CotahistAdapter implements ProviderPort<"quotes"> {
       is_stale: flags[index]?.isStale ?? false,
       suspect_tick: flags[index]?.isSuspectTick ?? false,
     }));
-    return { source: B3CotahistAdapter.VENDOR, tables: { quotes: flagged } };
+    return { source: B3CotahistAdapter.VENDOR, tables: { asset_quotes: flagged } };
   }
 
   static buildUrl(baseUrl: string, year: number): string {
@@ -149,18 +150,17 @@ export class B3CotahistAdapter implements ProviderPort<"quotes"> {
       return undefined;
     }
     const raw = B3CotahistAdapter.read(line, DATE_FIELD);
+    const day = `${raw.slice(0, YEAR_END)}-${raw.slice(YEAR_END, MONTH_END)}-${raw.slice(MONTH_END)}`;
     return {
-      market: request.market,
-      ticker: request.ticker,
-      asset_type: request.assetType ?? null,
-      date: `${raw.slice(0, YEAR_END)}-${raw.slice(YEAR_END, MONTH_END)}-${raw.slice(MONTH_END)}`,
+      asset_id: AssetIdUtil.build({ market: request.market, assetType: request.assetType ?? "", code: request.ticker }),
+      reference_time_start: day,
+      reference_time_end: day,
       open: B3CotahistAdapter.readPrice(line, OPEN_FIELD),
       high: B3CotahistAdapter.readPrice(line, HIGH_FIELD),
       low: B3CotahistAdapter.readPrice(line, LOW_FIELD),
       close: B3CotahistAdapter.readPrice(line, CLOSE_FIELD),
       adj_close: null,
       volume: Number(B3CotahistAdapter.read(line, QUANTITY_FIELD)),
-      source: B3CotahistAdapter.VENDOR,
     };
   }
 

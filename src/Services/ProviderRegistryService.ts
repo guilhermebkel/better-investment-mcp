@@ -24,13 +24,13 @@ export class ProviderRegistryService {
     fund_data: "BR:cvm",
     filings: "BR:cvm",
     documents: "BR:cvm",
-    macro: "SERIES:bcb",
-    treasury: "TDIR:tesouro",
-    expectations: "FOCUS:bcb",
+    macro: "BR:bcb",
+    treasury: "BR:tesouro",
+    expectations: "BR:bcb",
     identifiers: "BR:b3",
     registry: "BR:cvm",
-    fx: "FX:bcb",
-    fund: "FUND:cvm",
+    fx: "BR:bcb",
+    fund: "BR:cvm",
     disclosures: "BR:cvm",
   };
 

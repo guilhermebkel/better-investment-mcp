@@ -18,7 +18,7 @@ How the data the server keeps is named and shaped, for any new table or column. 
 - `asset_type` is also a column of the `asset` table, so it can be filtered and grouped without reading the id. Check: review.
 - A code is the code the publisher uses, in upper case. Characters other than `A-Z`, `0-9`, `.`, `/`, `-` and `_` are replaced by `_`, and the mapping is written in the data map. Check: review.
 - Every table about an asset is keyed by `asset_id`, not by market and ticker. Check: test.
-- A query reads an asset table only with a filter on `asset_id` (equal or in a list), directly or through a join to `asset`. A filter on another column does not say which assets to load, so it is refused. Check: test.
+- A query reads an asset table only with a filter on `asset_id` (equal or in a list). Each asset table in a query has its own filter: a join does not pass the filter of one table to the other. A filter on another column does not say which assets to load, so it is refused. Check: test.
 
 ## Time
 
@@ -30,7 +30,7 @@ How the data the server keeps is named and shaped, for any new table or column. 
 ## Values
 
 - A numeric observation has a `metric` and a `value` in long form, with `unit` on the same row. Check: review.
-- A metric name is `group.name`, lower case, with the group the source area: `fundamental.roe`, `fund.quota`, `statement.dre.3_01`, `macro.value`. Check: review.
+- A metric name is `group.name`, lower case, with the group the source area: `fundamental.roe`, `fund.quota`, `statement.dre_con.3_01`, `macro.value`. Check: review.
 - A metric's unit is the same in every row of that metric. Check: review.
 - A column that a vendor does not fill is null, never zero. Check: review.
 

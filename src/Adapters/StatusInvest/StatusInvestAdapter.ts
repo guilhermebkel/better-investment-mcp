@@ -11,7 +11,10 @@ import type {
   StatusInvestKey,
 } from "@/Protocols/StatusInvestProtocol.ts";
 import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow, TableToRows } from "@/Protocols/ProviderProtocol.ts";
+import { PeriodService } from "@/Services/PeriodService.ts";
+import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 import { IndicatorHistoricalSchema, MonthlySectionSchema, ProventsSchema } from "@/Schemas/StatusInvestSchema.ts";
+import type { KeyColumn } from "@/Protocols/StatusInvestProtocol.ts";
 
 const FORBIDDEN_STATUS = 403;
 const NOT_FOUND_STATUS = 404;
@@ -105,16 +108,17 @@ export class StatusInvestAdapter<Category extends FundCategory> implements Provi
     const url = `${this.baseUrl}/acao/indicatorhistorical`;
     const text = await this.callSite(() => this.http.postForm(url, body));
     const parsed = StatusInvestAdapter.parseText(text, IndicatorHistoricalSchema, "indicatorhistorical");
+    // Why: a fundamental is a metric of its year (fundamental.<indicator>); its unit is the indicator's, listed in the data map, so the row says as_published.
+    const assetId = AssetIdUtil.build({ market: request.market, assetType: "stock", code: request.ticker });
     const rows: ProviderRow[] = parsed.data.flatMap((indicator) => indicator.ranks.map((rank) => ({
-      market: request.market,
-      ticker: request.ticker,
-      asset_type: "stock",
-      year: rank.rank,
-      metric: indicator.key,
+      asset_id: assetId,
+      metric: `fundamental.${indicator.key}`,
+      reference_time_start: `${rank.rank}-01-01`,
+      reference_time_end: `${rank.rank}-12-31`,
       value: StatusInvestAdapter.readNumber(Reflect.get(rank, "value_F"), "value_F"),
-      source: StatusInvestAdapter.VENDOR,
+      unit: "as_published",
     })));
-    return { fundamentals: rows };
+    return { asset_metrics: rows };
   }
 
   private async fetchFiiMonthly(request: ProviderRequest): Promise<TableToRows> {
@@ -148,7 +152,33 @@ export class StatusInvestAdapter<Category extends FundCategory> implements Provi
     }
 
     const rows = [...periodToRow.values()].sort((left, right) => StatusInvestAdapter.comparePeriods(left, right));
-    return { fii_monthly: rows };
+    return { asset_metrics: StatusInvestAdapter.buildFiiMetrics(rows) };
+  }
+
+  static readonly KEY_COLUMNS: readonly KeyColumn[] = ["market", "ticker", "asset_type", "period", "source", "version", "source_file"];
+
+  static isKeyColumn(column: string): boolean {
+    return StatusInvestAdapter.KEY_COLUMNS.some((known) => known === column);
+  }
+
+  static buildFiiMetrics(rows: ProviderRow[]): ProviderRow[] {
+    // Why: a monthly FII value is one metric row (fii.<column>) of its month; a value the site does not carry is no row.
+    return rows.flatMap((row) => {
+      const assetId = AssetIdUtil.build({ market: String(row.market), assetType: "fii", code: String(row.ticker) });
+      const start = String(row.period);
+      const end = PeriodService.endOfMonth(start);
+      return Object.entries(row)
+        // Why: a value the site leaves empty is kept as null, so a missing month is not read as one never loaded.
+        .filter(([column, value]) => !StatusInvestAdapter.isKeyColumn(column) && (value === null || typeof value === "number"))
+        .map(([column, value]) => ({
+          asset_id: assetId,
+          metric: `fii.${column}`,
+          reference_time_start: start,
+          reference_time_end: end,
+          unit: "brl",
+          value,
+        }));
+    });
   }
 
   private async fetchSection(
@@ -209,7 +239,7 @@ export class StatusInvestAdapter<Category extends FundCategory> implements Provi
     if (existing !== undefined) {
       return existing;
     }
-    const created: ProviderRow = { ...key, period, net_worth: null, source: StatusInvestAdapter.VENDOR };
+    const created: ProviderRow = { ...key, period, net_worth: null };
     periodToRow.set(period, created);
     return created;
   }

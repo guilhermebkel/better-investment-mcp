@@ -34,14 +34,17 @@ describe("CvmDisclosureAdapter.fetchTables()", () => {
     const adapter = new CvmDisclosureAdapter(buildHttp(), () => Promise.resolve(PETROBRAS), BASE, () => CURRENT_YEAR);
 
     const result = await adapter.fetchTables({ market: "BR", ticker: "PETR4", assetType: "stock" });
-    const rows = result.tables.company_disclosures ?? [];
+    const rows = result.tables.asset_filing_items ?? [];
 
     expect(rows).toHaveLength(3);
     expect(rows.map((row) => row.section)).toStrictEqual(["principal", "posicao_acionaria", "posicao_acionaria"]);
-    expect(rows[1]).toMatchObject({
-      dataset: "fre", reference_date: "2024-12-31", version: "1", document_id: "555",
-      source_file: "fre_cia_aberta_posicao_acionaria_2024.csv", source: "cvm",
+    expect(rows[1]).toMatchObject({ asset_id: "BR:stock:PETR4", filing_id: "fre:BR:stock:PETR4:555", section: "posicao_acionaria" });
+    const document = (result.tables.asset_filings ?? []).find((row) => row.filing_id === "fre:BR:stock:PETR4:555");
+    expect(document).toMatchObject({
+      document_type: "fre", reference_time_start: "2024-12-31", reference_time_end: "2024-12-31", version: 1,
+      source_file: "fre_cia_aberta_posicao_acionaria_2024.csv",
     });
+    expect(document).not.toHaveProperty("source");
     const json = String(rows[1]?.row_json);
     expect(JSON.parse(json)).toMatchObject({ Acionista: "UNIAO FEDERAL", Percentual: "36.0" });
   });

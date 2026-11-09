@@ -134,3 +134,7 @@ export type CvmSubject = {
   cnpjDigits: string;
   window: PeriodWindow;
 };
+
+export type NonMetricColumn = "market" | "ticker" | "asset_type" | "period" | "version" | "source_file" | "source";
+
+export type PeriodStartRule = (year: number, month: number, periodEnd: string) => string;

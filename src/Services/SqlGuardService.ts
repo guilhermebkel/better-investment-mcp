@@ -3,7 +3,6 @@ import type { DatabasePort } from "@/Protocols/DatabaseProtocol.ts";
 import type { ComparisonSides, PeriodBounds, PeriodConstraint, PeriodNodeType, PeriodReader } from "@/Protocols/PeriodProtocol.ts";
 import type {
   NodeShape,
-  AssetKey,
   ColumnRef,
   ConditionReader,
   ConditionType,
@@ -12,7 +11,6 @@ import type {
   FilingSelector,
   FromReading,
   GuardVerdict,
-  KeyedSource,
   MacroReading,
   RefScope,
   Requirement,
@@ -34,68 +32,56 @@ import {
   TableFunctionSchema,
 } from "@/Schemas/SqlGuardSchema.ts";
 import { PeriodService } from "@/Services/PeriodService.ts";
+import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
+import type { AssetReading, CategoryReading, MetricGroup } from "@/Protocols/SqlGuardProtocol.ts";
+import type { AssetIdParts } from "@/Protocols/AssetIdProtocol.ts";
 
 const SELECT_TYPES: readonly ("SELECT_NODE" | "SET_OPERATION_NODE")[] = ["SELECT_NODE", "SET_OPERATION_NODE"];
 
 const isSelectType = (value: string): boolean => SELECT_TYPES.some((candidate) => candidate === value);
 const QUALIFIED_COLUMN_PARTS = 2;
 const SEARCH_MACRO = "search_chunks";
-const SEARCH_MACRO_FILTERS = ["market", "ticker", "asset_type", "filing_type", "section"] as const;
+const SEARCH_MACRO_FILTERS = ["asset_id", "document_type", "section"] as const;
 const SEARCH_MACRO_ARGUMENT_COUNT = SEARCH_MACRO_FILTERS.length + 1;
 
 export class SqlGuardService implements SqlGuardPort {
-  static readonly TABLE_TO_CATEGORY: Record<DataTable, CacheCategory> = {
-    quotes: "quotes",
-    splits: "quotes",
-    dividends: "dividends",
-    fundamentals: "fundamentals",
-    financial_statements: "statements",
-    fii_monthly: "fund_data",
-    filings: "filings",
-    chunks: "documents",
-    macro_series: "macro",
-    treasury_prices: "treasury",
-    market_expectations: "expectations",
-    asset_identifiers: "identifiers",
-    company_registry: "registry",
-    fx_rates: "fx",
-    fund_registry: "fund",
-    fund_daily: "fund",
-    fund_holdings: "fund",
-    company_disclosures: "disclosures",
+  static readonly TABLE_TO_CATEGORY: Partial<Record<DataTable, CacheCategory>> = {
+    asset: "registry",
+    asset_attribute: "registry",
+    asset_quotes: "quotes",
+    asset_dividends: "dividends",
+    asset_splits: "quotes",
+    asset_expectations: "expectations",
+    asset_holdings: "fund",
+    asset_filings: "filings",
+    asset_filing_items: "disclosures",
+    asset_filing_chunks: "documents",
   };
 
-  // Why: a keyed table is loaded per value of its key column (a series, a bond family, an indicator); each value is one load in the market the category serves.
-  static readonly TABLE_TO_KEYED_SOURCE: Partial<Record<DataTable, KeyedSource>> = {
-    macro_series: { market: "SERIES", column: "series" },
-    treasury_prices: { market: "TDIR", column: "bond_type" },
-    market_expectations: { market: "FOCUS", column: "indicator" },
-    fx_rates: { market: "FX", column: "currency" },
-    fund_registry: { market: "FUND", column: "cnpj" },
-    fund_daily: { market: "FUND", column: "cnpj" },
-    fund_holdings: { market: "FUND", column: "cnpj" },
+  // Why: asset_metrics holds the numbers of several categories; the first word of the metric name says which category fills it.
+  static readonly METRIC_GROUP_TO_CATEGORY: Readonly<Record<MetricGroup, CacheCategory>> = {
+    statement: "statements",
+    fundamental: "fundamentals",
+    fii: "fund_data",
+    fund: "fund",
+    macro: "macro",
+    treasury: "treasury",
+    fx: "fx",
   };
 
-  static readonly MARKET_FILTERS: TableFilters = { columns: ["market", "ticker", "asset_type"], anyOf: [] };
+  static readonly ASSET_FILTERS: TableFilters = { columns: ["asset_id"], anyOf: [] };
   static readonly TABLE_TO_FILTERS: Record<DataTable, TableFilters> = {
-    quotes: SqlGuardService.MARKET_FILTERS,
-    splits: SqlGuardService.MARKET_FILTERS,
-    dividends: SqlGuardService.MARKET_FILTERS,
-    fundamentals: SqlGuardService.MARKET_FILTERS,
-    financial_statements: SqlGuardService.MARKET_FILTERS,
-    fii_monthly: SqlGuardService.MARKET_FILTERS,
-    filings: SqlGuardService.MARKET_FILTERS,
-    chunks: { columns: ["market", "ticker", "asset_type"], anyOf: ["filing_type", "filing_id"] },
-    asset_identifiers: SqlGuardService.MARKET_FILTERS,
-    company_registry: SqlGuardService.MARKET_FILTERS,
-    fx_rates: { columns: ["currency"], anyOf: [] },
-    fund_registry: { columns: ["cnpj"], anyOf: [] },
-    fund_daily: { columns: ["cnpj"], anyOf: [] },
-    fund_holdings: { columns: ["cnpj"], anyOf: [] },
-    company_disclosures: SqlGuardService.MARKET_FILTERS,
-    macro_series: { columns: ["series"], anyOf: [] },
-    treasury_prices: { columns: ["bond_type"], anyOf: [] },
-    market_expectations: { columns: ["indicator"], anyOf: [] },
+    asset: SqlGuardService.ASSET_FILTERS,
+    asset_attribute: SqlGuardService.ASSET_FILTERS,
+    asset_quotes: SqlGuardService.ASSET_FILTERS,
+    asset_dividends: SqlGuardService.ASSET_FILTERS,
+    asset_splits: SqlGuardService.ASSET_FILTERS,
+    asset_metrics: { columns: ["asset_id", "metric"], anyOf: [] },
+    asset_expectations: SqlGuardService.ASSET_FILTERS,
+    asset_holdings: SqlGuardService.ASSET_FILTERS,
+    asset_filings: SqlGuardService.ASSET_FILTERS,
+    asset_filing_items: SqlGuardService.ASSET_FILTERS,
+    asset_filing_chunks: { columns: ["asset_id"], anyOf: ["document_type", "filing_id"] },
   };
 
   static readonly CONDITION_TO_READER = new Map<ConditionType, ConditionReader>([
@@ -163,7 +149,7 @@ export class SqlGuardService implements SqlGuardPort {
   }
 
   static isDataTable(name: string): name is DataTable {
-    return Object.hasOwn(SqlGuardService.TABLE_TO_CATEGORY, name);
+    return Object.hasOwn(SqlGuardService.TABLE_TO_FILTERS, name);
   }
 
   private static describeParserError(errorType: string | undefined, message: string | undefined): string {
@@ -203,9 +189,6 @@ export class SqlGuardService implements SqlGuardPort {
       return { problems: [], requirements: [] };
     }
     const from = SqlGuardService.readFrom(select);
-    const documentRefs = from.refs.filter((ref) => ref.table === "document_text");
-    const documentProblems = documentRefs.map(() => "document_text has no market, ticker or asset_type column. "
-      + "Query chunks instead, with its filters and filing_type or filing_id.");
     const whereClause: unknown = Reflect.get(select as object, "where_clause");
     const conditions = [whereClause, ...from.joinConditions];
     const constraints = [
@@ -222,7 +205,7 @@ export class SqlGuardService implements SqlGuardPort {
       periodConstraints,
     }));
     return {
-      problems: [...from.problems, ...documentProblems, ...checks.flatMap((check) => check.problems)],
+      problems: [...from.problems, ...checks.flatMap((check) => check.problems)],
       requirements: checks.flatMap((check) => check.requirements),
     };
   }
@@ -254,7 +237,7 @@ export class SqlGuardService implements SqlGuardPort {
         problems.push(...reading.problems);
         constraints.push(...reading.constraints);
         if (reading.problems.length === 0) {
-          refs.push({ table: "chunks", name: SEARCH_MACRO });
+          refs.push({ table: "asset_filing_chunks", name: SEARCH_MACRO });
         }
         return;
       }
@@ -268,7 +251,7 @@ export class SqlGuardService implements SqlGuardPort {
   }
 
   private static readSearchMacro(args: readonly { expression?: unknown }[]): MacroReading {
-    const expected = `search_chunks takes ${SEARCH_MACRO_ARGUMENT_COUNT} arguments: query text, market, ticker, asset_type, filing_type and section (NULL for no section).`;
+    const expected = `search_chunks takes ${SEARCH_MACRO_ARGUMENT_COUNT} arguments: query text, asset_id, document_type and section (NULL for no section).`;
     if (args.length !== SEARCH_MACRO_ARGUMENT_COUNT) {
       return { problems: [expected], constraints: [] };
     }
@@ -312,14 +295,16 @@ export class SqlGuardService implements SqlGuardPort {
       const needed = [...missing, ...(hasAnyOf ? [] : [filters.anyOf.join(" or ")])];
       return { problems: [SqlGuardService.describeMissing(ref, needed)], requirements: [] };
     }
-    const category = SqlGuardService.TABLE_TO_CATEGORY[table];
-    const keyed = SqlGuardService.TABLE_TO_KEYED_SOURCE[table];
-    if (keyed !== undefined) {
-      const values = readValues(keyed.column) ?? [];
-      const requirements = values.map((value) => ({ table, category, market: keyed.market, ticker: value }));
-      return { problems: [], requirements };
+    const assets = SqlGuardService.readAssets(readValues("asset_id") ?? []);
+    if (assets.invalid.length > 0) {
+      const problem = `asset_id ${assets.invalid.join(", ")} is not market:asset_type:code, for example BR:stock:PETR4`;
+      return { problems: [problem], requirements: [] };
     }
-    const requirements = SqlGuardService.buildRequirements(table, category, readValues);
+    const categories = SqlGuardService.readCategories(table, readValues);
+    if (categories.problems.length > 0) {
+      return { problems: categories.problems, requirements: [] };
+    }
+    const requirements = SqlGuardService.buildRequirements(table, categories.categories, assets.parts, readValues);
     const periodColumn = PeriodService.TABLE_TO_PERIOD_COLUMN[table];
     if (periodColumn === undefined) {
       return { problems: [], requirements };
@@ -329,6 +314,75 @@ export class SqlGuardService implements SqlGuardPort {
       return { problems: [SqlGuardService.describeEmptyPeriod(ref, period)], requirements: [] };
     }
     return { problems: [], requirements: requirements.map((requirement) => ({ ...requirement, period })) };
+  }
+
+  private static readAssets(assetIds: readonly string[]): AssetReading {
+    // Why: a query names the assets it reads by asset_id; an id that does not have the form market:asset_type:code is refused, not guessed.
+    const parts: AssetIdParts[] = [];
+    const invalid: string[] = [];
+    for (const assetId of assetIds) {
+      const read = AssetIdUtil.parse(assetId);
+      if (read === undefined) {
+        invalid.push(assetId);
+      } else {
+        parts.push(read);
+      }
+    }
+    return { parts, invalid };
+  }
+
+  private static readCategories(
+    table: DataTable,
+    readValues: (column: string) => string[] | undefined,
+  ): CategoryReading {
+    // Why: a metric names the category that fills it; a metric with an unknown first word is refused with the words it may use.
+    if (table !== "asset_metrics") {
+      const category = SqlGuardService.TABLE_TO_CATEGORY[table];
+      return { categories: category === undefined ? [] : [category], problems: [] };
+    }
+    const groups = (readValues("metric") ?? []).map((metric) => metric.split(".")[0] ?? "");
+    const unknown = groups.filter((group) => !Object.hasOwn(SqlGuardService.METRIC_GROUP_TO_CATEGORY, group));
+    if (unknown.length > 0) {
+      const known = Object.keys(SqlGuardService.METRIC_GROUP_TO_CATEGORY).join(", ");
+      return { categories: [], problems: [`metric group ${unknown.join(", ")} is not known; the groups are ${known}`] };
+    }
+    // Why: every group was checked against the table above, so each one is a known group.
+    const categories = [...new Set(groups)].map(
+      (group) => SqlGuardService.METRIC_GROUP_TO_CATEGORY[group as MetricGroup],
+    );
+    return { categories, problems: [] };
+  }
+
+  private static buildRequirements(
+    table: DataTable,
+    categories: readonly CacheCategory[],
+    assets: readonly AssetIdParts[],
+    readValues: (column: string) => string[] | undefined,
+  ): Requirement[] {
+    const selectors = SqlGuardService.readFilingSelectors(table, readValues);
+    return assets.flatMap((asset) => categories.flatMap((category) => selectors.map((selector) => ({
+      ...selector,
+      table,
+      category,
+      market: asset.market,
+      ticker: asset.code,
+      assetType: asset.assetType,
+    }))));
+  }
+
+  private static readFilingSelectors(
+    table: DataTable,
+    readValues: (column: string) => string[] | undefined,
+  ): FilingSelector[] {
+    if (table !== "asset_filing_chunks") {
+      return [{}];
+    }
+    // Why: a chunk load names one filing, or every filing of one document type; the loader never downloads the other filings of the company.
+    const filingIds = readValues("filing_id");
+    if (filingIds !== undefined) {
+      return filingIds.map((filingId) => ({ filingId }));
+    }
+    return (readValues("document_type") ?? []).map((filingType) => ({ filingType }));
   }
 
   private static readPeriodBounds(scope: RefScope, periodColumn: string, alias: string): PeriodBounds {
@@ -429,46 +483,6 @@ export class SqlGuardService implements SqlGuardPort {
     return PeriodService.isDate(text) ? text : undefined;
   }
 
-  private static buildRequirements(
-    table: DataTable,
-    category: CacheCategory,
-    readValues: (column: string) => string[] | undefined,
-  ): Requirement[] {
-    const selectors = SqlGuardService.readFilingSelectors(table, readValues);
-    return SqlGuardService.readAssets(readValues).flatMap((asset) => selectors.map((selector) => ({
-      ...selector,
-      table,
-      category,
-      ...asset,
-    })));
-  }
-
-  private static readAssets(readValues: (column: string) => string[] | undefined): AssetKey[] {
-    const markets = readValues("market") ?? [];
-    const tickers = readValues("ticker") ?? [];
-    const assetTypes = readValues("asset_type") ?? [];
-    return markets.flatMap((market) => tickers.flatMap((ticker) => assetTypes.map((assetType) => ({
-      market,
-      ticker,
-      assetType,
-    }))));
-  }
-
-  private static readFilingSelectors(
-    table: DataTable,
-    readValues: (column: string) => string[] | undefined,
-  ): FilingSelector[] {
-    if (table !== "chunks") {
-      return [{}];
-    }
-    // Why: a chunk load names one filing, or every filing of one type; the loader never downloads the other filings of the company.
-    const filingIds = readValues("filing_id");
-    if (filingIds !== undefined) {
-      return filingIds.map((filingId) => ({ filingId }));
-    }
-    return (readValues("filing_type") ?? []).map((filingType) => ({ filingType }));
-  }
-
   private static readValues(
     constraints: readonly Constraint[],
     column: string,
@@ -491,7 +505,7 @@ export class SqlGuardService implements SqlGuardPort {
   private static describeMissing(ref: TableRef, missing: string[]): string {
     const label = ref.name === ref.table ? ref.table : `${ref.table} (as ${ref.name})`;
     return `${label} needs a WHERE filter on ${missing.join(", ")}, compared with = or IN and literal values. `
-      + "Example: WHERE market = 'BR' AND ticker = 'PETR4' AND asset_type = 'stock'. "
+      + "Example: WHERE asset_id = 'BR:stock:PETR4'. "
       + "A filter that is a function, a subquery or one branch of an OR is not read as a filter.";
   }
 

@@ -3,6 +3,7 @@ import type { FocusIndicator } from "@/Protocols/BcbFocusProtocol.ts";
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
 import { BCB_FOCUS_WIRE, BcbFocusResponseSchema } from "@/Schemas/BcbFocusSchema.ts";
+import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 
 const RATE_LIMIT_STATUS = 429;
 const MAX_RESPONSE_MIB = 20;
@@ -13,10 +14,10 @@ const REFERENCE_YEAR = /^\d{4}$/u;
 
 // Why: the Focus survey answers the annual expectations; a query names one of these keys, and the service filters on its own name.
 const INDICATORS: readonly FocusIndicator[] = [
-  { key: "ipca", odataName: "IPCA" },
-  { key: "selic", odataName: "Selic" },
-  { key: "pib_total", odataName: "PIB Total" },
-  { key: "cambio", odataName: "Câmbio" },
+  { key: "ipca", odataName: "IPCA", code: "IPCA", assetType: "index" },
+  { key: "selic", odataName: "Selic", code: "SELIC", assetType: "tax_rate" },
+  { key: "pib_total", odataName: "PIB Total", code: "PIB_TOTAL", assetType: "index" },
+  { key: "cambio", odataName: "Câmbio", code: "USD", assetType: "currency" },
 ];
 
 export class BcbFocusAdapter implements ProviderPort<"expectations"> {
@@ -29,8 +30,8 @@ export class BcbFocusAdapter implements ProviderPort<"expectations"> {
 
   readonly category = "expectations";
   readonly vendor = BcbFocusAdapter.VENDOR;
-  readonly markets = ["FOCUS"] as const;
-  readonly assetTypes = [] as const;
+  readonly markets = ["BR"] as const;
+  readonly assetTypes = ["index", "tax_rate", "currency"] as const;
 
   private readonly http: HttpPort;
   private readonly baseUrl: string;
@@ -41,16 +42,18 @@ export class BcbFocusAdapter implements ProviderPort<"expectations"> {
   }
 
   async fetchTables(request: ProviderRequest): Promise<ProviderResult> {
-    const indicator = INDICATORS.find((candidate) => candidate.key === request.ticker);
+    const indicator = INDICATORS.find(
+      (candidate) => candidate.code === request.ticker && candidate.assetType === request.assetType,
+    );
     if (indicator === undefined) {
-      const known = INDICATORS.map((candidate) => candidate.key).join(", ");
+      const known = INDICATORS.map((candidate) => candidate.code).join(", ");
       throw new Error(`unknown Focus indicator ${request.ticker}; the known indicators are ${known}`);
     }
     const filter = encodeURIComponent(`Indicador eq '${indicator.odataName}'`);
     const url = `${this.baseUrl}/ExpectativasMercadoAnuais?$filter=${filter}&$format=json`;
     const text = await this.fetchText(url, indicator.key);
     const rows = BcbFocusAdapter.parseIndicator(text, indicator);
-    return { source: BcbFocusAdapter.VENDOR, tables: { market_expectations: rows } };
+    return { source: BcbFocusAdapter.VENDOR, tables: { asset_expectations: rows } };
   }
 
   static parseIndicator(text: string, indicator: FocusIndicator): ProviderRow[] {
@@ -87,17 +90,17 @@ export class BcbFocusAdapter implements ProviderPort<"expectations"> {
       }
       seen.add(key);
       return {
-        indicator: indicator.key,
-        reference_year: Number(referenceYear),
-        survey_date: surveyDate,
+        asset_id: AssetIdUtil.build({ market: "BR", assetType: indicator.assetType, code: indicator.code }),
+        reference_time_start: `${referenceYear}-01-01`,
+        reference_time_end: `${referenceYear}-12-31`,
+        survey_time: surveyDate,
         calculation_base: base,
-        mean_value: entry[BCB_FOCUS_WIRE.mean],
-        median_value: entry[BCB_FOCUS_WIRE.median],
+        mean: entry[BCB_FOCUS_WIRE.mean],
+        median: entry[BCB_FOCUS_WIRE.median],
         std_dev: entry[BCB_FOCUS_WIRE.stdDev],
-        min_value: entry[BCB_FOCUS_WIRE.min],
-        max_value: entry[BCB_FOCUS_WIRE.max],
+        min: entry[BCB_FOCUS_WIRE.min],
+        max: entry[BCB_FOCUS_WIRE.max],
         respondents: entry[BCB_FOCUS_WIRE.respondents],
-        source: BcbFocusAdapter.VENDOR,
       };
     });
   }

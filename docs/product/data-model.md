@@ -2,7 +2,7 @@
 
 The entities the server keeps in DuckDB, how they relate, and the rules behind their names. The columns and units of each table are in `data-map.md`; the rules that produce this shape are in `docs/data-modelling-standards.md`.
 
-This is the target model. The store is still at the schema of version 8, which has the older names. The move to this model is done in steps, and each step updates `data-map.md`.
+The store is at schema version 9, which is this model. The older names are listed in `data-map.md` under migration.
 
 The schema has no foreign keys. A relation is **logical**: both sides carry the same `asset_id`, and a query joins them on it.
 
@@ -143,14 +143,14 @@ erDiagram
 | Stock | `BR:stock:PETR4` |
 | FII | `BR:fii:HGLG11` |
 | Investment fund | `BR:fund:00.017.024/0001-53` |
-| Treasury bond | `BR:treasury:` a normalized family and maturity (the data map lists the rule) |
+| Treasury bond | `BR:treasury:TESOURO_SELIC_2027-03-01`, the family and the maturity (`data-map.md` has the rule) |
 | Macro index | `BR:index:IPCA` |
 | Tax rate | `BR:tax_rate:SELIC` |
 | Currency rate | `BR:currency:USD` |
 
 ## Queries
 
-A query names the assets it reads by `asset_id`, directly or through a join to `asset`:
+A query names the assets it reads by `asset_id`. Each asset table in a query needs its own filter; a join does not pass the filter of one table to the other:
 
 ```sql
 SELECT reference_time_start, close
@@ -159,15 +159,15 @@ WHERE asset_id = 'BR:stock:PETR4' AND reference_time_start >= DATE '2026-01-01'
 ```
 
 ```sql
-SELECT a.asset_id, q.reference_time_start, q.close
+SELECT a.name, q.reference_time_start, q.close
 FROM asset a JOIN asset_quotes q USING (asset_id)
-WHERE a.asset_id IN ('BR:stock:PETR4', 'BR:stock:VALE3')
+WHERE a.asset_id = 'BR:stock:PETR4' AND q.asset_id = 'BR:stock:PETR4' AND q.reference_time_start >= DATE '2026-01-01' 
 ```
 
-A filter on another column, such as the sector, does not name the assets to load, so it is refused.
+A filter on another column, such as the sector, does not name the assets to load, so it is refused. A query on `asset_metrics` also names the metrics it reads, with `metric = ` or `IN`.
 
 ## Open points
 
-1. **Load scope of a multi-asset load.** A Treasury family or a CNPJ writes several assets in one load. The replacement is by the key of the load, not by one asset. The data map must say, for each multi-asset load, which rows it replaces.
-2. **The normalized code of a Treasury bond.** The rule for `+` and for the maturity date is written in the data map before the code.
-3. **Migration.** Each old table maps to a new one (see the data map). The old names stay until the step that moves each one.
+1. **Scope of a load.** A load writes one asset, the one its requirement names, and replaces the rows of that asset in its scope (for `asset_metrics`, the metric group of its category). A row for another asset or another period is refused.
+2. **Treasury codes.** A bond is named by its family and its maturity. The rule for characters that are not in the code alphabet is in `data-map.md`.
+3. **Migration.** Done in schema 9; the mapping of the older names is in `data-map.md`.

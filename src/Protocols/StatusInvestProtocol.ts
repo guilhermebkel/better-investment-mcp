@@ -26,3 +26,5 @@ export type StatusInvestKey = {
   ticker: string;
   asset_type: string;
 };
+
+export type KeyColumn = "market" | "ticker" | "asset_type" | "period" | "source" | "version" | "source_file";

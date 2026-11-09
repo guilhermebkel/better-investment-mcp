@@ -47,9 +47,9 @@ describe("CvmStatementAdapter.fetchTables()", () => {
   it("gives PETR4's DRE for the third quarter of 2024 from the ITR 2024 file, with its version and file (AC1)", async () => {
     const adapter = new CvmStatementAdapter(buildHttp(), new CvmTickerAdapter(buildHttp()).resolveCnpj);
     const result = await adapter.fetchTables({ market: BR, ticker: PETR4, assetType: STOCK, period: QUARTER_3_2024 });
-    const dre = (result.tables.financial_statements ?? []).filter((row) => row.statement === "DRE_con");
+    const dre = (result.tables.asset_metrics ?? []).filter((row) => String(row.metric).startsWith("statement.dre_con."));
     expect(dre.length).toBeGreaterThan(0);
-    expect(dre[0]).toMatchObject({ period_end: SEPTEMBER_30_2024, source_file: "itr_cia_aberta_DRE_con_2024.csv", source: "cvm" });
+    expect(dre[0]).toMatchObject({ asset_id: "BR:stock:PETR4", reference_time_end: SEPTEMBER_30_2024, unit: "brl" });
     expect(typeof dre[0]?.version).toBe("number");
     const itr = result.files?.find((file) => file.url === ITR_2024_URL);
     expect(itr?.sha256).toMatch(HEX_HASH);
@@ -60,11 +60,11 @@ describe("CvmFundMonthlyAdapter.fetchTables()", () => {
   it("gives IRDM11's monthly net worth for 2025, one row per reference month, each with its version and file (AC2)", async () => {
     const adapter = new CvmFundMonthlyAdapter(buildHttp(), new CvmTickerAdapter(buildHttp()).resolveCnpj);
     const result = await adapter.fetchTables({ market: BR, ticker: IRDM11, assetType: FII, period: YEAR_2025 });
-    const rows = result.tables.fii_monthly ?? [];
-    expect(rows.length).toBeGreaterThanOrEqual(MONTHS_OF_2025);
-    for (const row of rows) {
-      expect(typeof row.net_worth).toBe("number");
-      expect(String(row.source_file)).toContain("inf_mensal_fii_");
+    const netWorth = (result.tables.asset_metrics ?? []).filter((row) => row.metric === "fii.net_worth");
+    expect(netWorth.length).toBeGreaterThanOrEqual(MONTHS_OF_2025);
+    for (const row of netWorth) {
+      expect(typeof row.value).toBe("number");
+      expect(row.unit).toBe("brl");
     }
   });
 });
@@ -73,7 +73,7 @@ describe("CvmAdapter.fetchTables()", () => {
   it("returns IRDM11's October 2025 management report with its official link and CNPJ (AC3)", async () => {
     const adapter = new CvmAdapter(buildHttp(), new CvmTickerAdapter(buildHttp()).resolveCnpj);
     const result = await adapter.fetchTables({ market: BR, ticker: IRDM11, assetType: FII, period: OCTOBER_2025 });
-    const reports = (result.tables.filings ?? []).filter((row) => row.filing_type === "management_report");
+    const reports = (result.tables.asset_filings ?? []).filter((row) => row.document_type === "management_report");
     expect(reports).toHaveLength(1);
     expect(String(reports[0]?.url)).toContain("https://fnet.bmfbovespa.com.br/");
   });
@@ -98,14 +98,14 @@ describe("CvmDocumentAdapter.fetchDocument() for an FNET report", () => {
     try {
       for (const chunk of chunks) {
         await store.writer.run(
-          "INSERT INTO chunks (filing_id, market, ticker, asset_type, filing_type, section, page, seq, text) VALUES ('fnet', 'BR', 'IRDM11', 'fii', 'management_report', ?, ?, ?, ?)",
+          "INSERT INTO asset_filing_chunks (filing_id, asset_id, document_type, section, page, seq, text) VALUES ('fnet', 'BR:fii:IRDM11', 'management_report', ?, ?, ?, ?)",
           [chunk.section, chunk.page, chunk.seq, chunk.text],
         );
       }
       await FullTextIndexService.buildIndex(store.writer);
       const reader = await store.openReader();
       try {
-        const hits = await reader.readRows(`SELECT text FROM search_chunks('${word}', 'BR', 'IRDM11', 'fii', 'management_report', NULL)`);
+        const hits = await reader.readRows(`SELECT text FROM search_chunks('${word}', 'BR:fii:IRDM11', 'management_report', NULL)`);
         expect(hits.length).toBeGreaterThan(0);
       } finally {
         reader.close();

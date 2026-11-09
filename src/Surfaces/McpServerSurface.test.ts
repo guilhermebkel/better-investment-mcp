@@ -109,10 +109,10 @@ describe("McpServerSurface.build()", () => {
 
   describe("when query_sql is called without the filters of a data table", () => {
     it("refuses it with the table, the missing filter and an example", async () => {
-      const result = await client.callTool({ name: "query_sql", arguments: { sql: "SELECT close FROM quotes" } });
+      const result = await client.callTool({ name: "query_sql", arguments: { sql: "SELECT close FROM asset_quotes" } });
 
       expect(result.isError).toBe(true);
-      expect(JSON.stringify(result)).toContain("quotes needs a WHERE filter on market, ticker, asset_type");
+      expect(JSON.stringify(result)).toContain("asset_quotes needs a WHERE filter on asset_id");
     });
   });
 

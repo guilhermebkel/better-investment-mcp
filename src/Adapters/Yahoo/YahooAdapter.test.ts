@@ -9,6 +9,7 @@ const FIXTURES = join(import.meta.dirname, "..", "..", "Testing", "fixtures", "y
 const CHART_FIXTURE = "chart-petr4.json";
 const UNKNOWN_FIXTURE = "chart-unknown.json";
 const PETR4 = { market: "BR", ticker: "PETR4", assetType: "stock" };
+const PETR4_ASSET = "BR:stock:PETR4";
 const UNKNOWN = { market: "BR", ticker: "XXXX3", assetType: "stock" };
 const NOT_FOUND_MESSAGE = "Yahoo did not find the symbol XXXX3.SA; no row was written";
 const NOT_USED = "not used";
@@ -74,42 +75,41 @@ const buildHttpFailing = (error: Error): HttpPort => ({
 });
 
 describe("YahooAdapter.fetchTables()", () => {
-  it("fills quotes, dividends, splits and the asset summary with source yahoo (AC1, AC7)", async () => {
+  it("fills quotes, dividends, splits and the asset summary (AC1, AC7)", async () => {
     const { http, urls } = buildHttpReturning(readFixture(CHART_FIXTURE));
     const result = await new YahooAdapter("quotes", http, YahooAdapter.BASE_URL).fetchTables(PETR4);
-    const quotes = result.tables.quotes ?? [];
+    const quotes = result.tables.asset_quotes ?? [];
 
     expect(urls[0]).toContain("/v8/finance/chart/PETR4.SA?");
     expect(result.source).toBe("yahoo");
-    expect(result.tables.assets).toStrictEqual([{
-      market: "BR", ticker: "PETR4", asset_type: "stock", legal_id: null,
-      name: "Petroleo Brasileiro S.A. - Petrobras", sector: null, currency: "BRL",
+    expect(result.tables.asset).toStrictEqual([{
+      asset_id: PETR4_ASSET, market: "BR", asset_type: "stock", code: "PETR4",
+      name: "Petroleo Brasileiro S.A. - Petrobras", currency: "BRL",
     }]);
-    expect(result.tables.dividends).toStrictEqual([{
-      market: "BR", ticker: "PETR4", asset_type: "stock", ex_date: "2023-11-16", pay_date: null,
-      amount: 0.25, kind: "dividend", source: "yahoo",
+    expect(result.tables.asset_dividends).toStrictEqual([{
+      asset_id: PETR4_ASSET, ex_time: "2023-11-16", payment_time: null, kind: "dividend", amount: 0.25,
     }]);
-    expect(result.tables.splits).toStrictEqual([{
-      market: "BR", ticker: "PETR4", asset_type: "stock", date: "2023-11-18", ratio: 2, source: "yahoo",
+    expect(result.tables.asset_splits).toStrictEqual([{
+      asset_id: PETR4_ASSET, ex_time: "2023-11-18", ratio: 2,
     }]);
     expect(quotes).toHaveLength(6);
-    expect(quotes.every((row) => row.source === "yahoo")).toBe(true);
+    expect(quotes.every((row) => row.asset_id === PETR4_ASSET)).toBe(true);
   });
 
   it("flags stale and suspect rows and keeps them in the table (AC3, AC4)", async () => {
     const { http } = buildHttpReturning(readFixture(CHART_FIXTURE));
     const result = await new YahooAdapter("quotes", http).fetchTables(PETR4);
-    const [, stale, suspect, afterSuspect] = result.tables.quotes ?? [];
+    const [, stale, suspect, afterSuspect] = result.tables.asset_quotes ?? [];
 
-    expect(stale).toMatchObject({ date: "2023-11-15", is_stale: true, suspect_tick: false });
-    expect(suspect).toMatchObject({ date: "2023-11-16", close: 13, is_stale: false, suspect_tick: true });
+    expect(stale).toMatchObject({ reference_time_start: "2023-11-15", is_stale: true, suspect_tick: false });
+    expect(suspect).toMatchObject({ reference_time_start: "2023-11-16", close: 13, is_stale: false, suspect_tick: true });
     expect(afterSuspect).toMatchObject({ close: 10.2, suspect_tick: false });
   });
 
   it("serves the dividends category with the same tables", async () => {
     const { http } = buildHttpReturning(readFixture(CHART_FIXTURE));
     const result = await new YahooAdapter("dividends", http).fetchTables(PETR4);
-    expect(Object.keys(result.tables).sort()).toStrictEqual(["assets", "dividends", "quotes", "splits"]);
+    expect(Object.keys(result.tables).sort()).toStrictEqual(["asset", "asset_dividends", "asset_quotes", "asset_splits"]);
   });
 
   it("fails with a not-found message when Yahoo answers 404 (AC2)", async () => {
@@ -157,7 +157,7 @@ describe("YahooAdapter.fetchTables()", () => {
     const result = await new YahooAdapter("quotes", http, YahooAdapter.BASE_URL).fetchTables(PETR4);
 
     expect(counts.crumbs).toBe(2);
-    expect(result.tables.quotes).toHaveLength(6);
+    expect(result.tables.asset_quotes).toHaveLength(6);
   });
 
   it("stops the load when the renewed crumb is refused too, and writes nothing (AC8)", async () => {

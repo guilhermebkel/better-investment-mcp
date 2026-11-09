@@ -38,9 +38,9 @@ describe("B3ListingAdapter.fetchTables()", () => {
 
     const result = await adapter.fetchTables({ market: "BR", ticker: "HGLG11", assetType: "fii" });
 
-    expect(result.tables.asset_identifiers).toStrictEqual([
-      { market: "BR", ticker: "HGLG11", asset_type: "fii", legal_id: HGLG_CNPJ, isin: null,
-        company_name: "PÁTRIA LOG - FUNDO DE INVESTIMENTO IMOBILIÁRIO - RESPONSABILIDADE LIMITADA", source: "b3" },
+    expect(result.tables.asset).toStrictEqual([
+      { asset_id: "BR:fii:HGLG11", market: "BR", asset_type: "fii", code: "HGLG11", legal_id: HGLG_CNPJ, isin: null,
+        name: "PÁTRIA LOG - FUNDO DE INVESTIMENTO IMOBILIÁRIO - RESPONSABILIDADE LIMITADA" },
     ]);
   });
 
@@ -49,7 +49,7 @@ describe("B3ListingAdapter.fetchTables()", () => {
 
     const result = await adapter.fetchTables({ market: "BR", ticker: "HGLG13", assetType: "fii" });
 
-    expect(result.tables.asset_identifiers?.[0]).toMatchObject({ ticker: "HGLG13", legal_id: HGLG_CNPJ });
+    expect(result.tables.asset?.[0]).toMatchObject({ asset_id: "BR:fii:HGLG13", code: "HGLG13", legal_id: HGLG_CNPJ });
   });
 
   it("refuses a FII whose detail does not list the ticker, and writes nothing", async () => {
@@ -65,8 +65,8 @@ describe("B3ListingAdapter.fetchTables()", () => {
 
     const result = await adapter.fetchTables({ market: "BR", ticker: "VALE3", assetType: "stock" });
 
-    expect(result.tables.asset_identifiers?.[0]).toMatchObject({
-      ticker: "VALE3", asset_type: "stock", legal_id: "33.592.510/0001-54", isin: "BRVALEACNOR0",
+    expect(result.tables.asset?.[0]).toMatchObject({
+      asset_id: "BR:stock:VALE3", code: "VALE3", asset_type: "stock", legal_id: "33.592.510/0001-54", isin: "BRVALEACNOR0",
     });
   });
 

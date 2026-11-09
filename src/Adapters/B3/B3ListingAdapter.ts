@@ -1,5 +1,6 @@
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type { B3FundIdentifiers, B3StockIdentifiers, B3TickerListing } from "@/Protocols/B3Protocol.ts";
+import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
 import {
   B3CompanyDetailSchema,
@@ -50,7 +51,7 @@ export class B3ListingAdapter implements ProviderPort<"identifiers"> {
     if (row === undefined) {
       throw new Error(`B3 has no ${request.assetType ?? "asset"} with the ticker ${request.ticker}; no identifier was written`);
     }
-    return { source: B3ListingAdapter.VENDOR, tables: { asset_identifiers: [row] } };
+    return { source: B3ListingAdapter.VENDOR, tables: { asset: [row] } };
   }
 
   async findStock(ticker: string): Promise<B3StockIdentifiers | undefined> {
@@ -122,13 +123,13 @@ export class B3ListingAdapter implements ProviderPort<"identifiers"> {
       return undefined;
     }
     return {
-      ticker,
+      asset_id: AssetIdUtil.build({ market: "BR", assetType: "stock", code: ticker }),
       market: "BR",
       asset_type: "stock",
+      code: ticker,
       legal_id: found.legalId,
       isin: found.isin,
-      company_name: found.companyName,
-      source: B3ListingAdapter.VENDOR,
+      name: found.companyName,
     };
   }
 
@@ -138,13 +139,13 @@ export class B3ListingAdapter implements ProviderPort<"identifiers"> {
       return undefined;
     }
     return {
-      ticker,
+      asset_id: AssetIdUtil.build({ market: "BR", assetType: "fii", code: ticker }),
       market: "BR",
       asset_type: "fii",
+      code: ticker,
       legal_id: found.legalId,
       isin: null,
-      company_name: found.fundName,
-      source: B3ListingAdapter.VENDOR,
+      name: found.fundName,
     };
   }
 

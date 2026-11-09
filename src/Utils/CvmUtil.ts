@@ -9,6 +9,7 @@ import type { CvmSubject, LegalIdLookup } from "@/Protocols/CvmProtocol.ts";
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type { PeriodWindow } from "@/Protocols/PeriodProtocol.ts";
 import type { ProviderFile, ProviderRequest, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
+import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 import { TempFileUtil } from "@/Utils/TempFileUtil.ts";
 
 const NOT_FOUND_STATUS = 404;
@@ -105,6 +106,25 @@ export class CvmUtil {
       sizeBytes += chunk.byteLength;
     }
     return { url, dataset, sizeBytes, referenceYear: year, sha256: hash.digest("hex") };
+  }
+
+  static buildAssetFiling(row: ProviderRow): ProviderRow {
+    // Why: a filing row is keyed by its asset_id, and its period is the document's reference time (start and end).
+    const reference = row.reference_date ?? null;
+    return {
+      asset_id: AssetIdUtil.build({
+        market: String(row.market), assetType: String(row.asset_type), code: String(row.ticker),
+      }),
+      filing_id: row.filing_id ?? null,
+      document_type: row.filing_type ?? null,
+      category: row.category ?? null,
+      subject: row.subject ?? null,
+      reference_time_start: reference,
+      reference_time_end: reference,
+      published_at: row.delivered_at ?? null,
+      url: row.url ?? null,
+      file_hash: row.file_hash ?? null,
+    };
   }
 
   static async* readLines(chunks: AsyncIterable<Uint8Array>): AsyncGenerator<string> {

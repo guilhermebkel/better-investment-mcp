@@ -4,6 +4,7 @@ import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type { LegalIdLookup } from "@/Protocols/CvmProtocol.ts";
 import type { ProviderPort, ProviderRequest, ProviderResult } from "@/Protocols/ProviderProtocol.ts";
 import { CvmAdapter } from "@/Adapters/Cvm/CvmAdapter.ts";
+import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 import { CsvUtil } from "@/Utils/CsvUtil.ts";
 import { CvmUtil } from "@/Utils/CvmUtil.ts";
 import { TempFileUtil } from "@/Utils/TempFileUtil.ts";
@@ -47,17 +48,17 @@ export class CvmRegistryAdapter implements ProviderPort<"registry"> {
     return {
       source: CvmRegistryAdapter.VENDOR,
       tables: {
-        company_registry: [{
+        asset: [{
+          asset_id: AssetIdUtil.build({ market: request.market, assetType: "stock", code: request.ticker }),
           market: request.market,
-          ticker: request.ticker,
           asset_type: "stock",
+          code: request.ticker,
           legal_id: cnpj,
-          company_name: CsvUtil.readText(record.DENOM_SOCIAL),
+          name: CsvUtil.readText(record.DENOM_SOCIAL),
           trade_name: CsvUtil.readText(record.DENOM_COMERC),
           sector: CsvUtil.readText(record.SETOR_ATIV),
           situation: CsvUtil.readText(record.SIT),
           cvm_code: CsvUtil.readText(record.CD_CVM),
-          source: CvmRegistryAdapter.VENDOR,
         }],
       },
     };

@@ -7,7 +7,7 @@ Terms marked *planned* have no code yet; they are the vocabulary the docs alread
 ## Language
 
 **Asset**:
-A thing with a price or a report: a stock, an FII, a fund, an ETF or a BDR. It is identified by `market:ticker` and has an asset type.
+A thing with a price or a report: a stock, an FII, a fund, an index, a currency or a Treasury bond. It is identified by its `asset_id`, `market:asset_type:code` (for example `BR:stock:PETR4`).
 _Avoid_: security, instrument, position (a position is what a person holds, which is out of scope)
 
 **Market**:
@@ -47,7 +47,7 @@ The code that talks to one vendor, such as Yahoo Finance, and implements one or 
 An outside service that has data: Yahoo Finance, StatusInvest, CVM, FNET or BCB.
 
 **Source**:
-The vendor that produced a load. It is recorded once per load, in `cache_runs`, and is not a column of the data tables (ADR 0020).
+The vendor that produced a load. It is recorded once per load, in `load_runs`, and is not a column of the data tables (ADR 0020).
 
 **Data category**:
 A kind of data with its own provider: quotes and splits, dividends, fundamentals, financial statements, periodic fund data, filing list, document text, macro, Tesouro Direto prices and market expectations.
@@ -60,7 +60,7 @@ _Avoid_: database, store (the store is the code that manages the cache)
 Downloading data from a vendor and writing it into the cache before a query runs.
 
 **Run**:
-One load of one category for one asset, recorded in `cache_runs` with its start, end, expiry, rows and error.
+One load of one category for one asset, recorded in `load_runs` with its start, end, expiry, rows and error.
 
 **Freshness**:
 Whether a run has not expired yet. A fresh run is not loaded again.
@@ -107,15 +107,15 @@ A macro series such as `ipca`, `cdi`, `selic`, `ptax` or `igpm`. It has no marke
 _Avoid_: indicator, index
 
 **Bond family**:
-A Tesouro Direto group of bonds that the file names alike, such as `Tesouro Selic` or `Tesouro IPCA+`. It is the ticker of a load of `treasury_prices`, whose registry market is `TDIR`.
+A Tesouro Direto group of bonds that the file names alike, such as `Tesouro Selic` or `Tesouro IPCA+`. It is the code of a Treasury asset: its family and its maturity (`TESOURO_SELIC_2027-03-01`). Its prices are rows of `asset_metrics` with the `treasury.` metrics.
 _Avoid_: product, bond type
 
 **Fund key**:
-The CNPJ of a fund class, the key of `fund_registry`, `fund_daily` and `fund_holdings`. CVM's fund files cover FI, FIDC and FIF, not FII.
+The CNPJ of a fund class. It is the code of a fund asset (`BR:fund:<CNPJ>`), in `asset`, `asset_attribute`, `asset_metrics` (`fund.`) and `asset_holdings`. CVM's fund files cover FI, FIDC and FIF, not FII.
 _Avoid_: fund ticker
 
 **Focus**:
-The BCB survey of market expectations. `market_expectations` holds its annual mean and median for `ipca`, `selic`, `pib_total` and `cambio`, one row per survey date and reference year. Its registry market is `FOCUS`.
+The BCB survey of market expectations. `asset_expectations` holds its annual mean and median for `ipca`, `selic`, `pib_total` and `cambio`, one row per survey date and calculation base.
 _Avoid_: forecast, projection
 
 ## CVM open data

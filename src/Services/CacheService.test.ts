@@ -12,7 +12,8 @@ const TTL_SECONDS = 60;
 const TEMP_PREFIX = join(tmpdir(), "cache-service-test-");
 const LOCK_TEMP_PREFIX = join(tmpdir(), "cache-lock-test-");
 
-const PETR4_KEY = "quotes:BR:PETR4";
+const PETR4_ASSET = "BR:stock:PETR4";
+const PETR4_KEY = "quotes:BR:stock:PETR4";
 
 describe("CacheService.isFresh()", () => {
   let directory: string;
@@ -36,39 +37,39 @@ describe("CacheService.isFresh()", () => {
   });
 
   const finishLoad = async (): Promise<void> => {
-    const runId = await store.cache.startRun({ category: "quotes", market: "BR", ticker: "PETR4", source: "yahoo" });
+    const runId = await store.cache.startRun({ category: "quotes", assetId: PETR4_ASSET, source: "yahoo" });
     await store.cache.finishRun(runId, { rowsRead: 10 });
   };
 
   describe("when a run finished with an expiry in the future", () => {
-    it("is true for that category, market and ticker", async () => {
+    it("is true for that category and asset", async () => {
       await finishLoad();
 
-      expect(await store.cache.isFresh("quotes", "BR", "PETR4")).toBe(true);
+      expect(await store.cache.isFresh("quotes", PETR4_ASSET)).toBe(true);
     });
 
-    it("is false for another ticker", async () => {
+    it("is false for another asset", async () => {
       await finishLoad();
 
-      expect(await store.cache.isFresh("quotes", "BR", "VALE3")).toBe(false);
+      expect(await store.cache.isFresh("quotes", "BR:stock:VALE3")).toBe(false);
     });
 
     it("stays true one second before the expiry and turns false when the expiry passes", async () => {
       await finishLoad();
       nowMs = START_MS + (TTL_SECONDS - 1) * ONE_SECOND_MS;
-      const beforeExpiry = await store.cache.isFresh("quotes", "BR", "PETR4");
+      const beforeExpiry = await store.cache.isFresh("quotes", PETR4_ASSET);
       nowMs = START_MS + TTL_SECONDS * ONE_SECOND_MS;
 
-      expect([beforeExpiry, await store.cache.isFresh("quotes", "BR", "PETR4")]).toStrictEqual([true, false]);
+      expect([beforeExpiry, await store.cache.isFresh("quotes", PETR4_ASSET)]).toStrictEqual([true, false]);
     });
   });
 
   describe("when the run failed", () => {
     it("is false", async () => {
-      const runId = await store.cache.startRun({ category: "quotes", market: "BR", ticker: "PETR4", source: "yahoo" });
+      const runId = await store.cache.startRun({ category: "quotes", assetId: PETR4_ASSET, source: "yahoo" });
       await store.cache.finishRun(runId, { rowsRead: 0, errorMessage: "Yahoo answered with a rate limit" });
 
-      expect(await store.cache.isFresh("quotes", "BR", "PETR4")).toBe(false);
+      expect(await store.cache.isFresh("quotes", PETR4_ASSET)).toBe(false);
     });
   });
 });
@@ -89,7 +90,7 @@ describe("CacheService.runOnce()", () => {
     rmSync(directory, { recursive: true, force: true });
   });
 
-  describe("when two callers ask for the same category, market and ticker at once", () => {
+  describe("when two callers ask for the same category and asset at once", () => {
     it("runs the load once and gives both callers its result", async () => {
       let loads = 0;
       const load = async (): Promise<CacheLoadResult> => {
@@ -133,7 +134,7 @@ describe("CacheService.runOnce()", () => {
 
       await Promise.all([
         store.cache.runOnce(PETR4_KEY, load),
-        store.cache.runOnce("quotes:BR:VALE3", load),
+        store.cache.runOnce("quotes:BR:stock:VALE3", load),
       ]);
 
       expect(loads).toBe(2);

@@ -30,8 +30,8 @@ These rules are enforced in code, not in a prompt (`docs/adr/0006-the-query-must
 
 - Only `SELECT` runs. The connection is read-only; its file system and extension autoload are locked after the full-text extension loads (ADR 0013).
 - Every data table in the query must be filtered by `market`, `ticker` and `asset_type`, with equality or `IN` with literal values.
-- `macro_series` is filtered by `series`. `chunks` also needs `filing_type` or `filing_id`; `search_chunks` takes the same filters as its arguments.
-- The catalog tables `assets`, `cache_runs` and `asset_coverage` need no filter.
+- `asset_metrics` is filtered by `asset_id` and `metric`. `asset_filing_chunks` also needs `document_type` or `filing_id`; `search_chunks` takes the same filters as its arguments.
+- The catalog tables `asset_coverage`, `load_runs` and `load_files` need no filter.
 - A query whose filters cannot be read is refused with an explanation and a corrected example.
 - At most 1,024 rows and 50,000 characters per answer; a cut is always reported.
 - Before the query runs, the server loads what is missing or expired and returns a `loaded` report.

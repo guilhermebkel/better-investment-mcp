@@ -7,7 +7,7 @@ ADR 0006 required a query to filter by market, ticker and asset type. Each table
 ## Decision
 
 - An asset has one `asset_id` of the form `market:asset_type:code`, for example `BR:stock:PETR4`, `BR:tax_rate:SELIC`, `BR:fund:00.017.024/0001-53`. The codes follow `docs/data-modelling-standards.md`.
-- The guard requires a filter on `asset_id` (equal or in a list) on every asset table, directly or through a join to `asset`. A filter on another column does not name the assets to load, so the query is refused.
+- The guard requires a filter on `asset_id` (equal or in a list) on every asset table. Each asset table in a query has its own filter: a join does not pass the filter of one table to the other, so a join filters both sides. A filter on another column does not name the assets to load, so the query is refused.
 - A category is a loader contract (the provider that fills it), not a table. A category may fill several tables.
 - The rule of ADR 0006 that a query names its assets is kept; the columns that name them change.
 

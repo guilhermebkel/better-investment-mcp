@@ -15,7 +15,9 @@ const EVENTUAL_URL_2025 = "https://dados.cvm.gov.br/dados/FI/DOC/EVENTUAL/DADOS/
 const EVENTUAL_URL_2026 = "https://dados.cvm.gov.br/dados/FI/DOC/EVENTUAL/DADOS/eventual_fi_2026.csv";
 const IRDM_FUND = "28.830.325/0001-10";
 const IRIDIUM_CRI_FUND = "41.076.564/0001-95";
-const OCTOBER_2025 = { from: "2025-10-01", to: "2025-10-31" };
+const OCTOBER_START = "2025-10-01";
+const OCTOBER_END = "2025-10-31";
+const OCTOBER_2025 = { from: OCTOBER_START, to: OCTOBER_END };
 const FULL_2025 = { from: "2025-01-01", to: "2025-12-31" };
 const OCTOBER_REPORT_LINK = "https://fnet.bmfbovespa.com.br/fnet/publico/downloadDocumento?id=1035283";
 const CURRENT_YEAR = 2025;
@@ -30,45 +32,43 @@ const fetchFund = (http: HttpPort, cnpj: string, period: PeriodRange) => {
 describe("CvmFundFilingAdapter.fetchFilings()", () => {
   it("returns the October 2025 management report of IRDM11 with its official link and its CNPJ (AC3)", async () => {
     const result = await fetchFund(buildServing(), IRDM_FUND, OCTOBER_2025);
-    const filings = result.tables.filings ?? [];
+    const filings = result.tables.asset_filings ?? [];
     // Why: October 2025 holds three documents of IRDM11 (a notice, a material fact and the report); only the report is the one asked for.
     expect(filings).toHaveLength(3);
-    const reports = filings.filter((row) => row.filing_type === "management_report");
+    const reports = filings.filter((row) => row.document_type === "management_report");
     expect(reports).toHaveLength(1);
     expect(reports[0]).toMatchObject({
-      market: "BR",
-      ticker: "IRDM11",
-      asset_type: "fii",
-      filing_type: "management_report",
+      asset_id: "BR:fii:IRDM11",
+      document_type: "management_report",
       category: "RELAT GERENCIAL",
-      reference_date: "2025-10-31",
+      reference_time_start: OCTOBER_END,
+      reference_time_end: OCTOBER_END,
       url: OCTOBER_REPORT_LINK,
-      source: "cvm",
     });
   });
 
   it("reports a month with no document as missing, and does not fill it from another fund (AC3)", async () => {
     const result = await fetchFund(buildServing(), IRIDIUM_CRI_FUND, OCTOBER_2025);
-    expect(result.tables.filings).toStrictEqual([]);
+    expect(result.tables.asset_filings).toStrictEqual([]);
   });
 
   it("reports an October 2026 document as missing when the year's file is not published (AC3)", async () => {
     const { http, urls } = FakeHttp.buildServing({ [EVENTUAL_URL_2025]: EVENTUAL_2025 });
     const result = await fetchFund(http, IRDM_FUND, { from: "2026-10-01", to: "2026-10-31" });
     expect(urls).toStrictEqual([EVENTUAL_URL_2026]);
-    expect(result.tables.filings).toStrictEqual([]);
+    expect(result.tables.asset_filings).toStrictEqual([]);
   });
 
   it("sorts the IRDM11 documents of 2025 into management reports, material facts and other documents, keeping the CVM document type", async () => {
     const result = await fetchFund(buildServing(), IRDM_FUND, FULL_2025);
-    const filings = result.tables.filings ?? [];
+    const filings = result.tables.asset_filings ?? [];
     const kindToCount = filings.reduce<Record<string, number>>((counts, row) => {
-      const kind = String(row.filing_type);
+      const kind = String(row.document_type);
       return { ...counts, [kind]: (counts[kind] ?? 0) + 1 };
     }, {});
     expect(filings).toHaveLength(28);
     expect(kindToCount).toStrictEqual({ management_report: 10, material_fact: 7, other: 11 });
-    expect(filings.find((row) => row.category === "AVISO MERCADO")?.filing_type).toBe("other");
+    expect(filings.find((row) => row.category === "AVISO MERCADO")?.document_type).toBe("other");
   });
 
   it("records the eventual file it read, with its hash and size, for the version history (S4)", async () => {

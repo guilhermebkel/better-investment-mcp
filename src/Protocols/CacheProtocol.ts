@@ -4,8 +4,7 @@ export type CacheCategory = "quotes" | "dividends" | "fundamentals" | "statement
 
 export type CacheRunStart = {
   category: CacheCategory;
-  market: string;
-  ticker: string;
+  assetId: string;
   source: string;
   filingId?: string;
   period?: PeriodWindow;

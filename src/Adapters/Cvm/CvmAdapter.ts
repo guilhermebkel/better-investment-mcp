@@ -22,7 +22,8 @@ const COLUMNS = [
 const PERIODIC_COLUMNS = [
   "CNPJ_CIA", "DT_REFER", "VERSAO", "DENOM_CIA", "CD_CVM", "CATEG_DOC", "ID_DOC", "DT_RECEB", "LINK_DOC",
 ] as const;
-const PERIODIC_KINDS: readonly CvmPeriodicKind[] = ["itr", "dfp", "fre"];
+// Why: the reference form (FRE) is read by the disclosure adapter, which keeps its rows; the filings list holds only the ITR and the DFP.
+const PERIODIC_KINDS: readonly CvmPeriodicKind[] = ["itr", "dfp"];
 const PERIODIC_FORMAT_ERROR = "the response format changed: an ITR, DFP or FRE file is not the one the adapter reads; no row was written";
 const FUND_ASSET_TYPE = "fii" as const;
 const CATEGORY_TO_KIND: ReadonlyMap<KnownCvmCategory, CvmFilingKind> = new Map<KnownCvmCategory, CvmFilingKind>([
@@ -66,7 +67,8 @@ export class CvmAdapter extends CvmBaseAdapter implements ProviderPort<"filings"
     if (request.assetType === FUND_ASSET_TYPE) {
       const files: ProviderFile[] = [];
       const rows = await this.fundFilings.fetchFilings({ cnpjDigits, key, window, files });
-      return { source: CvmUtil.VENDOR, tables: { filings: rows }, files };
+      const documents = rows.map((row) => CvmUtil.buildAssetFiling(row));
+      return { source: CvmUtil.VENDOR, tables: { asset_filings: documents }, files };
     }
     const collection: CvmCollection = {
       key,
@@ -82,7 +84,8 @@ export class CvmAdapter extends CvmBaseAdapter implements ProviderPort<"filings"
       }
     }
     const filings = [...collection.filingIdToRow.values()];
-    return { source: CvmUtil.VENDOR, tables: { filings }, files: collection.files };
+    const documents = filings.map((row) => CvmUtil.buildAssetFiling(row));
+    return { source: CvmUtil.VENDOR, tables: { asset_filings: documents }, files: collection.files };
   }
 
   static async readRows(

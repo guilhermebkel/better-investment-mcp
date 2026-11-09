@@ -1,8 +1,9 @@
 import { CvmBaseAdapter } from "@/Adapters/Cvm/CvmBaseAdapter.ts";
-import type { ColumnPairs, CvmFundColumn, CvmFundMonth, CvmKey, FileScope, FundMonthField } from "@/Protocols/CvmProtocol.ts";
+import type { ColumnPairs, CvmFundColumn, CvmFundMonth, CvmKey, FileScope, FundMonthField, NonMetricColumn } from "@/Protocols/CvmProtocol.ts";
 import type { ProviderFile, ProviderPort, ProviderRequest, ProviderResult, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
 import { PeriodService } from "@/Services/PeriodService.ts";
 import { CvmUtil } from "@/Utils/CvmUtil.ts";
+import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 import { ZipFileUtil } from "@/Utils/ZipFileUtil.ts";
 
 const SEPARATOR = ";";
@@ -13,7 +14,7 @@ const REFERENCE_COLUMN = "Data_Referencia";
 const VERSION_COLUMN = "Versao";
 const COMPLEMENT_FILE = "complemento";
 const ASSET_LIABILITY_FILE = "ativo_passivo";
-// Why: each CVM column maps to one column of fii_monthly; the net worth is the complement file's, the liquidity and the balance items are the balance sheet file's.
+// Why: each CVM column maps to one fii metric of its month; the net worth is the complement file's, the liquidity and the balance items are the balance sheet file's.
 const COMPLEMENT_COLUMNS: readonly (readonly [CvmFundColumn, FundMonthField])[] = [
   ["Patrimonio_Liquido", "net_worth"],
 ];
@@ -54,7 +55,8 @@ export class CvmFundMonthlyAdapter extends CvmBaseAdapter implements ProviderPor
       });
     }
     const rows = [...periodToMonth].map(([period, month]) => CvmFundMonthlyAdapter.buildRow(key, period, month));
-    return { source: CvmFundMonthlyAdapter.VENDOR, tables: { fii_monthly: rows }, files };
+    const metrics = CvmFundMonthlyAdapter.buildMetrics(rows);
+    return { source: CvmFundMonthlyAdapter.VENDOR, tables: { asset_metrics: metrics }, files };
   }
 
   private static async readFile(
@@ -157,6 +159,35 @@ export class CvmFundMonthlyAdapter extends CvmBaseAdapter implements ProviderPor
       throw new Error(`${FORMAT_ERROR}; a value is not a number`);
     }
     return value;
+  }
+
+  static buildMetrics(rows: ProviderRow[]): ProviderRow[] {
+    // Why: a monthly FII value is one metric row (fii.<column>) of its month; a value CVM does not carry is no row, not a zero.
+    return rows.flatMap((row) => {
+      const assetId = AssetIdUtil.build({
+        market: String(row.market), assetType: String(row.asset_type), code: String(row.ticker),
+      });
+      const start = String(row.period);
+      const end = PeriodService.endOfMonth(start);
+      return Object.entries(row)
+        // Why: a column the file carries but leaves empty is kept as null, so a missing month is not read as one that was never loaded; a column the file does not carry is not a row at all.
+        .filter(([column, value]) => CvmFundMonthlyAdapter.isMetricColumn(column) && (value === null || typeof value === "number"))
+        .map(([column, value]) => ({
+          asset_id: assetId,
+          metric: `fii.${column}`,
+          reference_time_start: start,
+          reference_time_end: end,
+          unit: "brl",
+          version: row.version ?? null,
+          value,
+        }));
+    });
+  }
+
+  private static readonly NON_METRIC_COLUMNS: readonly NonMetricColumn[] = ["market", "ticker", "asset_type", "period", "version", "source_file", "source"];
+
+  private static isMetricColumn(column: string): boolean {
+    return !CvmFundMonthlyAdapter.NON_METRIC_COLUMNS.some((known) => known === column);
   }
 
   private static buildRow(key: CvmKey, period: string, month: CvmFundMonth): ProviderRow {

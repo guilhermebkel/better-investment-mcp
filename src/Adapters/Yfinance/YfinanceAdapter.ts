@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow, TableToRows } from "@/Protocols/ProviderProtocol.ts";
 import { YfinanceSchema } from "@/Schemas/YfinanceSchema.ts";
 import { QualityFlagService } from "@/Services/QualityFlagService.ts";
+import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 
 const PYTHON_TIMEOUT_MS = 180_000;
 const BYTES_PER_MIB = 1_048_576;
@@ -90,13 +91,15 @@ export class YfinanceAdapter<Category extends "quotes" | "dividends"> implements
   }
 
   static buildTables(data: ReturnType<typeof YfinanceAdapter.parseOutput>, request: ProviderRequest): TableToRows {
-    const key = { market: request.market, ticker: request.ticker, asset_type: request.assetType ?? "" };
+    const assetId = AssetIdUtil.build({ market: request.market, assetType: request.assetType ?? "", code: request.ticker });
+    const key = { asset_id: assetId };
     const priced = data.quotes.filter((quote) => quote.close !== null);
     const points = priced.map((quote) => ({ close: quote.close ?? 0, volume: quote.volume ?? 0 }));
     const flags = QualityFlagService.buildFlags(points);
     const quoteRows: ProviderRow[] = priced.map((quote, index) => ({
       ...key,
-      date: quote.date,
+      reference_time_start: quote.date,
+      reference_time_end: quote.date,
       open: quote.open,
       high: quote.high,
       low: quote.low,
@@ -105,19 +108,17 @@ export class YfinanceAdapter<Category extends "quotes" | "dividends"> implements
       volume: quote.volume,
       is_stale: flags[index]?.isStale ?? false,
       suspect_tick: flags[index]?.isSuspectTick ?? false,
-      source: YfinanceAdapter.VENDOR,
     }));
     return {
-      assets: [{ ...key, legal_id: null, name: data.name, sector: null, currency: data.currency }],
-      quotes: quoteRows,
-      dividends: data.dividends.map((dividend) => ({
-        ...key, ex_date: dividend.exDate, pay_date: null, amount: dividend.amount, kind: "dividend", source: YfinanceAdapter.VENDOR,
+      asset: [{ ...key, market: request.market, asset_type: request.assetType ?? "", code: request.ticker, name: data.name, currency: data.currency }],
+      asset_quotes: quoteRows,
+      asset_dividends: data.dividends.map((dividend) => ({
+        ...key, ex_time: dividend.exDate, payment_time: null, amount: dividend.amount, kind: "dividend",
       })),
-      splits: data.splits.map((split) => ({
+      asset_splits: data.splits.map((split) => ({
         ...key,
-        date: split.date,
+        ex_time: split.date,
         ratio: split.ratio,
-        source: YfinanceAdapter.VENDOR,
       })),
     };
   }

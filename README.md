@@ -13,7 +13,7 @@ The server exposes <!-- tools:count -->3<!-- /tools:count --> tools. All of them
 <!-- tools:list -->
 - `get_overview`: the server's usage notice.
 - `get_guide`: the guide for one topic of `query_sql`. The guide texts come later.
-- `query_sql`: one `SELECT` over the data tables. Every data table needs filters on `market`, `ticker` and `asset_type`; a query without them is refused with the filter to add. The rules are in `docs/product/sql-guard.md`.
+- `query_sql`: one `SELECT` over the data tables. Every asset table needs a filter on `asset_id` (`market:asset_type:code`, for example `BR:stock:PETR4`), and `asset_metrics` also needs `metric`; a query without them is refused with the filter to add. The tables are in `docs/product/data-map.md`, the rules in `docs/product/sql-guard.md`.
 <!-- /tools:list -->
 
 ## Install
@@ -48,14 +48,14 @@ Every setting is an environment variable. The server reads them once at start an
 | `INVESTMENT_MCP_FUND_DATA_PROVIDER` | `BR:cvm` | FII monthly data source per market, for example `BR:cvm`. Set it only to replace the default. |
 | `INVESTMENT_MCP_FILINGS_PROVIDER` | `BR:cvm` | Filings list source per market, for example `BR:cvm`. Set it only to replace the default. |
 | `INVESTMENT_MCP_DOCUMENTS_PROVIDER` | `BR:cvm` | Document download source per market. Set it only to replace the default. |
-| `INVESTMENT_MCP_MACRO_PROVIDER` | `SERIES:bcb` | Macro series source. The series have no market, so the value is `SERIES:bcb`. Set it only to replace the default. |
-| `INVESTMENT_MCP_TREASURY_PROVIDER` | `TDIR:tesouro` | Tesouro Direto source. The bond families have no market, so the value is `TDIR:tesouro`. Set it only to replace the default. |
-| `INVESTMENT_MCP_EXPECTATIONS_PROVIDER` | `FOCUS:bcb` | Market expectations source. The indicators have no market, so the value is `FOCUS:bcb`. Set it only to replace the default. |
+| `INVESTMENT_MCP_MACRO_PROVIDER` | `BR:bcb` | Macro series source (IPCA, IGPM, CDI, SELIC). Set it only to replace the default. |
+| `INVESTMENT_MCP_TREASURY_PROVIDER` | `BR:tesouro` | Tesouro Direto source, one bond per asset. Set it only to replace the default. |
+| `INVESTMENT_MCP_EXPECTATIONS_PROVIDER` | `BR:bcb` | Market expectations source (BCB Focus). Set it only to replace the default. |
 | `INVESTMENT_MCP_IDENTIFIERS_PROVIDER` | `BR:b3` | CNPJ and ISIN of a ticker, from B3. The value is `BR:b3`. Set it only to replace the default. |
 | `INVESTMENT_MCP_REGISTRY_PROVIDER` | `BR:cvm` | Company registry of a stock, from CVM. The value is `BR:cvm`. Set it only to replace the default. |
-| `INVESTMENT_MCP_FX_PROVIDER` | `FX:bcb` | Closing PTAX rate per currency. The value is `FX:bcb`. Set it only to replace the default. |
+| `INVESTMENT_MCP_FX_PROVIDER` | `BR:bcb` | Closing PTAX rate per currency. Set it only to replace the default. |
 | `INVESTMENT_MCP_DISCLOSURES_PROVIDER` | `BR:cvm` | Company disclosures (FRE, VLMO, CGVN). Set it only to replace the default. |
-| `INVESTMENT_MCP_FUND_PROVIDER` | `FUND:cvm` | Fund registry, daily quota and holdings, keyed by CNPJ. The value is `FUND:cvm`. Set it only to replace the default. |
+| `INVESTMENT_MCP_FUND_PROVIDER` | `BR:cvm` | Fund registry, daily figures and holdings, keyed by CNPJ. Set it only to replace the default. |
 
 A provider variable is optional: each category has a default (in the table), and a second vendor after `>` is the fallback, used when the first one fails. A provider variable names the vendor for each market: `BR:yahoo` uses one vendor, and `BR:yahoo>statusinvest` uses a second vendor only when the first fails. The vendors are added with their adapters.
 
@@ -77,7 +77,7 @@ A provider variable is optional: each category has a default (in the table), and
 | CVM | ITR, DFP, Formulário de Referência | Not built (issue #11). |
 | FNET | FII management reports | Built only if a spike passes. |
 
-Each load records the vendor that produced it in `cache_runs`. The answer of `query_sql` does not name it.
+Each load records the vendor that produced it in `load_runs`. The answer of `query_sql` does not name it.
 
 ## Development
 

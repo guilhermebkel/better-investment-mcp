@@ -1,16 +1,26 @@
+import type { DatabaseValue } from "@/Protocols/DatabaseProtocol.ts";
 import { createReadStream } from "node:fs";
 import { join } from "node:path";
 import { HttpFailureError } from "@/Errors/HttpFailureError.ts";
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
-import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
+import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow, TableToRows } from "@/Protocols/ProviderProtocol.ts";
 import { CvmAdapter } from "@/Adapters/Cvm/CvmAdapter.ts";
 import type { FundKeyed } from "@/Protocols/FundProtocol.ts";
+import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 import { CsvUtil } from "@/Utils/CsvUtil.ts";
 import { CvmUtil } from "@/Utils/CvmUtil.ts";
 import { TempFileUtil } from "@/Utils/TempFileUtil.ts";
 import { ZipFileUtil } from "@/Utils/ZipFileUtil.ts";
 
 const MONTHS_BACK = 12;
+const FUND_DAILY_METRICS: readonly (readonly [string, string])[] = [
+  ["quota", "brl_per_quota"],
+  ["net_worth", "brl"],
+  ["total_value", "brl"],
+  ["subscriptions", "brl"],
+  ["redemptions", "brl"],
+  ["holders", "count"],
+];
 const MONTH_PAD_LENGTH = 2;
 const NOT_FOUND_STATUS = 404;
 const CNPJ_PATTERN = /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/u;
@@ -28,8 +38,8 @@ export class CvmFundAdapter implements ProviderPort<"fund"> {
 
   readonly category = "fund";
   readonly vendor = CvmFundAdapter.VENDOR;
-  readonly markets = ["FUND"] as const;
-  readonly assetTypes = [] as const;
+  readonly markets = ["BR"] as const;
+  readonly assetTypes = ["fund"] as const;
 
   private readonly http: HttpPort;
   private readonly baseUrl: string;
@@ -57,9 +67,69 @@ export class CvmFundAdapter implements ProviderPort<"fund"> {
       }
       return {
         source: CvmFundAdapter.VENDOR,
-        tables: { fund_registry: registry === undefined ? [] : [registry], fund_daily: daily, fund_holdings: holdings },
+        tables: CvmFundAdapter.buildTables(cnpj, registry, daily, holdings),
       };
     });
+  }
+
+  static buildTables(
+    cnpj: string,
+    registry: ProviderRow | undefined,
+    daily: ProviderRow[],
+    holdings: ProviderRow[],
+  ): TableToRows {
+    // Why: a fund is an asset (its CNPJ is its code); its administrator and manager are attributes, and its quota, its equity and its flows are metrics of the day they refer to.
+    const assetId = AssetIdUtil.build({ market: "BR", assetType: "fund", code: cnpj });
+    const attributes: ProviderRow[] = [];
+    const metrics: ProviderRow[] = [];
+    if (registry !== undefined) {
+      for (const attribute of ["administrator", "administrator_cnpj", "manager", "fund_type", "class_name"]) {
+        const value = registry[attribute];
+        if (value !== null && value !== undefined) {
+          attributes.push({ asset_id: assetId, attribute, value });
+        }
+      }
+      if (registry.net_worth !== null && registry.net_worth_date !== null && registry.net_worth !== undefined) {
+        const netWorth = CvmFundAdapter.buildMetric(assetId, "fund.net_worth", String(registry.net_worth_date), registry.net_worth, "brl");
+        metrics.push(netWorth);
+      }
+    }
+    for (const row of daily) {
+      const day = String(row.date);
+      for (const [column, unit] of FUND_DAILY_METRICS) {
+        const metric = CvmFundAdapter.buildMetric(assetId, `fund.${column}`, day, row[column] ?? null, unit);
+        metrics.push(metric);
+      }
+    }
+    const holdingRows = holdings.map((row) => ({
+      asset_id: assetId,
+      reference_time_start: row.period ?? null,
+      reference_time_end: row.period ?? null,
+      block: row.block ?? null,
+      application_type: row.application_type ?? null,
+      held_code: row.asset_code ?? null,
+      held_description: row.asset_description ?? null,
+      held_issuer: row.issuer ?? null,
+      quantity: row.quantity ?? null,
+      market_value: row.market_value ?? null,
+    }));
+    const asset: ProviderRow[] = [];
+    if (registry !== undefined) {
+      asset.push({
+        asset_id: assetId,
+        market: "BR",
+        asset_type: "fund",
+        code: cnpj,
+        legal_id: cnpj,
+        name: registry.fund_name ?? null,
+        situation: registry.situation ?? null,
+      });
+    }
+    return { asset, asset_attribute: attributes, asset_metrics: metrics, asset_holdings: holdingRows };
+  }
+
+  static buildMetric(assetId: string, metric: string, day: string, value: DatabaseValue, unit: string): ProviderRow {
+    return { asset_id: assetId, reference_time_start: day, reference_time_end: day, metric, value, unit };
   }
 
   static listRecentMonths(now: Date, count: number): string[] {

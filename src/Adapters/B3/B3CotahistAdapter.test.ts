@@ -40,20 +40,20 @@ describe("B3CotahistAdapter.fetchTables()", () => {
       "https://bvmf.bmfbovespa.com.br/InstDados/SerHist/COTAHIST_A2024.ZIP",
       "https://bvmf.bmfbovespa.com.br/InstDados/SerHist/COTAHIST_A2025.ZIP",
     ]);
-    expect(result.tables.quotes?.every((row) => String(row.date).startsWith("2025"))).toBe(true);
+    expect(result.tables.asset_quotes?.every((row) => String(row.reference_time_start).startsWith("2025"))).toBe(true);
   });
 
   it("keeps only the ticker asked, with its prices read from the fixed-width record", async () => {
     const adapter = new B3CotahistAdapter(buildHttp(), B3CotahistAdapter.BASE_URL, () => NOW_YEAR);
 
     const result = await adapter.fetchTables(PETR4_REQUEST);
-    const rows = result.tables.quotes ?? [];
+    const rows = result.tables.asset_quotes ?? [];
 
     expect(rows.length).toBeGreaterThan(0);
-    expect(rows.every((row) => row.ticker === "PETR4" && row.asset_type === "stock")).toBe(true);
+    expect(rows.every((row) => row.asset_id === "BR:stock:PETR4")).toBe(true);
     expect(rows[0]).toMatchObject({
-      market: "BR", ticker: "PETR4", date: "2025-01-20",
-      open: 37.22, high: 37.43, low: 37.11, close: 37.29, adj_close: null, volume: 13912800, source: "b3",
+      asset_id: "BR:stock:PETR4", reference_time_start: "2025-01-20", reference_time_end: "2025-01-20",
+      open: 37.22, high: 37.43, low: 37.11, close: 37.29, adj_close: null, volume: 13912800,
     });
   });
 
@@ -62,8 +62,8 @@ describe("B3CotahistAdapter.fetchTables()", () => {
 
     const result = await adapter.fetchTables({ market: "BR", ticker: "HGLG11", assetType: "fii" });
 
-    expect(result.tables.quotes?.map((row) => row.date)).toStrictEqual(["2025-05-26", "2025-05-27", "2025-06-02"]);
-    expect(result.tables.quotes?.[1]).toMatchObject({ close: 160.5, asset_type: "fii" });
+    expect(result.tables.asset_quotes?.map((row) => row.reference_time_start)).toStrictEqual(["2025-05-26", "2025-05-27", "2025-06-02"]);
+    expect(result.tables.asset_quotes?.[1]).toMatchObject({ close: 160.5, asset_id: "BR:fii:HGLG11" });
   });
 
   it("flags the quote of a day that repeats the day before with zero volume, and keeps the row", async () => {
@@ -71,6 +71,6 @@ describe("B3CotahistAdapter.fetchTables()", () => {
 
     const result = await adapter.fetchTables({ market: "BR", ticker: "HGLG11", assetType: "fii" });
 
-    expect(result.tables.quotes?.every((row) => typeof row.is_stale === "boolean")).toBe(true);
+    expect(result.tables.asset_quotes?.every((row) => typeof row.is_stale === "boolean")).toBe(true);
   });
 });

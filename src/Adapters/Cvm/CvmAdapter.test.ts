@@ -121,7 +121,7 @@ describe("CvmAdapter.readPeriodicRows()", () => {
 });
 
 describe("CvmAdapter.fetchTables()", () => {
-  it("reads the yearly IPE, ITR, DFP and FRE files, skips a year without a file and fills filings (AC1)", async () => {
+  it("reads the yearly IPE, ITR and DFP files, skips a year without a file and fills filings (AC1)", async () => {
     const itrZip = ZipFixture.buildZipOf({ "itr_cia_aberta_2025.csv": readPeriodicLines("ITR") });
     const files = {
       [`${BASE}/IPE/DADOS/ipe_cia_aberta_2024.zip`]: ZipFixture.buildZipOf({ "ipe_cia_aberta_2024.csv": SAMPLE }),
@@ -131,15 +131,15 @@ describe("CvmAdapter.fetchTables()", () => {
     const adapter = new CvmAdapter(http, resolveKnownCompany, CvmAdapter.BASE_URL, () => CURRENT_YEAR);
     const result = await adapter.fetchTables(key);
 
-    expect(urls).toHaveLength(12);
-    expect(urls.slice(0, 4)).toStrictEqual([
+    expect(urls).toHaveLength(9);
+    // Why: FRE, VLMO and CGVN are read by the disclosures adapter, not here; this adapter reads the filing list and the periodic statements.
+    expect(urls.slice(0, 3)).toStrictEqual([
       `${BASE}/IPE/DADOS/ipe_cia_aberta_2023.zip`,
       `${BASE}/ITR/DADOS/itr_cia_aberta_2023.zip`,
       `${BASE}/DFP/DADOS/dfp_cia_aberta_2023.zip`,
-      `${BASE}/FRE/DADOS/fre_cia_aberta_2023.zip`,
     ]);
     expect(result.source).toBe("cvm");
-    expect(result.tables.filings).toHaveLength(7);
+    expect(result.tables.asset_filings).toHaveLength(7);
   });
 
   it("names the ticker as pending when it cannot be mapped to a company, and guesses nothing (AC8)", async () => {
@@ -165,8 +165,8 @@ describe("CvmAdapter.fetchTables()", () => {
       const adapter = new CvmAdapter(http, resolveKnownCompany, CvmAdapter.BASE_URL, () => CURRENT_YEAR);
       await adapter.fetchTables({ ...key, period: window });
       expect(urls.filter((url) => url.includes("_2018.zip") || url.includes("_2021.zip"))).toStrictEqual([]);
-      expect(urls.filter((url) => url.includes("_2019.zip"))).toHaveLength(4);
-      expect(urls.filter((url) => url.includes("_2020.zip"))).toHaveLength(4);
+      expect(urls.filter((url) => url.includes("_2019.zip"))).toHaveLength(3);
+      expect(urls.filter((url) => url.includes("_2020.zip"))).toHaveLength(3);
     });
 
     it("keeps only the filings whose reference date is inside the period, and a row with no reference date is left out", async () => {

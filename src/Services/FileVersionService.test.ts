@@ -20,7 +20,7 @@ const buildFile = (sha256: string, sizeBytes: number): ProviderFile => ({
 });
 
 const readVersions = async (database: DatabasePort): Promise<Record<string, unknown>[]> => database.readRows(
-  "SELECT sha256, CAST(size_bytes AS INTEGER) AS sizeBytes, CAST(is_current AS VARCHAR) AS isCurrent FROM cvm_files ORDER BY sha256",
+  "SELECT sha256, CAST(size_bytes AS INTEGER) AS sizeBytes, CAST(is_current AS VARCHAR) AS isCurrent FROM load_files ORDER BY sha256",
 );
 
 describe("FileVersionService.record()", () => {
@@ -43,7 +43,7 @@ describe("FileVersionService.record()", () => {
     await FileVersionService.record(database, [buildFile(HASH_FIRST, 100)], FETCHED_SECOND);
     const rows = await readVersions(database);
     expect(rows).toStrictEqual([{ sha256: HASH_FIRST, sizeBytes: 100, isCurrent: "true" }]);
-    const fetched = await database.readRows("SELECT CAST(fetched_at AS VARCHAR) AS fetchedAt FROM cvm_files");
+    const fetched = await database.readRows("SELECT CAST(fetched_at AS VARCHAR) AS fetchedAt FROM load_files");
     expect(fetched[0]?.fetchedAt).toContain("2026-11-20");
     database.close();
   });

@@ -161,9 +161,10 @@ describe("CvmStatementAdapter.fetchTables()", () => {
     expect(urls).toHaveLength(6);
     expect(urls[0]).toBe(`${BASE}/ITR/DADOS/itr_cia_aberta_2023.zip`);
     expect(result.source).toBe("cvm");
-    const rows = result.tables.financial_statements ?? [];
-    const statements = rows.map((row) => row.statement);
-    expect(new Set(statements)).toStrictEqual(new Set(STATEMENTS));
+    const rows = result.tables.asset_metrics ?? [];
+    // Why: a metric is statement.<statement>.<code>; the statement is the second word, in lower case.
+    const statements = rows.map((row) => String(row.metric).split(".")[1]);
+    expect(new Set(statements)).toStrictEqual(new Set(STATEMENTS.map((name) => name.toLowerCase())));
     // Why: each statement file has three company lines (two quarters and a year to date), so eight files give 24 rows.
     expect(rows).toHaveLength(24);
   });
@@ -189,9 +190,9 @@ describe("CvmStatementAdapter.fetchTables()", () => {
     const result = await new CvmStatementAdapter(http, resolveSampleCompany, CvmAdapter.BASE_URL, () => CURRENT_YEAR)
       .fetchTables({ ...request, period: { from: Q1_2024, to: Q1_2024 } });
     expect(urls).toStrictEqual([itrUrl, `${BASE}/DFP/DADOS/dfp_cia_aberta_2024.zip`]);
-    const rows = result.tables.financial_statements ?? [];
+    const rows = result.tables.asset_metrics ?? [];
     // Why: the sample's 2024 comparative quarter is the only line inside the period; the 2025 lines are outside it and are not kept.
-    expect(rows.map((row) => row.period_end)).toStrictEqual(Array.from({ length: STATEMENTS.length }, () => "2024-03-31"));
+    expect(rows.map((row) => row.reference_time_end)).toStrictEqual(Array.from({ length: STATEMENTS.length }, () => "2024-03-31"));
   });
 
   it("records each statement file that it read, with its hash, for the version history (S4)", async () => {

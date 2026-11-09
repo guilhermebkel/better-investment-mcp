@@ -19,7 +19,7 @@ const convertRow = (row: Record<string, unknown>): Record<string, unknown> => {
 export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
   static readonly NAME = "querySql";
   static readonly DESCRIPTION = "Read-only. Runs one SELECT over the server's tables and returns the rows. "
-    + "Every data table in the query needs WHERE filters on market, ticker and asset_type, compared with = or IN "
+    + "Every asset table in the query needs a WHERE filter on asset_id (market:asset_type:code), compared with = or IN "
     + "and literal values; a query without them is refused with the filter to add. Output is limited to "
     + `${OutputLimitService.DEFAULT_LIMITS.maxRows} rows and ${OutputLimitService.DEFAULT_LIMITS.maxChars} characters, `
     + "and a cut is reported. "
@@ -75,7 +75,7 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
   }
 
   private static removeVendorKeys(entry: LoadedEntry): Record<string, unknown> {
-    // Why: the answer never names the vendor that served a load, nor whether a fallback did; that is kept in cache_runs.
+    // Why: the answer never names the vendor that served a load, nor whether a fallback did; that is kept in load_runs.
     return Object.fromEntries(Object.entries(entry).filter(([key]) => !VENDOR_KEYS.has(key as "source")));
   }
 
@@ -107,7 +107,7 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
     if (windows.length === 0) {
       return "";
     }
-    return ` Reference period loaded: ${windows.join(", ")}. Each row keeps its version (version) and its file (source_file); the latest version of each row is kept.`;
+    return ` Reference period loaded: ${windows.join(", ")}. Each row keeps its version (version); the latest version of each row is kept.`;
   }
 
   private static isUsable(status: LoadedEntry["status"]): boolean {

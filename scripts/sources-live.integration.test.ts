@@ -26,8 +26,8 @@ describe("B3ListingAdapter against the live service", () => {
 
     for (const ticker of B3_FII_TICKERS) {
       const result = await adapter.fetchTables({ assetType: "fii", market: BR, ticker });
-      expect(result.tables.asset_identifiers?.[0]).toMatchObject({ asset_type: "fii", ticker });
-      expect(result.tables.asset_identifiers?.[0]?.legal_id).toMatch(/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/u);
+      expect(result.tables.asset?.[0]).toMatchObject({ asset_type: "fii", code: ticker });
+      expect(result.tables.asset?.[0]?.legal_id).toMatch(/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/u);
     }
   }, TIMEOUT_MS);
 
@@ -37,8 +37,8 @@ describe("B3ListingAdapter against the live service", () => {
 
     const result = await adapter.fetchTables({ market: BR, ticker: "VALE3", assetType: "stock" });
 
-    expect(result.tables.asset_identifiers?.[0]).toMatchObject({ ticker: "VALE3", legal_id: "33.592.510/0001-54" });
-    expect(String(result.tables.asset_identifiers?.[0]?.isin)).toMatch(/^BR[A-Z0-9]{10}$/u);
+    expect(result.tables.asset?.[0]).toMatchObject({ code: "VALE3", legal_id: "33.592.510/0001-54" });
+    expect(String(result.tables.asset?.[0]?.isin)).toMatch(/^BR[A-Z0-9]{10}$/u);
   }, TIMEOUT_MS);
 });
 
@@ -47,11 +47,11 @@ describe("BcbPtaxAdapter against the live service", () => {
     const http = new HttpAdapter({ allowedHosts: ["olinda.bcb.gov.br"] });
     const adapter = new BcbPtaxAdapter(http);
 
-    const result = await adapter.fetchTables({ market: "FX", ticker: "USD" });
-    const rows = result.tables.fx_rates ?? [];
+    const result = await adapter.fetchTables({ market: BR, assetType: "currency", ticker: "USD" });
+    const rows = (result.tables.asset_metrics ?? []).filter((row) => row.metric === "fx.sell_rate");
 
     expect(rows.length).toBeGreaterThan(MIN_FX_DAYS);
-    expect(rows.every((row) => typeof row.sell_rate === "number" && row.sell_rate > MIN_SELL_RATE)).toBe(true);
+    expect(rows.every((row) => typeof row.value === "number" && row.value > MIN_SELL_RATE)).toBe(true);
   }, TIMEOUT_MS);
 });
 
@@ -68,18 +68,18 @@ describe("CVM registry and fund adapters against the live files", () => {
 
     const result = await adapter.fetchTables({ market: BR, ticker: "PETR4", assetType: "stock" });
 
-    expect(result.tables.company_registry?.[0]).toMatchObject({ legal_id: PETROBRAS_CNPJ, sector: "Petróleo e Gás" });
+    expect(result.tables.asset?.[0]).toMatchObject({ legal_id: PETROBRAS_CNPJ, sector: "Petróleo e Gás" });
   }, TIMEOUT_MS);
 
   it("writes a fund's registry and its monthly rows from the last twelve months", async () => {
     const http = buildCvmHttp();
     const adapter = new CvmFundAdapter(http);
 
-    const result = await adapter.fetchTables({ market: "FUND", ticker: FUND_CNPJ });
+    const result = await adapter.fetchTables({ market: BR, assetType: "fund", ticker: FUND_CNPJ });
 
-    expect(result.tables.fund_registry?.length).toBe(1);
-    expect(result.tables.fund_daily?.length).toBeGreaterThan(0);
-    expect(result.tables.fund_holdings?.length).toBeGreaterThan(0);
+    expect(result.tables.asset?.length).toBe(1);
+    expect((result.tables.asset_metrics ?? []).filter((row) => row.metric === "fund.quota").length).toBeGreaterThan(0);
+    expect(result.tables.asset_holdings?.length).toBeGreaterThan(0);
   }, TIMEOUT_MS);
 
   it("keeps the ticker lookup of CVM's company list reachable", async () => {
@@ -96,8 +96,8 @@ describe("YfinanceAdapter against the live library", () => {
 
     const result = await adapter.fetchTables({ market: BR, ticker: "PETR4", assetType: "stock" });
 
-    expect((result.tables.quotes ?? []).length).toBeGreaterThan(MIN_HISTORY_DAYS);
-    expect(result.tables.assets?.[0]).toMatchObject({ ticker: "PETR4" });
+    expect((result.tables.asset_quotes ?? []).length).toBeGreaterThan(MIN_HISTORY_DAYS);
+    expect(result.tables.asset?.[0]).toMatchObject({ code: "PETR4" });
   }, TIMEOUT_MS);
 });
 
@@ -106,9 +106,9 @@ describe("CVM disclosures against the live zips", () => {
     const adapter = new CvmDisclosureAdapter(buildCvmHttp(), () => Promise.resolve(PETROBRAS_CNPJ));
 
     const result = await adapter.fetchTables({ market: BR, ticker: "PETR4", assetType: "stock" });
-    const datasets = new Set((result.tables.company_disclosures ?? []).map((row) => row.dataset));
+    const datasets = new Set((result.tables.asset_filings ?? []).map((row) => row.document_type));
 
     expect(datasets.has("fre")).toBe(true);
-    expect((result.tables.company_disclosures ?? []).length).toBeGreaterThan(MIN_HISTORY_DAYS);
+    expect((result.tables.asset_filing_items ?? []).length).toBeGreaterThan(MIN_HISTORY_DAYS);
   }, TIMEOUT_MS);
 });

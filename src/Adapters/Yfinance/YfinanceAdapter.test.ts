@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { YfinanceAdapter } from "@/Adapters/Yfinance/YfinanceAdapter.ts";
+const PETR4_ASSET = "BR:stock:PETR4";
 
 // Why: the Python library is replaced by a recorded answer of the same shape; the live check runs the real library.
 const ANSWER = JSON.stringify({
@@ -30,17 +31,17 @@ describe("YfinanceAdapter.fetchTables()", () => {
   it("writes the quotes, skipping a day with no close, and flags the day that repeats with zero volume", async () => {
     const result = await buildAdapter(ANSWER).fetchTables({ market: "BR", ticker: "PETR4", assetType: "stock" });
 
-    expect(result.tables.quotes).toHaveLength(2);
-    expect(result.tables.quotes?.[0]).toMatchObject({ date: "2026-11-02", close: 37.3, adj_close: 36.2, source: "yfinance" });
-    expect(result.tables.quotes?.[1]).toMatchObject({ date: "2026-11-04", is_stale: true });
+    expect(result.tables.asset_quotes).toHaveLength(2);
+    expect(result.tables.asset_quotes?.[0]).toMatchObject({ asset_id: PETR4_ASSET, reference_time_start: "2026-11-02", close: 37.3, adj_close: 36.2 });
+    expect(result.tables.asset_quotes?.[1]).toMatchObject({ reference_time_start: "2026-11-04", is_stale: true });
   });
 
   it("writes the dividends and splits with their dates, and the asset name", async () => {
     const result = await buildAdapter(ANSWER).fetchTables({ market: "BR", ticker: "PETR4", assetType: "stock" });
 
-    expect(result.tables.dividends?.[0]).toMatchObject({ ex_date: "2026-10-15", amount: 0.5, kind: "dividend", source: "yfinance" });
-    expect(result.tables.splits?.[0]).toMatchObject({ date: "2019-01-02", ratio: 2 });
-    expect(result.tables.assets?.[0]).toMatchObject({ name: "Petroleo Brasileiro S.A.", currency: "BRL" });
+    expect(result.tables.asset_dividends?.[0]).toMatchObject({ asset_id: PETR4_ASSET, ex_time: "2026-10-15", amount: 0.5, kind: "dividend" });
+    expect(result.tables.asset_splits?.[0]).toMatchObject({ ex_time: "2019-01-02", ratio: 2 });
+    expect(result.tables.asset?.[0]).toMatchObject({ asset_id: PETR4_ASSET, name: "Petroleo Brasileiro S.A.", currency: "BRL" });
   });
 
   it("refuses an answer of another shape, and writes nothing", async () => {

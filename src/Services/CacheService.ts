@@ -19,9 +19,9 @@ export class CacheService {
   async startRun(run: CacheRunStart): Promise<string> {
     const runId = randomUUID();
     await this.writer.run(
-      "INSERT INTO cache_runs (run_id, category, market, ticker, source, started_at, filing_id, period_from, period_to) VALUES (?, ?, ?, ?, ?, CAST(? AS TIMESTAMPTZ), ?, CAST(? AS DATE), CAST(? AS DATE))",
+      "INSERT INTO load_runs (run_id, category, asset_id, source, started_at, filing_id, reference_time_start, reference_time_end) VALUES (?, ?, ?, ?, CAST(? AS TIMESTAMPTZ), ?, CAST(? AS DATE), CAST(? AS DATE))",
       [
-        runId, run.category, run.market, run.ticker, run.source, this.formatIso(this.nowMs()), run.filingId ?? null,
+        runId, run.category, run.assetId, run.source, this.formatIso(this.nowMs()), run.filingId ?? null,
         run.period?.from ?? null, run.period?.to ?? null,
       ],
     );
@@ -32,25 +32,25 @@ export class CacheService {
     const isFailed = outcome.errorMessage !== undefined;
     const expiresAt = isFailed ? null : this.formatIso(this.nowMs() + this.ttlMs);
     await this.writer.run(
-      "UPDATE cache_runs SET finished_at = CAST(? AS TIMESTAMPTZ), expires_at = CAST(? AS TIMESTAMPTZ), rows_read = CAST(? AS BIGINT), error = ? WHERE run_id = ?",
+      "UPDATE load_runs SET finished_at = CAST(? AS TIMESTAMPTZ), expires_at = CAST(? AS TIMESTAMPTZ), rows_read = CAST(? AS BIGINT), error = ? WHERE run_id = ?",
       [this.formatIso(this.nowMs()), expiresAt, outcome.rowsRead, outcome.errorMessage ?? null, runId],
     );
   }
 
-  async isFresh(category: CacheCategory, market: string, ticker: string, window?: PeriodWindow): Promise<boolean> {
+  async isFresh(category: CacheCategory, assetId: string, window?: PeriodWindow): Promise<boolean> {
     // Why: a run of a period covers a window only when the run's own period contains it, so a load of 2024 does not answer for 2019.
-    const periodCondition = window === undefined ? "" : " AND period_from <= CAST(? AS DATE) AND period_to >= CAST(? AS DATE)";
+    const periodCondition = window === undefined ? "" : " AND reference_time_start <= CAST(? AS DATE) AND reference_time_end >= CAST(? AS DATE)";
     const periodValues = window === undefined ? [] : [window.from, window.to];
     const rows = await this.writer.readRows(
-      `SELECT CAST(count(*) AS INTEGER) AS freshRunCount FROM cache_runs WHERE category = ? AND market = ? AND ticker = ? AND error IS NULL AND expires_at > CAST(? AS TIMESTAMPTZ)${periodCondition}`,
-      [category, market, ticker, this.formatIso(this.nowMs()), ...periodValues],
+      `SELECT CAST(count(*) AS INTEGER) AS freshRunCount FROM load_runs WHERE category = ? AND asset_id = ? AND error IS NULL AND expires_at > CAST(? AS TIMESTAMPTZ)${periodCondition}`,
+      [category, assetId, this.formatIso(this.nowMs()), ...periodValues],
     );
     return CacheService.readFreshRunCount(rows) > 0;
   }
 
   async isFreshFiling(filingId: string): Promise<boolean> {
     const rows = await this.writer.readRows(
-      "SELECT CAST(count(*) AS INTEGER) AS freshRunCount FROM cache_runs WHERE category = 'documents' AND filing_id = ? AND error IS NULL AND expires_at > CAST(? AS TIMESTAMPTZ)",
+      "SELECT CAST(count(*) AS INTEGER) AS freshRunCount FROM load_runs WHERE category = 'filings' AND filing_id = ? AND error IS NULL AND expires_at > CAST(? AS TIMESTAMPTZ)",
       [filingId, this.formatIso(this.nowMs())],
     );
     return CacheService.readFreshRunCount(rows) > 0;
@@ -72,10 +72,10 @@ export class CacheService {
     return started;
   }
 
-  async readLastSource(category: CacheCategory, market: string, ticker: string): Promise<string | undefined> {
+  async readLastSource(category: CacheCategory, assetId: string): Promise<string | undefined> {
     const rows = await this.writer.readRows(
-      "SELECT source FROM cache_runs WHERE category = ? AND market = ? AND ticker = ? AND error IS NULL AND finished_at IS NOT NULL ORDER BY finished_at DESC LIMIT 1",
-      [category, market, ticker],
+      "SELECT source FROM load_runs WHERE category = ? AND asset_id = ? AND error IS NULL AND finished_at IS NOT NULL ORDER BY finished_at DESC LIMIT 1",
+      [category, assetId],
     );
     const [row] = SourceRowsSchema.parse(rows);
     return row?.source;

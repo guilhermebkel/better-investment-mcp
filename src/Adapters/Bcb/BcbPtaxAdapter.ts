@@ -2,6 +2,7 @@ import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import type { PtaxBulletin } from "@/Protocols/PtaxProtocol.ts";
 import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
 import { BcbPtaxSchema } from "@/Schemas/BcbPtaxSchema.ts";
+import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 
 const YEARS_BACK = 2;
 const CLOSING_BULLETIN = "Fechamento";
@@ -15,8 +16,8 @@ export class BcbPtaxAdapter implements ProviderPort<"fx"> {
 
   readonly category = "fx";
   readonly vendor = BcbPtaxAdapter.VENDOR;
-  readonly markets = ["FX"] as const;
-  readonly assetTypes = [] as const;
+  readonly markets = ["BR"] as const;
+  readonly assetTypes = ["currency"] as const;
 
   private readonly http: HttpPort;
   private readonly baseUrl: string;
@@ -43,7 +44,7 @@ export class BcbPtaxAdapter implements ProviderPort<"fx"> {
     for (let reference = year - YEARS_BACK; reference <= year; reference += 1) {
       rows.push(...await this.fetchYear(currency, reference));
     }
-    return { source: BcbPtaxAdapter.VENDOR, tables: { fx_rates: rows } };
+    return { source: BcbPtaxAdapter.VENDOR, tables: { asset_metrics: rows } };
   }
 
   static buildUrl(baseUrl: string, currency: string, year: number): string {
@@ -75,13 +76,13 @@ export class BcbPtaxAdapter implements ProviderPort<"fx"> {
         });
       }
     }
-    return [...dateToBulletin].sort(([left], [right]) => left.localeCompare(right)).map(([date, bulletin]) => ({
-      currency,
-      date,
-      buy_rate: bulletin.buy,
-      sell_rate: bulletin.sell,
-      source: BcbPtaxAdapter.VENDOR,
-    }));
+    const assetId = AssetIdUtil.build({ market: "BR", assetType: "currency", code: currency });
+    return [...dateToBulletin]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .flatMap(([date, bulletin]) => [
+        { asset_id: assetId, metric: "fx.buy_rate", reference_time_start: date, reference_time_end: date, value: bulletin.buy, unit: "brl_per_currency" },
+        { asset_id: assetId, metric: "fx.sell_rate", reference_time_start: date, reference_time_end: date, value: bulletin.sell, unit: "brl_per_currency" },
+      ]);
   }
 
   private async fetchYear(currency: string, year: number): Promise<ProviderRow[]> {

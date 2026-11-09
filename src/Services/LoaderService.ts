@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
-import type { CacheLoadResult } from "@/Protocols/CacheProtocol.ts";
+import type { CacheCategory, CacheLoadResult } from "@/Protocols/CacheProtocol.ts";
 import type { DatabasePort } from "@/Protocols/DatabaseProtocol.ts";
 import type { DocumentProvider } from "@/Protocols/DocumentProviderProtocol.ts";
 import type { ChunkRow } from "@/Protocols/DocumentTextProtocol.ts";
 import type { DataTable, Requirement } from "@/Protocols/SqlGuardProtocol.ts";
-import type { DownloadOutcome, FetchAttempt, FetchOutcome, FilingRow, LoadedEntry, LoaderPort, TableToColumns } from "@/Protocols/LoaderProtocol.ts";
+import type { DownloadOutcome, FetchAttempt, FetchOutcome, FilingRow, LoadedEntry, LoaderPort, ScopeRule, SqlScope, TableToColumns } from "@/Protocols/LoaderProtocol.ts";
 import type { PeriodWindow } from "@/Protocols/PeriodProtocol.ts";
 import type { ProviderPort, ProviderRequest, ProviderRow, ProviderResult, ResolvedProviders } from "@/Protocols/ProviderProtocol.ts";
 import { PeriodRowsSchema } from "@/Schemas/CacheSchema.ts";
@@ -15,18 +15,20 @@ import { FileVersionService } from "@/Services/FileVersionService.ts";
 import { DocumentTextService } from "@/Services/DocumentTextService.ts";
 import { FullTextIndexService } from "@/Services/FullTextIndexService.ts";
 import { PeriodService } from "@/Services/PeriodService.ts";
+import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 import type { ProviderRegistryService } from "@/Services/ProviderRegistryService.ts";
 import { SqlGuardService } from "@/Services/SqlGuardService.ts";
 import type { StoreService } from "@/Services/StoreService.ts";
 import { ConcurrencyUtil } from "@/Utils/ConcurrencyUtil.ts";
 
-const ASSET_KEY_COLUMNS: readonly ("market" | "ticker")[] = ["market", "ticker"];
+const ASSET_TABLE = "asset";
+const DISCLOSURE_DOCUMENT_TYPES = ["fre", "vlmo", "cgvn"] as const;
 const DOCUMENT_SOURCE = "cvm";
 
 export class LoaderService implements LoaderPort {
   static readonly MAX_PARALLEL_LOADS = 4;
   static readonly INSERT_BATCH_ROWS = 500;
-  static readonly WRITABLE_TABLES: ReadonlySet<string> = new Set([...Object.keys(SqlGuardService.TABLE_TO_CATEGORY), "assets"]);
+  static readonly WRITABLE_TABLES: ReadonlySet<string> = new Set(Object.keys(SqlGuardService.TABLE_TO_FILTERS));
 
   private readonly store: StoreService;
   private readonly registry: ProviderRegistryService;
@@ -87,14 +89,14 @@ export class LoaderService implements LoaderPort {
       const error = `the period ${window.from} to ${window.to} is longer than ${PeriodService.MAX_YEARS_PER_LOAD} years; narrow it to load it`;
       return { ...base, status: "failed", error };
     }
-    if (await cache.isFresh(requirement.category, requirement.market, requirement.ticker, window)) {
-      const source = await cache.readLastSource(requirement.category, requirement.market, requirement.ticker);
+    if (await cache.isFresh(requirement.category, LoaderService.buildAssetId(requirement), window)) {
+      const source = await cache.readLastSource(requirement.category, LoaderService.buildAssetId(requirement));
       const period = await this.readPeriod(requirement);
       return { ...base, status: "fresh", ...(source === undefined ? {} : { source }), ...(period === undefined ? {} : { period }) };
     }
-    const { category, market, ticker } = requirement;
+    const { category } = requirement;
     const windowKey = window === undefined ? "" : `:${window.from}:${window.to}`;
-    const result = await cache.runOnce(`${category}:${market}:${ticker}${windowKey}`, () => this.load(requirement, window));
+    const result = await cache.runOnce(`${category}:${LoaderService.buildAssetId(requirement)}${windowKey}`, () => this.load(requirement, window));
     const error = result.errorMessage === undefined ? {} : { error: result.errorMessage };
     const period = await this.readPeriod(requirement);
     return {
@@ -116,7 +118,8 @@ export class LoaderService implements LoaderPort {
   }
 
   private static readPeriodicity(requirement: Requirement): { periodicity?: string } {
-    const periodicity = PeriodService.TABLE_TO_PERIODICITY[requirement.table];
+    const periodicity = PeriodService.CATEGORY_TO_PERIODICITY[requirement.category]
+      ?? PeriodService.TABLE_TO_PERIODICITY[requirement.table];
     return periodicity === undefined ? {} : { periodicity };
   }
 
@@ -131,8 +134,7 @@ export class LoaderService implements LoaderPort {
     const fetched = await this.fetchWithFallback(resolved, requirement, window);
     const runId = await this.store.cache.startRun({
       category: requirement.category,
-      market: requirement.market,
-      ticker: requirement.ticker,
+      assetId: LoaderService.buildAssetId(requirement),
       source: fetched.vendor,
       ...(window === undefined ? {} : { period: window }),
     });
@@ -166,7 +168,7 @@ export class LoaderService implements LoaderPort {
     const filingsEntry = await this.ensureOne({
       market,
       ticker,
-      table: "filings",
+      table: "asset_filings",
       category: "filings",
       assetType: requirement.assetType,
     });
@@ -208,9 +210,8 @@ export class LoaderService implements LoaderPort {
     const { cache } = this.store;
     const download = await LoaderService.fetchAndSplit(this.registry, filing);
     const runId = await cache.startRun({
-      category: "documents",
-      market: filing.market,
-      ticker: filing.ticker,
+      category: "filings",
+      assetId: AssetIdUtil.build({ market: filing.market, assetType: filing.asset_type, code: filing.ticker }),
       source: DOCUMENT_SOURCE,
       filingId: filing.filing_id,
     });
@@ -270,7 +271,7 @@ export class LoaderService implements LoaderPort {
   ): Promise<{ isChanged: boolean }> {
     const { writer } = this.store;
     const rows = await writer.readRows(
-      "SELECT file_hash AS fileHash FROM filings WHERE filing_id = ?",
+      "SELECT file_hash AS fileHash FROM asset_filings WHERE filing_id = ?",
       [filing.filing_id],
     );
     const storedHash = rows[0]?.fileHash;
@@ -280,18 +281,19 @@ export class LoaderService implements LoaderPort {
     }
     await writer.run("BEGIN TRANSACTION");
     try {
-      await writer.run("DELETE FROM chunks WHERE filing_id = ?", [filing.filing_id]);
+      await writer.run("DELETE FROM asset_filing_chunks WHERE filing_id = ?", [filing.filing_id]);
+      const assetId = AssetIdUtil.build({ market: filing.market, assetType: filing.asset_type, code: filing.ticker });
       for (const chunk of chunks) {
         const values = [
-          filing.filing_id, filing.market, filing.ticker, filing.asset_type, filing.filing_type,
+          filing.filing_id, assetId, filing.filing_type,
           chunk.section, chunk.page, chunk.seq, chunk.text,
         ];
         await writer.run(
-          "INSERT INTO chunks (filing_id, market, ticker, asset_type, filing_type, section, page, seq, text) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          "INSERT INTO asset_filing_chunks (filing_id, asset_id, document_type, section, page, seq, text) VALUES (?, ?, ?, ?, ?, ?, ?)",
           values,
         );
       }
-      await writer.run("UPDATE filings SET file_hash = ? WHERE filing_id = ?", [hash, filing.filing_id]);
+      await writer.run("UPDATE asset_filings SET file_hash = ? WHERE filing_id = ?", [hash, filing.filing_id]);
       await writer.run("COMMIT");
       return { isChanged: true };
     } catch (error) {
@@ -311,18 +313,18 @@ export class LoaderService implements LoaderPort {
   }
 
   private async readFilings(requirement: Requirement): Promise<FilingRow[]> {
-    const selector = requirement.filingId === undefined ? "filing_type = ?" : "filing_id = ?";
+    const selector = requirement.filingId === undefined ? "document_type = ?" : "filing_id = ?";
     const value = requirement.filingId ?? requirement.filingType ?? "";
     const rows = await this.store.writer.readRows(
-      `SELECT filing_id, market, ticker, asset_type, filing_type, url, file_hash FROM filings WHERE market = ? AND ticker = ? AND asset_type = ? AND ${selector} ORDER BY delivered_at`,
-      [requirement.market, requirement.ticker, requirement.assetType ?? "", value],
+      `SELECT filing_id, document_type, url, file_hash FROM asset_filings WHERE asset_id = ? AND ${selector} ORDER BY published_at`,
+      [LoaderService.buildAssetId(requirement), value],
     );
     return rows.map((row) => ({
       filing_id: String(row.filing_id),
-      market: String(row.market),
-      ticker: String(row.ticker),
-      asset_type: String(row.asset_type),
-      filing_type: String(row.filing_type),
+      market: requirement.market,
+      ticker: requirement.ticker,
+      asset_type: requirement.assetType ?? "",
+      filing_type: String(row.document_type),
       url: typeof row.url === "string" ? row.url : null,
       file_hash: typeof row.file_hash === "string" ? row.file_hash : null,
     }));
@@ -408,23 +410,28 @@ export class LoaderService implements LoaderPort {
     window: PeriodWindow | undefined,
   ): Promise<number> {
     const { writer } = this.store;
-    const keyed = SqlGuardService.TABLE_TO_KEYED_SOURCE[table as DataTable];
-    const keyColumns: readonly string[] = keyed === undefined ? ASSET_KEY_COLUMNS : [keyed.column];
-    const keyValues = keyed === undefined ? [requirement.market, requirement.ticker] : [requirement.ticker];
+    const assetId = LoaderService.buildAssetId(requirement);
     const periodColumn = window === undefined ? undefined : PeriodService.TABLE_TO_PERIOD_COLUMN[table as DataTable];
-    const deleteWhere = keyColumns.map((column) => `${column} = ?`).join(" AND ");
     // Why: a period load replaces only the rows of its own window, so the rows of another period stay in the store.
     const periodWhere = periodColumn === undefined ? "" : ` AND ${periodColumn} BETWEEN ? AND ?`;
     const periodValues = window === undefined ? [] : [window.from, window.to];
     // Why: a filing list reload keeps the hash of each document already stored, so an unchanged document is not downloaded again into the chunks.
     const filingIdToHash = await this.readStoredHashes(table, requirement);
-    await writer.run(`DELETE FROM ${table} WHERE ${deleteWhere}${periodWhere}`, [...keyValues, ...periodValues]);
+    // Why: the asset row is merged, not replaced: each load fills the columns it knows and keeps the others, so a CVM load does not erase a name that Yahoo gave.
+    if (table !== ASSET_TABLE) {
+      const scope = LoaderService.readScope(table, requirement.category);
+      await writer.run(`DELETE FROM ${table} WHERE asset_id = ?${scope.sql}${periodWhere}`, [assetId, ...scope.values, ...periodValues]);
+    }
     const prepared: ProviderRow[] = [];
     for (const original of rows) {
       const row = LoaderService.dropSource(original);
       LoaderService.checkRow(requirement, table, row, columns);
       LoaderService.checkPeriod(table, row, window);
       prepared.push(LoaderService.keepStoredHash(row, filingIdToHash));
+    }
+    if (table === ASSET_TABLE) {
+      await LoaderService.mergeAssets(writer, prepared);
+      return rows.length;
     }
     // Why: the rows go in batches of many value groups per statement; one statement per row made a full history of a series take minutes. A column a row does not carry is written as NULL, as before.
     const names = [...new Set(prepared.flatMap((row) => Object.keys(row)))];
@@ -438,12 +445,12 @@ export class LoaderService implements LoaderPort {
   }
 
   private async readStoredHashes(table: string, requirement: Requirement): Promise<Map<string, string>> {
-    if (table !== "filings") {
+    if (table !== "asset_filings") {
       return new Map();
     }
     const rows = await this.store.writer.readRows(
-      "SELECT filing_id, file_hash FROM filings WHERE market = ? AND ticker = ? AND file_hash IS NOT NULL",
-      [requirement.market, requirement.ticker],
+      "SELECT filing_id, file_hash FROM asset_filings WHERE asset_id = ? AND file_hash IS NOT NULL",
+      [LoaderService.buildAssetId(requirement)],
     );
     return new Map(rows.map((row): [string, string] => [String(row.filing_id), String(row.file_hash)]));
   }
@@ -474,19 +481,62 @@ export class LoaderService implements LoaderPort {
     if (unknownColumn !== undefined) {
       throw new Error(`the provider sent the column ${unknownColumn}, which ${table} does not have`);
     }
-    const keyed = SqlGuardService.TABLE_TO_KEYED_SOURCE[table as DataTable];
-    const isOtherAsset = keyed === undefined
-      ? row.market !== requirement.market || row.ticker !== requirement.ticker
-      : row[keyed.column] !== requirement.ticker;
-    if (isOtherAsset) {
+    if (row.asset_id !== LoaderService.buildAssetId(requirement)) {
       throw new Error(`the provider sent a row for another asset in ${table}`);
     }
   }
 
   private static dropSource(row: ProviderRow): ProviderRow {
-    // Why: a row does not carry the vendor that produced it; the load records its source once, in cache_runs, and every row of a key comes from that one load.
+    // Why: a row does not carry the vendor that produced it; the load records its source once, in load_runs, and every row of a key comes from that one load.
     const { source: _source, ...withoutSource } = row;
     return withoutSource;
+  }
+
+  private static readScope(table: string, category: CacheCategory): SqlScope {
+    const scope = SqlGuardService.isDataTable(table) ? LoaderService.TABLE_TO_SCOPE[table] : undefined;
+    return scope === undefined ? { sql: "", values: [] } : scope(category);
+  }
+
+  private static readFilingScope(category: CacheCategory): SqlScope {
+    const types = [...DISCLOSURE_DOCUMENT_TYPES];
+    const placeholders = types.map(() => "?").join(", ");
+    const operator = LoaderService.CATEGORY_TO_FILING_OPERATOR[category] ?? "NOT IN";
+    return { sql: ` AND document_type ${operator} (${placeholders})`, values: types };
+  }
+
+  // Why: a metric scope is the group of the category; a filing scope keeps the disclosure types on their own category, and the other filings on the rest.
+  private static readonly TABLE_TO_SCOPE: Readonly<Partial<Record<DataTable, ScopeRule>>> = {
+    asset_metrics: (category) => {
+      const group = LoaderService.readMetricGroup(category);
+      return group === undefined ? { sql: "", values: [] } : { sql: " AND metric LIKE ?", values: [`${group}.%`] };
+    },
+    asset_filings: (category) => LoaderService.readFilingScope(category),
+  };
+
+  private static readonly CATEGORY_TO_FILING_OPERATOR: Partial<Record<CacheCategory, "IN" | "NOT IN">> = { disclosures: "IN" };
+
+  private static readMetricGroup(category: CacheCategory): string | undefined {
+    return Object.entries(SqlGuardService.METRIC_GROUP_TO_CATEGORY).find(([, owner]) => owner === category)?.[0];
+  }
+
+  private static buildAssetId(requirement: Requirement): string {
+    return AssetIdUtil.build({
+      market: requirement.market,
+      assetType: requirement.assetType ?? "",
+      code: requirement.ticker,
+    });
+  }
+
+  private static async mergeAssets(writer: DatabasePort, rows: readonly ProviderRow[]): Promise<void> {
+    // Why: each column of the asset row that a load fills replaces the stored one; a column it leaves null keeps the value another load gave.
+    for (const row of rows) {
+      const names = Object.keys(row);
+      const updates = names.filter((name) => name !== "asset_id").map((name) => `${name} = COALESCE(excluded.${name}, asset.${name})`);
+      const placeholders = names.map(() => "?").join(", ");
+      const values = names.map((name) => row[name] ?? null);
+      const conflict = updates.length === 0 ? "DO NOTHING" : `DO UPDATE SET ${updates.join(", ")}`;
+      await writer.run(`INSERT INTO asset (${names.join(", ")}) VALUES (${placeholders}) ON CONFLICT (asset_id) ${conflict}`, values);
+    }
   }
 
   private static isWritable(table: string): boolean {
@@ -509,8 +559,8 @@ export class LoaderService implements LoaderPort {
     from: string; to: string;
   } | undefined> {
     const rows = await this.store.writer.readRows(
-      "SELECT CAST(first_date AS VARCHAR) AS firstDate, CAST(last_date AS VARCHAR) AS lastDate FROM asset_coverage WHERE category = ? AND market = ? AND ticker = ?",
-      [requirement.category, requirement.market, requirement.ticker],
+      "SELECT CAST(first_date AS VARCHAR) AS firstDate, CAST(last_date AS VARCHAR) AS lastDate FROM asset_coverage WHERE category = ? AND asset_id = ?",
+      [requirement.category, LoaderService.buildAssetId(requirement)],
     );
     const [period] = PeriodRowsSchema.parse(rows);
     const firstDate = period?.firstDate;

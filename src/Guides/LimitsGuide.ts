@@ -7,7 +7,7 @@ export const LIMITS_GUIDE = `# Limits guide
 
 ## Cache
 
-- Loaded data is kept in a local DuckDB file, valid for the time that get_overview reports.
+- Loaded data is kept in a local DuckDB file, valid until the time that get_overview reports.
 - A load runs the first time a query asks for an asset, or after its time is over.
 - The server keeps only its own cache file. Deleting it loses nothing: the next query loads the data again.
 

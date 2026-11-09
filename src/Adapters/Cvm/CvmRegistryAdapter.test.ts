@@ -25,10 +25,10 @@ describe("CvmRegistryAdapter.fetchTables()", () => {
 
     const result = await adapter.fetchTables({ market: "BR", ticker: "PETR4", assetType: "stock" });
 
-    expect(result.tables.company_registry).toStrictEqual([{
-      market: "BR", ticker: "PETR4", asset_type: "stock", legal_id: PETROBRAS_CNPJ,
-      company_name: "PETRÓLEO BRASILEIRO S.A. - PETROBRAS", trade_name: "PETROBRAS",
-      sector: "Petróleo e Gás", situation: "ATIVO", cvm_code: "9512", source: "cvm",
+    expect(result.tables.asset).toStrictEqual([{
+      asset_id: "BR:stock:PETR4", market: "BR", asset_type: "stock", code: "PETR4", legal_id: PETROBRAS_CNPJ,
+      name: "PETRÓLEO BRASILEIRO S.A. - PETROBRAS", trade_name: "PETROBRAS",
+      sector: "Petróleo e Gás", situation: "ATIVO", cvm_code: "9512",
     }]);
   });
 
