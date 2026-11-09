@@ -8,6 +8,7 @@ Each answer says what was loaded, with its period and the error if any.
 - Dividends and splits: Yahoo Finance through yfinance, for BR and US tickers.
 - Fundamentals: StatusInvest. The site may block the requests; a blocked load says so and writes nothing.
 - Statements, company filings, fund files and FRE, VLMO, CGVN: CVM open data.
+- Sustainability reports: the CVM filings whose category is "Relatório de Sustentabilidade", "Relato Integrado" or the ISSB sustainability report. Coverage is partial: a company that CVM does not file in those categories has none here, and the company needs a CNPJ.
 - Company and fund registry, and the B3 identifiers (CNPJ, ISIN): CVM and B3.
 - Macro series and PTAX exchange rates: BCB open data. Market expectations (Focus): BCB open data.
 - Treasury bonds: Tesouro Transparente, one bond per asset_id (family and maturity, for example SELIC_2029-03-01).

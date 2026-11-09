@@ -66,6 +66,43 @@ describe("CvmAdapter.readRows()", () => {
     expect(row?.filing_type).toBe("sustainability");
   });
 
+  describe("sustainability categories (issue #26)", () => {
+    const ISSB = "Relatório de Informações Financeiras Relacionadas à Sustentabilidade - Padrão ISSB";
+    const readCategory = async (category: string, subject = "Relato") => {
+      const line = `${PETROBRAS};X;1;2024-01-01;${category};;;${subject};2024-01-02;AP;PROTO-C;1;https://example.org/c`;
+      const text = `${SAMPLE.split("\n")[0]}\n${line}\n`;
+      const [row] = await CvmAdapter.readRows(splitLines(text), "33000167000101", rowKey);
+      return row;
+    };
+
+    it.each([
+      ["Relatório de Sustentabilidade"],
+      ["Relato Integrado"],
+      [ISSB],
+    ])("maps %s to sustainability and keeps the exact category", async (category) => {
+      const row = await readCategory(category);
+      expect(row?.filing_type).toBe("sustainability");
+      expect(row?.category).toBe(category);
+    });
+
+    it("keeps Política de Sustentabilidade as other", async () => {
+      const row = await readCategory("Política de Sustentabilidade");
+      expect(row?.filing_type).toBe("other");
+    });
+
+    it("keeps a Comunicado ao Mercado whose subject names a report as other", async () => {
+      const row = await readCategory("Comunicado ao Mercado", "Relatório de Sustentabilidade 2025");
+      expect(row?.filing_type).toBe("other");
+    });
+
+    it("matches the category exactly: a case, accent or spacing change stays other", async () => {
+      const row = await readCategory("relato integrado");
+      const unaccented = await readCategory("Relatorio de Sustentabilidade");
+      const spaced = await readCategory("Relato  Integrado");
+      expect([row?.filing_type, unaccented?.filing_type, spaced?.filing_type]).toStrictEqual(["other", "other", "other"]);
+    });
+  });
+
   it("fails with a format-changed message when the header differs (AC5 format)", async () => {
     const attempt = CvmAdapter.readRows(splitLines("a;b;c\n1;2;3\n"), "33000167000101", rowKey);
     await expect(attempt).rejects.toThrow("the response format changed");
