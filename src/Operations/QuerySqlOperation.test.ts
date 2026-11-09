@@ -10,6 +10,7 @@ import { ProviderRegistryService } from "@/Services/ProviderRegistryService.ts";
 import { SqlGuardService } from "@/Services/SqlGuardService.ts";
 import { StoreService } from "@/Services/StoreService.ts";
 import { FakeProvider } from "@/Testing/FakeProvider.ts";
+import type { LoadedEntry } from "@/Protocols/LoaderProtocol.ts";
 const START_MS = Date.parse("2026-11-08T12:00:00Z");
 const STOCK = "stock";
 const FAKE_VENDOR = "fake";
@@ -274,5 +275,30 @@ describe("QuerySqlOperation.execute()", () => {
       expect(answer.message).toContain(`Published periodicity: ${PERIODICITY}.`);
       expect(answer.message).toContain(`Reference period loaded: ${MONTH_START} to ${MONTH_END}.`);
     });
+  });
+
+  it("answers past the threshold with the rows already stored, a warning that they may be incomplete, and the load id", async () => {
+    const directory = mkdtempSync(TEMP_PREFIX);
+    vi.spyOn(process.stderr, "write").mockReturnValue(true);
+    const store = await StoreService.open(
+      { INVESTMENT_MCP_LOG_LEVEL: "error", INVESTMENT_MCP_CACHE_DIR: directory, INVESTMENT_MCP_CACHE_TTL_SECONDS: 60 },
+      () => START_MS,
+    );
+    const requirement = { table: "asset_quotes" as const, category: "quotes" as const, market: BR_MARKET, ticker: PETR4_TICKER, assetType: STOCK };
+    const operation = new QuerySqlOperation({
+      guard: { checkSql: () => Promise.resolve({ isAccepted: true as const, requirements: [requirement] }) },
+      loader: { ensure: () => new Promise<LoadedEntry[]>(() => undefined) },
+      openReader: () => store.openReader(),
+      backgroundAfterMs: 5,
+    });
+
+    const result = await operation.execute({ sql: PETR4_SQL });
+    store.close();
+    rmSync(directory, { recursive: true, force: true });
+
+    expect(result.isError).toBe(false);
+    expect(result.message).toContain("A load is still running in the background (id ");
+    expect(result.message).toContain("may be incomplete");
+    expect(typeof result.structuredResult?.loadingId).toBe("string");
   });
 });

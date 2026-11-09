@@ -3,6 +3,8 @@ import type { LoadedEntry } from "@/Protocols/LoaderProtocol.ts";
 import type { QuerySqlDependencies, QuerySqlInput } from "@/Protocols/QuerySqlProtocol.ts";
 import { QuerySqlInputSchema } from "@/Schemas/QuerySqlSchema.ts";
 import type { OutputLimitResult } from "@/Protocols/OutputLimitProtocol.ts";
+import type { LoadJob, LoadJobRegistry } from "@/Protocols/LoadJobProtocol.ts";
+import { LoadJobService } from "@/Services/LoadJobService.ts";
 import { OutputLimitService } from "@/Services/OutputLimitService.ts";
 
 const VENDOR_KEYS: ReadonlySet<"source" | "isFallback"> = new Set(["source", "isFallback"]);
@@ -30,9 +32,13 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
   readonly inputSchema = QuerySqlInputSchema;
 
   private readonly dependencies: QuerySqlDependencies;
+  private readonly jobs: LoadJobRegistry;
+  private readonly backgroundAfterMs: number;
 
   constructor(dependencies: QuerySqlDependencies) {
     this.dependencies = dependencies;
+    this.jobs = dependencies.jobs ?? new LoadJobService(dependencies.loader);
+    this.backgroundAfterMs = dependencies.backgroundAfterMs ?? LoadJobService.DEFAULT_BACKGROUND_AFTER_MS;
   }
 
   async execute(input: QuerySqlInput): Promise<OperationResult> {
@@ -40,7 +46,12 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
     if (!verdict.isAccepted) {
       return { isError: true, message: verdict.message };
     }
-    const loaded = await this.dependencies.loader.ensure(verdict.requirements);
+    const job = this.jobs.start(verdict.requirements);
+    const isSettled = await LoadJobService.waitUpTo(job, this.backgroundAfterMs);
+    if (isSettled && job.state === "failed") {
+      throw new Error(job.error ?? "the load failed");
+    }
+    const loaded = isSettled ? job.entries ?? [] : [];
     const reader = await this.dependencies.openReader();
     let rows: Record<string, unknown>[];
     try {
@@ -50,13 +61,14 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
     } finally {
       reader.close();
     }
-    return QuerySqlOperation.answer(rows, loaded);
+    return QuerySqlOperation.answer(rows, loaded, isSettled ? undefined : job);
   }
 
-  private static answer(rows: Record<string, unknown>[], loaded: LoadedEntry[]): OperationResult {
+  private static answer(rows: Record<string, unknown>[], loaded: LoadedEntry[], pending?: LoadJob): OperationResult {
     const plainRows = rows.map(convertRow);
     const limited = new OutputLimitService().limit(plainRows.map((row) => JSON.stringify(row)));
     const structuredResult: OperationData = {
+      ...(pending === undefined ? {} : { loadingId: pending.id }),
       rows: plainRows.slice(0, limited.returnedRows),
       truncated: limited.isTruncated,
       remainingRows: limited.remainingRows,
@@ -64,6 +76,7 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
       loaded: loaded.map((entry) => QuerySqlOperation.removeVendorKeys(entry)),
     };
     const message = [
+      QuerySqlOperation.describePending(pending),
       QuerySqlOperation.describeRows(rows.length, limited.returnedRows, loaded),
       QuerySqlOperation.describePeriodicity(rows.length, loaded),
       QuerySqlOperation.describePeriods(loaded),
@@ -77,6 +90,15 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
   private static removeVendorKeys(entry: LoadedEntry): Record<string, unknown> {
     // Why: the answer never names the vendor that served a load, nor whether a fallback did; that is kept in load_runs.
     return Object.fromEntries(Object.entries(entry).filter(([key]) => !VENDOR_KEYS.has(key as "source")));
+  }
+
+  private static describePending(pending: LoadJob | undefined): string {
+    if (pending === undefined) {
+      return "";
+    }
+    // Why: a row set answered while a load runs can be incomplete, so the answer says so and gives the id to follow.
+    return `A load is still running in the background (id ${pending.id}) for ${LoadJobService.describe(pending)}. `
+      + "The rows below are the ones already stored, so they may be incomplete. Run the query again later to read the rows once it finishes. ";
   }
 
   private static describeRows(rowCount: number, returnedRows: number, loaded: LoadedEntry[]): string {

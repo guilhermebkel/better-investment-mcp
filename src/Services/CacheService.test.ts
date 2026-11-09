@@ -141,3 +141,21 @@ describe("CacheService.runOnce()", () => {
     });
   });
 });
+
+describe("CacheService.closeInterruptedRuns()", () => {
+  it("closes a run that never finished when the store opens again, and says why", async () => {
+    const directory = mkdtempSync(TEMP_PREFIX);
+    vi.spyOn(process.stderr, "write").mockReturnValue(true);
+    const env = { INVESTMENT_MCP_LOG_LEVEL: "error" as const, INVESTMENT_MCP_CACHE_DIR: directory, INVESTMENT_MCP_CACHE_TTL_SECONDS: TTL_SECONDS };
+    let store = await StoreService.open(env, () => START_MS);
+    await store.cache.startRun({ category: "quotes", assetId: "BR:stock:PETR4", source: "yahoo" });
+    store.close();
+
+    store = await StoreService.open(env, () => START_MS);
+    const rows = await store.writer.readRows("SELECT error, CAST(finished_at IS NOT NULL AS VARCHAR) AS finished FROM load_runs");
+    store.close();
+    rmSync(directory, { recursive: true, force: true });
+
+    expect(rows).toStrictEqual([{ error: "interrupted: the server stopped before the load finished", finished: "true" }]);
+  });
+});

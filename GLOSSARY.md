@@ -140,3 +140,9 @@ _Avoid_: unknown, missing (the ticker is known; its CNPJ is not)
 The source a field is taken from first. CVM for what it carries. Another source only for a field CVM does not carry, and never after a CVM failure.
 _Avoid_: default, main
 
+**Background load**:
+A load that outlives the threshold of `query_sql` (`INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS`, 5 seconds by default). The query answers with the rows already stored and a warning; the load goes on, and Running the query again shows its progress and, once it has finished, the complete rows. Rule in `docs/adr/0022-long-loads-continue-in-the-background.md`.
+_Avoid_: job, task
+
+**Load id**:
+The id of a load in this server process, given by `query_sql` while the load runs in the background. It is kept only while the process runs; a load that was running at a restart is closed as interrupted in `load_runs`.

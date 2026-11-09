@@ -41,6 +41,7 @@ Every setting is an environment variable. The server reads them once at start an
 | `INVESTMENT_MCP_LOG_LEVEL` | `info` | `error`, `info` or `debug`. Log lines go to stderr. |
 | `INVESTMENT_MCP_CACHE_DIR` | the system temporary directory | Where the DuckDB cache file is kept. Created when missing. |
 | `INVESTMENT_MCP_CACHE_TTL_SECONDS` | `86400` | How long a loaded piece of data stays valid, in seconds. |
+| `INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS` | `5` | How long a query waits for a load before it answers with the rows already stored and a load id. The load keeps running in the background. |
 | `INVESTMENT_MCP_QUOTES_PROVIDER` | `BR:yfinance>b3,US:yfinance>yahoo` | Quote source per market. For Brazil the fallback is B3 COTAHIST, which has no adjusted close. Set it only to replace the default. |
 | `INVESTMENT_MCP_DIVIDENDS_PROVIDER` | `BR:yfinance>yahoo,US:yfinance>yahoo` | Dividend source per market. Set it only to replace the default. |
 | `INVESTMENT_MCP_FUNDAMENTALS_PROVIDER` | `BR:statusinvest` | Fundamentals source per market. Set it only to replace the default. |

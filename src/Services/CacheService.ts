@@ -28,6 +28,19 @@ export class CacheService {
     return runId;
   }
 
+  async closeInterruptedRuns(): Promise<number> {
+    // Why: a load still running when the server stopped never reached finishRun; it is closed as interrupted when the store opens, so it is not read as running forever.
+    const rows = await this.writer.readRows("SELECT CAST(count(*) AS INTEGER) AS total FROM load_runs WHERE finished_at IS NULL");
+    const total = Number(rows[0]?.total ?? 0);
+    if (total > 0) {
+      await this.writer.run(
+        "UPDATE load_runs SET finished_at = CAST(? AS TIMESTAMPTZ), error = ? WHERE finished_at IS NULL",
+        [new Date(this.nowMs()).toISOString(), "interrupted: the server stopped before the load finished"],
+      );
+    }
+    return total;
+  }
+
   async finishRun(runId: string, outcome: CacheRunOutcome): Promise<void> {
     const isFailed = outcome.errorMessage !== undefined;
     const expiresAt = isFailed ? null : this.formatIso(this.nowMs() + this.ttlMs);

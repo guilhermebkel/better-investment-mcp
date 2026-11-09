@@ -35,6 +35,7 @@ export class StoreService {
     const databasePath = join(cacheDir, StoreService.FILE_NAME);
     const writer = await StoreService.openUsableWriter(databasePath);
     const cache = new CacheService(writer, nowMs, env.INVESTMENT_MCP_CACHE_TTL_SECONDS * MS_PER_SECOND);
+    await cache.closeInterruptedRuns();
     return new StoreService(databasePath, writer, cache);
   }
 
