@@ -17,6 +17,7 @@ const buildHttp = (answer: () => Promise<string>, urls: string[] = []): HttpPort
   },
   getBytes: () => Promise.reject(new Error(NOT_USED)),
   postForm: () => Promise.reject(new Error(NOT_USED)),
+  downloadToFile: () => Promise.reject(new Error("not used")),
   getCookies: () => Promise.reject(new Error(NOT_USED)),
 });
 

@@ -13,6 +13,7 @@ export type HttpPort = {
   getText(url: string, encoding?: string, requestHeaders?: HeaderNameToValue): Promise<string>;
   getCookies(url: string): Promise<string[]>;
   getBytes(url: string): Promise<Uint8Array>;
+  downloadToFile(url: string, filePath: string): Promise<number>;
   postForm(url: string, fieldToValue: FieldNameToValue): Promise<string>;
 };
 

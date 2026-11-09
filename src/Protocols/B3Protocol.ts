@@ -13,3 +13,5 @@ export type B3TickerListing = {
   tradingCode: string | null;
   tradingCodeOthers: string | null;
 };
+
+export type CotahistField = readonly [number, number];

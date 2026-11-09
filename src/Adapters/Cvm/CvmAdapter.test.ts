@@ -193,6 +193,7 @@ describe("CvmAdapter.fetchTables()", () => {
       const http = {
         getText: () => Promise.reject(new Error("not used")),
         postForm: () => Promise.reject(new Error("not used")),
+        downloadToFile: () => Promise.reject(new Error("not used")),
         getCookies: () => Promise.reject(new Error("not used")),
         getBytes: () => Promise.reject(new HttpFailureError("the vendor answered with status 500", 500)),
       };
@@ -205,6 +206,7 @@ describe("CvmAdapter.fetchTables()", () => {
       const http = {
         getText: () => Promise.reject(new Error("not used")),
         postForm: () => Promise.reject(new Error("not used")),
+        downloadToFile: () => Promise.reject(new Error("not used")),
         getCookies: () => Promise.reject(new Error("not used")),
         getBytes: () => Promise.reject(new HttpRefusedError("the vendor redirected the request, and redirects are not followed")),
       };

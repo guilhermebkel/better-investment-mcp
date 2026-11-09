@@ -1,4 +1,5 @@
 import { B3ListingAdapter } from "@/Adapters/B3/B3ListingAdapter.ts";
+import { B3CotahistAdapter } from "@/Adapters/B3/B3CotahistAdapter.ts";
 import { BcbAdapter } from "@/Adapters/Bcb/BcbAdapter.ts";
 import { BcbFocusAdapter } from "@/Adapters/Bcb/BcbFocusAdapter.ts";
 import { CvmAdapter } from "@/Adapters/Cvm/CvmAdapter.ts";
@@ -38,13 +39,18 @@ export class VendorCatalogService {
     // Why: one ticker-to-CNPJ lookup serves every CVM adapter, so the company list is read once for all of them.
     const b3Http = new HttpAdapter({ allowedHosts: [B3ListingAdapter.HOST] });
     const b3Listing = new B3ListingAdapter(b3Http);
+    const b3CotahistHttp = new HttpAdapter({
+      allowedHosts: [B3CotahistAdapter.HOST],
+      maxBytes: B3CotahistAdapter.MAX_FILE_BYTES,
+      timeoutMs: B3CotahistAdapter.TIMEOUT_MS,
+    });
     const findFundCnpj = async (ticker: string): Promise<string | undefined> => {
       return (await b3Listing.findFund(ticker))?.legalId;
     };
     const cvmTicker = new CvmTickerAdapter(cvmHttp, CvmAdapter.BASE_URL, undefined, findFundCnpj);
     return {
       ...ProviderRegistryService.buildEmptyCatalog(),
-      quotes: { yahoo: new YahooAdapter("quotes", yahooHttp) },
+      quotes: { yahoo: new YahooAdapter("quotes", yahooHttp), b3: new B3CotahistAdapter(b3CotahistHttp) },
       dividends: { yahoo: new YahooAdapter("dividends", yahooHttp) },
       fundamentals: { statusinvest: new StatusInvestAdapter("fundamentals", statusInvestHttp) },
       fund_data: {

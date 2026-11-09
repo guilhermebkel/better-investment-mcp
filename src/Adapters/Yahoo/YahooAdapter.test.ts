@@ -48,6 +48,7 @@ const buildYahooHttp = (chart: (callNumber: number) => Promise<string>, urls: st
     },
     getBytes: () => Promise.reject(new Error(NOT_USED)),
     postForm: () => Promise.reject(new Error(NOT_USED)),
+    downloadToFile: () => Promise.reject(new Error("not used")),
     getCookies: () => {
       counts.cookies += 1;
       return Promise.resolve([`${SESSION_COOKIE}; Path=/; Domain=yahoo.com`]);
@@ -68,6 +69,7 @@ const buildHttpFailing = (error: Error): HttpPort => ({
   getText: () => Promise.reject(error),
   getBytes: () => Promise.reject(error),
   postForm: () => Promise.reject(error),
+  downloadToFile: () => Promise.reject(new Error("not used")),
   getCookies: () => Promise.reject(error),
 });
 

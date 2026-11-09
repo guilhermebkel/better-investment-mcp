@@ -57,6 +57,7 @@ describe("CvmTickerAdapter.resolveCnpj()", () => {
     const http: HttpPort = {
       getText: () => Promise.reject(new Error("not used")),
       postForm: () => Promise.reject(new Error("not used")),
+      downloadToFile: () => Promise.reject(new Error("not used")),
       getCookies: () => Promise.reject(new Error("not used")),
       getBytes: (url: string) => {
         if (url === FCA_2024) {
