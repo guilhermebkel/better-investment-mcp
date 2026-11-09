@@ -1,200 +1,173 @@
 # Data model
 
-The entities the server keeps in DuckDB, how they relate, and which of them still need a decision. The columns of each table are in `data-map.md`, which is the source of truth for names and units; this page shows the shape and the relations. It describes the schema at version 7 (`DuckDbSchemaAdapter`).
+The entities the server keeps in DuckDB, how they relate, and the rules behind their names. The columns and units of each table are in `data-map.md`; the rules that produce this shape are in `docs/data-modelling-standards.md`.
 
-The schema has no foreign keys. A relation below is **logical**: the two sides carry the same key values, and a query joins them on those columns.
+This is the target model. The store is still at the schema of version 8, which has the older names. The move to this model is done in steps, and each step updates `data-map.md`.
 
-## The current shape
+The schema has no foreign keys. A relation is **logical**: both sides carry the same `asset_id`, and a query joins them on it.
+
+## Entities
 
 ```mermaid
 erDiagram
-    assets ||--o| asset_identifiers : "market, ticker, asset_type"
-    assets ||--o| company_registry : "market, ticker, asset_type"
-    assets ||--o{ quotes : "market, ticker, asset_type"
-    assets ||--o{ dividends : "market, ticker, asset_type"
-    assets ||--o{ splits : "market, ticker, asset_type"
-    assets ||--o{ fundamentals : "market, ticker, asset_type"
-    assets ||--o{ financial_statements : "market, ticker, asset_type"
-    assets ||--o{ fii_monthly : "market, ticker, asset_type"
-    assets ||--o{ filings : "market, ticker, asset_type"
-    assets ||--o{ company_disclosures : "market, ticker, asset_type"
-    filings ||--o{ chunks : "filing_id"
-    asset_identifiers }o--o| fund_registry : "legal_id = cnpj (FII)"
-    fund_registry ||--o{ fund_daily : "cnpj"
-    fund_registry ||--o{ fund_holdings : "cnpj"
+    asset ||--o{ asset_attribute : "asset_id"
+    asset ||--o{ asset_quotes : "asset_id"
+    asset ||--o{ asset_dividends : "asset_id"
+    asset ||--o{ asset_splits : "asset_id"
+    asset ||--o{ asset_metrics : "asset_id"
+    asset ||--o{ asset_expectations : "asset_id"
+    asset ||--o{ asset_holdings : "asset_id (fund)"
+    asset ||--o{ asset_filings : "asset_id"
+    asset_filings ||--o{ asset_filing_items : "filing_id"
+    asset_filings ||--o{ asset_filing_chunks : "filing_id"
+    asset_filings ||--o{ asset_metrics : "filing_id (optional)"
 
-    assets {
-        VARCHAR market PK
-        VARCHAR ticker PK
-        VARCHAR asset_type PK
-        VARCHAR legal_id
-        VARCHAR name
-        VARCHAR sector
-        VARCHAR currency
-    }
-    asset_identifiers {
-        VARCHAR market PK
-        VARCHAR ticker PK
-        VARCHAR asset_type PK
+    asset {
+        VARCHAR asset_id PK
+        VARCHAR market
+        VARCHAR asset_type
+        VARCHAR code
         VARCHAR legal_id
         VARCHAR isin
-        VARCHAR company_name
-    }
-    company_registry {
-        VARCHAR market PK
-        VARCHAR ticker PK
-        VARCHAR asset_type PK
-        VARCHAR legal_id
-        VARCHAR company_name
+        VARCHAR name
+        VARCHAR trade_name
         VARCHAR sector
         VARCHAR situation
+        VARCHAR cvm_code
+        VARCHAR currency
     }
-    quotes {
-        VARCHAR market PK
-        VARCHAR ticker PK
-        DATE date PK
+    asset_attribute {
+        VARCHAR asset_id PK
+        VARCHAR attribute PK
+        VARCHAR value
+    }
+    asset_quotes {
+        VARCHAR asset_id PK
+        DATE reference_time_start PK
+        DATE reference_time_end
         DOUBLE close
         DOUBLE volume
     }
-    dividends {
-        VARCHAR market PK
-        VARCHAR ticker PK
-        DATE ex_date PK
+    asset_dividends {
+        VARCHAR asset_id PK
+        DATE ex_time PK
         VARCHAR kind PK
+        DATE payment_time
         DOUBLE amount
     }
-    splits {
-        VARCHAR market
-        VARCHAR ticker
-        DATE date
+    asset_splits {
+        VARCHAR asset_id PK
+        DATE ex_time PK
         DOUBLE ratio
     }
-    fundamentals {
-        VARCHAR market PK
-        VARCHAR ticker PK
-        INTEGER year PK
+    asset_metrics {
+        VARCHAR asset_id PK
         VARCHAR metric PK
+        DATE reference_time_start PK
+        DATE reference_time_end
         DOUBLE value
-    }
-    financial_statements {
-        VARCHAR market
-        VARCHAR ticker
-        DATE period_end
-        VARCHAR statement
-        VARCHAR line_item
-        DOUBLE value
+        VARCHAR unit
         INTEGER version
+        VARCHAR filing_id
     }
-    fii_monthly {
-        VARCHAR market PK
-        VARCHAR ticker PK
-        DATE period PK
-        DOUBLE net_worth
-        INTEGER version
+    asset_expectations {
+        VARCHAR asset_id PK
+        DATE reference_time_start PK
+        DATE survey_time PK
+        INTEGER calculation_base PK
+        DOUBLE mean
+        DOUBLE median
     }
-    filings {
+    asset_holdings {
+        VARCHAR asset_id PK
+        DATE reference_time_start PK
+        VARCHAR block PK
+        VARCHAR held_code
+        DOUBLE quantity
+        DOUBLE market_value
+    }
+    asset_filings {
         VARCHAR filing_id PK
-        VARCHAR market
-        VARCHAR ticker
-        VARCHAR filing_type
-        DATE reference_date
+        VARCHAR asset_id
+        VARCHAR document_type
+        DATE reference_time_start
+        DATE reference_time_end
+        TIMESTAMP published_at
+        INTEGER version
         VARCHAR url
     }
-    chunks {
+    asset_filing_items {
+        VARCHAR filing_id PK
+        VARCHAR section PK
+        VARCHAR row_json
+    }
+    asset_filing_chunks {
         VARCHAR filing_id PK
         INTEGER seq PK
         VARCHAR text
     }
-    company_disclosures {
-        VARCHAR market
-        VARCHAR ticker
-        VARCHAR dataset
-        VARCHAR section
-        DATE reference_date
-        VARCHAR row_json
-    }
-    fund_registry {
-        VARCHAR cnpj PK
-        VARCHAR fund_name
-        VARCHAR administrator
-        DOUBLE net_worth
-    }
-    fund_daily {
-        VARCHAR cnpj PK
-        DATE date PK
-        DOUBLE quota
-        DOUBLE net_worth
-    }
-    fund_holdings {
-        VARCHAR cnpj
-        DATE period
-        VARCHAR block
-        DOUBLE market_value
-    }
-    macro_series {
-        VARCHAR series PK
-        DATE date PK
-        DOUBLE value
-    }
-    treasury_prices {
-        VARCHAR bond_type PK
-        DATE maturity PK
-        DATE base_date PK
-        DOUBLE sell_rate
-    }
-    market_expectations {
-        VARCHAR indicator PK
-        INTEGER reference_year PK
-        DATE survey_date PK
-        INTEGER calculation_base PK
-        DOUBLE median_value
-    }
-    fx_rates {
-        VARCHAR currency PK
-        DATE date PK
-        DOUBLE sell_rate
-    }
-    cache_runs {
+    load_runs {
         VARCHAR run_id PK
         VARCHAR category
-        VARCHAR market
-        VARCHAR ticker
+        VARCHAR asset_id
+        VARCHAR source
     }
-    cvm_files {
+    load_files {
         VARCHAR url PK
         VARCHAR sha256 PK
-        VARCHAR dataset
     }
 ```
 
-The four series tables (`macro_series`, `treasury_prices`, `market_expectations`, `fx_rates`) have no relation to an asset: a series is identified by its own key (the series code, the bond family, the indicator, the currency). The control tables (`cache_runs`, `cvm_files`) describe loads, not data, and have no relation to the data tables.
+## What each entity holds
 
-## Keys by kind
-
-| Kind | Tables | Key |
+| Entity | Holds | Key |
 | --- | --- | --- |
-| Asset | `assets`, `asset_identifiers`, `company_registry`, `quotes`, `dividends`, `splits`, `fundamentals`, `financial_statements`, `fii_monthly`, `filings`, `company_disclosures` | `market, ticker, asset_type` (plus the time column where the table has one) |
-| Document text | `chunks` | `filing_id, seq` |
-| Fund | `fund_registry`, `fund_daily`, `fund_holdings` | `cnpj` (the fund class CNPJ) |
-| Series | `macro_series`, `treasury_prices`, `market_expectations`, `fx_rates` | the series key (`series`, `bond_type`, `indicator`, `currency`) |
-| Control | `cache_runs`, `cvm_files`, `schema_version` | the load or the file |
+| `asset` | One row per asset: its identity and the fields every asset may have (CNPJ, ISIN, name, sector, situation). | `asset_id` |
+| `asset_attribute` | Descriptors that only some types have (administrator and manager of a fund, class). | `asset_id, attribute` |
+| `asset_quotes` | Daily prices and volume of a stock or a FII. | `asset_id, reference_time_start` |
+| `asset_dividends` | Proventos, with the ex date and the payment date. | `asset_id, ex_time, kind` |
+| `asset_splits` | Stock splits and reverse splits. | `asset_id, ex_time` |
+| `asset_metrics` | Every number observed over time: fundamentals, FII monthly values, statement lines, fund quota, Treasury prices and rates, macro indexes, currency rates. | `asset_id, metric, reference_time_start` |
+| `asset_expectations` | Market expectations of a macro indicator, by survey. | `asset_id, reference_time_start, survey_time, calculation_base` |
+| `asset_holdings` | What a fund holds, by block, with quantity and value. | `asset_id, reference_time_start, block` |
+| `asset_filings` | One row per document: ITR, DFP, FRE, IPE and the other CVM and FNET documents. | `filing_id` |
+| `asset_filing_items` | Rows of a document that have no single number (FRE, VLMO, CGVN), as JSON. | `filing_id, section` |
+| `asset_filing_chunks` | Text of a document, for search. | `filing_id, seq` |
+| `load_runs` | Each load: its category, its asset, its source, its time and its error. | `run_id` |
+| `load_files` | Each CVM file downloaded, with its hash. | `url, sha256` |
 
-A query must filter these keys (`docs/product/data-map.md`, "Filters"). The market of a series is an internal name in the registry (`SERIES`, `TDIR`, `FOCUS`, `FX`, `FUND`), not a market of the B3.
+## Asset identifiers
 
-## Decisions pending (proposal)
+| Asset | `asset_id` |
+| --- | --- |
+| Stock | `BR:stock:PETR4` |
+| FII | `BR:fii:HGLG11` |
+| Investment fund | `BR:fund:00.017.024/0001-53` |
+| Treasury bond | `BR:treasury:` a normalized family and maturity (the data map lists the rule) |
+| Macro index | `BR:index:IPCA` |
+| Tax rate | `BR:tax_rate:SELIC` |
+| Currency rate | `BR:currency:USD` |
 
-These points come from reviewing the shape above. None of them is implemented. Each one needs an answer before the code changes.
+## Queries
 
-1. **One key convention.** Assets use `(market, ticker, asset_type)`; series and funds use a single column of their own, and the registry markets (`SERIES`, `TDIR`, `FOCUS`, `FX`, `FUND`) are invented. Option: keep both and document the reason, or give series and funds a common `entity` column.
-2. **One company identity.** The CNPJ and the name of a company are in `assets` (Yahoo), `asset_identifiers` (B3) and `company_registry` (CVM). Option: a single `companies` entity, with each source filling its own columns and a `source` per column group.
-3. **`fii_monthly` is wide.** Most of its value columns come from one source and are null for the rest. Option: a long table (`period, metric, value`), as `fundamentals` already is.
-4. **FII has no fund data.** `fund_registry`, `fund_daily` and `fund_holdings` come from CVM's fund files, which do not cover FII. A FII has its CNPJ (from B3) but no daily quota or holdings. Option: accept the gap, or find another source per FII.
-5. **No position entity.** The analysis of a portfolio needs the holdings (asset, quantity, average price, date). There is no table for it. Option: a `positions` table that the user fills, joined to the asset keys above.
-6. **Tables without a primary key.** `splits`, `financial_statements`, `fund_holdings` and `company_disclosures` are not keyed, so a reload relies on the replacement rule alone. Option: key them, and keep the row order and version in the key.
-7. **Mixed sources in one column.** `quotes.adj_close` comes from yfinance or Yahoo and is null from B3. Resolved in part: no table carries the vendor per row any more (ADR 0020); a key is always one source, so the question is only the meaning of `adj_close`, which the data map states.
+A query names the assets it reads by `asset_id`, directly or through a join to `asset`:
 
-## Where the rules live
+```sql
+SELECT reference_time_start, close
+FROM asset_quotes
+WHERE asset_id = 'BR:stock:PETR4' AND reference_time_start >= DATE '2026-01-01'
+```
 
-- Names, units and the filter rule of each table: `docs/product/data-map.md`.
-- What a provider fills, and how a new source is added: `docs/product/architecture.md` and `docs/product/adding-a-source.md`.
-- Why a choice was made: `docs/adr/`.
+```sql
+SELECT a.asset_id, q.reference_time_start, q.close
+FROM asset a JOIN asset_quotes q USING (asset_id)
+WHERE a.asset_id IN ('BR:stock:PETR4', 'BR:stock:VALE3')
+```
+
+A filter on another column, such as the sector, does not name the assets to load, so it is refused.
+
+## Open points
+
+1. **Load scope of a multi-asset load.** A Treasury family or a CNPJ writes several assets in one load. The replacement is by the key of the load, not by one asset. The data map must say, for each multi-asset load, which rows it replaces.
+2. **The normalized code of a Treasury bond.** The rule for `+` and for the maturity date is written in the data map before the code.
+3. **Migration.** Each old table maps to a new one (see the data map). The old names stay until the step that moves each one.

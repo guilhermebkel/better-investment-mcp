@@ -19,6 +19,10 @@ What goes in `docs/` and where everything else goes.
 | `docs/product/adding-a-source.md` | product doc |
 | `docs/product/releasing.md` | product doc |
 
+## Data modelling
+
+The rules for the names and shapes of the data are in `docs/data-modelling-standards.md`. Every new table or column follows them.
+
 ## What a standard never contains
 
 - An operation, class, constant or message as the rule. An example may name one, as an example: inside a fenced block, or on a line that says "e.g." or "example".
