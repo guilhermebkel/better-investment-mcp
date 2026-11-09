@@ -56,6 +56,7 @@ export class SqlGuardService implements SqlGuardPort {
     macro_series: "macro",
     treasury_prices: "treasury",
     market_expectations: "expectations",
+    asset_identifiers: "identifiers",
   };
 
   // Why: a keyed table is loaded per value of its key column (a series, a bond family, an indicator); each value is one load in the market the category serves.
@@ -75,6 +76,7 @@ export class SqlGuardService implements SqlGuardPort {
     fii_monthly: SqlGuardService.MARKET_FILTERS,
     filings: SqlGuardService.MARKET_FILTERS,
     chunks: { columns: ["market", "ticker", "asset_type"], anyOf: ["filing_type", "filing_id"] },
+    asset_identifiers: SqlGuardService.MARKET_FILTERS,
     macro_series: { columns: ["series"], anyOf: [] },
     treasury_prices: { columns: ["bond_type"], anyOf: [] },
     market_expectations: { columns: ["indicator"], anyOf: [] },

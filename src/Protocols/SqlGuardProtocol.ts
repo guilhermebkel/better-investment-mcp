@@ -12,7 +12,8 @@ export type DataTable
     | "chunks"
     | "macro_series"
     | "treasury_prices"
-    | "market_expectations";
+    | "market_expectations"
+    | "asset_identifiers";
 
 export type KeyedSource = {
   market: string;

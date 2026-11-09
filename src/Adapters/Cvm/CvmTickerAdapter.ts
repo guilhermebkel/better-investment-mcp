@@ -22,6 +22,7 @@ export class CvmTickerAdapter {
   private readonly http: HttpPort;
   private readonly baseUrl: string;
   private readonly currentYear: () => number;
+  private readonly fundLookup: (ticker: string) => Promise<string | undefined>;
   private companies?: Promise<ReadonlyMap<string, string>>;
 
   readonly resolveCnpj: LegalIdLookup = (market, ticker) => this.findCnpj(market, ticker);
@@ -30,10 +31,16 @@ export class CvmTickerAdapter {
     http: HttpPort,
     baseUrl: string = CvmAdapter.BASE_URL,
     currentYear: () => number = () => new Date().getUTCFullYear(),
+    fundLookup: (ticker: string) => Promise<string | undefined> = () => Promise.resolve(undefined),
   ) {
     this.http = http;
     this.baseUrl = baseUrl;
     this.currentYear = currentYear;
+    this.fundLookup = fundLookup;
+  }
+
+  static isUnitTicker(ticker: string): boolean {
+    return ticker.endsWith("11");
   }
 
   static isFiiTicker(ticker: string): ticker is CvmFiiTicker {
@@ -49,7 +56,12 @@ export class CvmTickerAdapter {
     }
     try {
       const companies = await this.readCompanies();
-      return companies.get(ticker);
+      const company = companies.get(ticker);
+      if (company !== undefined || !CvmTickerAdapter.isUnitTicker(ticker)) {
+        return company;
+      }
+      // Why: a fund's ticker (a unit, ending in 11) is not in CVM's company list; B3's listing gives its CNPJ, which is checked against the ticker it lists.
+      return await this.fundLookup(ticker);
     } catch (error) {
       throw CvmUtil.classifyFailure(error);
     }

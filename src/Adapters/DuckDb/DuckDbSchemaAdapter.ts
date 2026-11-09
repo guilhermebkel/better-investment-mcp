@@ -9,7 +9,7 @@ const FII_COLUMNS = [
 ].map((column) => `${column} DOUBLE`).join(", ");
 
 export class DuckDbSchemaAdapter {
-  static readonly VERSION = 4;
+  static readonly VERSION = 5;
 
   static readonly STATEMENTS: readonly string[] = [
     "CREATE TABLE schema_version (version INTEGER NOT NULL);",
@@ -26,6 +26,7 @@ export class DuckDbSchemaAdapter {
     "CREATE TABLE macro_series (series VARCHAR NOT NULL, date DATE NOT NULL, value DOUBLE, source VARCHAR NOT NULL, PRIMARY KEY (series, date));",
     "CREATE TABLE treasury_prices (bond_type VARCHAR NOT NULL, maturity DATE NOT NULL, base_date DATE NOT NULL, buy_rate DOUBLE, sell_rate DOUBLE, buy_unit_price DOUBLE, sell_unit_price DOUBLE, base_unit_price DOUBLE, source VARCHAR NOT NULL, PRIMARY KEY (bond_type, maturity, base_date));",
     "CREATE TABLE market_expectations (indicator VARCHAR NOT NULL, reference_year INTEGER NOT NULL, survey_date DATE NOT NULL, calculation_base INTEGER NOT NULL, mean_value DOUBLE, median_value DOUBLE, std_dev DOUBLE, min_value DOUBLE, max_value DOUBLE, respondents INTEGER, source VARCHAR NOT NULL, PRIMARY KEY (indicator, reference_year, survey_date, calculation_base));",
+    "CREATE TABLE asset_identifiers (market VARCHAR NOT NULL, ticker VARCHAR NOT NULL, asset_type VARCHAR NOT NULL, legal_id VARCHAR, isin VARCHAR, company_name VARCHAR, source VARCHAR NOT NULL, PRIMARY KEY (market, ticker, asset_type));",
     "CREATE TABLE cache_runs (run_id VARCHAR PRIMARY KEY, category VARCHAR NOT NULL, market VARCHAR NOT NULL, ticker VARCHAR NOT NULL, source VARCHAR NOT NULL, started_at TIMESTAMPTZ NOT NULL, finished_at TIMESTAMPTZ, expires_at TIMESTAMPTZ, rows_read BIGINT, error VARCHAR, filing_id VARCHAR, period_from DATE, period_to DATE);",
     "CREATE TABLE cvm_files (url VARCHAR NOT NULL, dataset VARCHAR NOT NULL, reference_year INTEGER NOT NULL, sha256 VARCHAR NOT NULL, size_bytes BIGINT NOT NULL, fetched_at TIMESTAMPTZ NOT NULL, is_current BOOLEAN NOT NULL, PRIMARY KEY (url, sha256));",
     "CREATE VIEW document_text AS SELECT filing_id, seq, section, page, text FROM chunks ORDER BY filing_id, seq;",
