@@ -1,4 +1,4 @@
-# better-investment-analysis-mcp
+# better-investment-mcp
 
 An open-source MCP server that gives AI agents data on Brazilian assets (US stocks later): prices, dividends, fundamentals, company filings and FII reports, and macro series. The agent reads everything with one SQL tool over a local DuckDB cache that the server fills on demand. Nothing in the server writes to the outside world. Vocabulary is in `GLOSSARY.md`; decisions are in `docs/adr/`; planned work is in GitHub issues.
 
@@ -20,6 +20,8 @@ Folders are created when the first file needs them.
 - `src/Setup/`: the entry points that start the program: stdio, HTTP (`INVESTMENT_MCP_TRANSPORT=http`), `init` and `health`; `src/main.ts` calls them. They never import an adapter.
 - `src/Testing/`: test doubles and fixtures; only tests import it.
 - `src/types/`: ambient declarations (`*.d.ts`).
+- `site/`: the GitHub Pages landing page, served at `better-investment-mcp.guilherr.me`. `.github/workflows/pages.yml` publishes it on every push to `main` that touches it. Not part of the npm package.
+- `design/`: the brand kit (logo, web icons, deck, guidelines); see `design/README.md`. Not part of the npm package.
 - `scripts/`: the harness (lint, checks, package smoke test, source drift check) and the integration tests.
 - Tests sit next to the file they test (`*.test.ts`, `*.test.mjs`).
 

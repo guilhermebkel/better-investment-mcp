@@ -6,7 +6,7 @@ The image runs the package that npm publishes, so `npx` and Docker run the same 
 
 - **stdio** (the default). A client starts `docker run -i --rm` and talks over stdin and stdout, as it does with `npx`.
 - **HTTP** when `INVESTMENT_MCP_TRANSPORT=http`. The server listens on `INVESTMENT_MCP_HTTP_HOST` and `INVESTMENT_MCP_HTTP_PORT` (`127.0.0.1:3100` by default) with Streamable HTTP at `/mcp`, and `GET /health` answers `ok`. A bearer token (`INVESTMENT_MCP_HTTP_TOKEN`, at least 8 characters) is required on every address, and every `/mcp` request must send it.
-- **Health.** The image's `HEALTHCHECK` runs `better-investment-analysis-mcp health`. Over stdio it passes at once; in HTTP mode it probes `GET /health`. The mode comes from the environment, not from a marker file.
+- **Health.** The image's `HEALTHCHECK` runs `better-investment-mcp health`. Over stdio it passes at once; in HTTP mode it probes `GET /health`. The mode comes from the environment, not from a marker file.
 - **One test for both.** `scripts/package-smoke.mjs` runs the stdio check and then the HTTP check: `/health`, the token, the three tools, and 401 without a token. CI runs it on the built image in both modes.
 
 ## Considered options

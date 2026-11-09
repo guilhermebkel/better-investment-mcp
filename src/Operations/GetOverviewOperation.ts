@@ -22,7 +22,7 @@ export class GetOverviewOperation implements OperationPort<GetOverviewInput> {
   async execute(): Promise<OperationResult> {
     const loaded = await this.readLoadedLines();
     const message = [
-      "Better Investment Analysis: data on Brazilian assets, read with query_sql.",
+      "Better Investment: data on Brazilian assets, read with query_sql.",
       "Tools: get_overview, get_guide and query_sql. All three only read.",
       "Markets and asset types: BR stocks, FIIs, funds, indexes and currencies, and Tesouro bonds. US assets are planned.",
       "Tables:",

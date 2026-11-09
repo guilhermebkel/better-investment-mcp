@@ -1,0 +1,14 @@
+# better-investment-mcp
+
+> An open-source MCP server that gives AI agents (such as Claude, Cursor and Codex) data on Brazilian assets: prices, dividends, fundamentals, filings, FII reports and macro series. The agent reads everything with one read-only SQL tool over a local DuckDB cache that the server fills on demand.
+
+Nothing in the server writes to the outside world. It exposes three tools: get_overview, get_guide and query_sql. The output describes and locates information; it is not investment advice. Unofficial: not affiliated with B3, CVM, Yahoo or any other data vendor. Work in progress: the data behind the tools arrives issue by issue.
+
+## Docs
+
+- [GitHub repository and README](https://github.com/guilhermebkel/better-investment-mcp): install, configuration, tools, architecture
+- [npm package](https://www.npmjs.com/package/better-investment-mcp): npx -y better-investment-mcp init
+
+## Optional
+
+- [Open issues and roadmap](https://github.com/guilhermebkel/better-investment-mcp/issues)

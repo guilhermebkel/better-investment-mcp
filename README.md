@@ -1,4 +1,4 @@
-<h1 align="center">better-investment-analysis-mcp</h1>
+<h1 align="center">better-investment-mcp</h1>
 
 <p align="center">
   <strong>Let your AI agent read Brazilian asset data: prices, dividends, fundamentals, filings, FII reports and macro series, through one read-only SQL tool.</strong>
@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="#quick-start"><img src="https://img.shields.io/badge/Quick_start-f4e40c" alt="Quick start" /></a>
-  <a href="https://github.com/guilhermebkel/better-investment-analysis-mcp/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/guilhermebkel/better-investment-analysis-mcp/ci.yml?branch=main&label=CI" alt="CI" /></a>
+  <a href="https://github.com/guilhermebkel/better-investment-mcp/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/guilhermebkel/better-investment-mcp/ci.yml?branch=main&label=CI" alt="CI" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow" alt="License: MIT" /></a>
 </p>
 
@@ -16,7 +16,7 @@
 
 **An agent that answers questions about a company needs real data, and it needs to know where each number came from.** Most data sources are a web page or a CSV that the model cannot query, so it guesses or pastes too much text.
 
-`better-investment-analysis-mcp` loads the data a question needs into a local DuckDB cache, then lets the agent answer with one `SELECT`. The cache is filled on demand, so the first query for an asset takes longer and later ones are fast. Every answer says what was loaded and what failed, and the server never gives an opinion on what to buy or sell.
+`better-investment-mcp` loads the data a question needs into a local DuckDB cache, then lets the agent answer with one `SELECT`. The cache is filled on demand, so the first query for an asset takes longer and later ones are fast. Every answer says what was loaded and what failed, and the server never gives an opinion on what to buy or sell.
 
 > **Work in progress.** The server runs and its three tools answer, but the data behind them arrives issue by issue. The list below shows what exists today.
 
@@ -72,9 +72,9 @@ Add this to the MCP servers of your client (Claude Code, Cursor, Codex, and othe
 ```json
 {
   "mcpServers": {
-    "better-investment-analysis": {
+    "better-investment": {
       "command": "npx",
-      "args": ["-y", "better-investment-analysis-mcp"]
+      "args": ["-y", "better-investment-mcp"]
     }
   }
 }
@@ -85,7 +85,7 @@ Add this to the MCP servers of your client (Claude Code, Cursor, Codex, and othe
 The client starts the container; the cache is a named volume:
 
 ```bash
-docker run -i --rm -v better-investment-analysis-cache:/cache ghcr.io/guilhermebkel/better-investment-analysis-mcp
+docker run -i --rm -v better-investment-cache:/cache ghcr.io/guilhermebkel/better-investment-mcp
 ```
 
 ### 3. Docker over HTTP
@@ -97,8 +97,8 @@ docker run -d --name investment-mcp -p 127.0.0.1:3100:3100 \
   -e INVESTMENT_MCP_TRANSPORT=http \
   -e INVESTMENT_MCP_HTTP_HOST=0.0.0.0 \
   -e INVESTMENT_MCP_HTTP_TOKEN='your-long-random-secret' \
-  -v better-investment-analysis-cache:/cache \
-  ghcr.io/guilhermebkel/better-investment-analysis-mcp
+  -v better-investment-cache:/cache \
+  ghcr.io/guilhermebkel/better-investment-mcp
 ```
 
 Then point the client at it:
@@ -106,7 +106,7 @@ Then point the client at it:
 ```json
 {
   "mcpServers": {
-    "better-investment-analysis": {
+    "better-investment": {
       "url": "http://127.0.0.1:3100/mcp",
       "headers": {
         "Authorization": "Bearer your-long-random-secret"
@@ -116,12 +116,12 @@ Then point the client at it:
 }
 ```
 
-The image has a Docker `HEALTHCHECK` (`better-investment-analysis-mcp health`): in HTTP mode it checks `GET /health`, and over stdio it passes at once. The server does not terminate TLS, so put a reverse proxy with TLS in front of it before you expose it beyond localhost. The decision is in [ADR 0025](docs/adr/0025-docker-runs-stdio-or-http.md).
+The image has a Docker `HEALTHCHECK` (`better-investment-mcp health`): in HTTP mode it checks `GET /health`, and over stdio it passes at once. The server does not terminate TLS, so put a reverse proxy with TLS in front of it before you expose it beyond localhost. The decision is in [ADR 0025](docs/adr/0025-docker-runs-stdio-or-http.md).
 
 ### Check the setup
 
 ```bash
-npx -y better-investment-analysis-mcp init
+npx -y better-investment-mcp init
 ```
 
 `init` prints the client configuration for Claude, Cursor and Codex, for `npx`, and for Docker over stdio and over HTTP. It reads no environment variable, so it never prints a secret.
@@ -143,10 +143,10 @@ With `npx`, set the folder in the client configuration:
 ```json
 {
   "mcpServers": {
-    "better-investment-analysis": {
+    "better-investment": {
       "command": "npx",
-      "args": ["-y", "better-investment-analysis-mcp"],
-      "env": { "INVESTMENT_MCP_CACHE_DIR": "/home/you/.cache/better-investment-analysis" }
+      "args": ["-y", "better-investment-mcp"],
+      "env": { "INVESTMENT_MCP_CACHE_DIR": "/home/you/.cache/better-investment" }
     }
   }
 }
@@ -156,8 +156,8 @@ With Docker over stdio, mount the same folder over `/cache`:
 
 ```bash
 docker run -i --rm --user "$(id -u):$(id -g)" \
-  -v "$HOME/.cache/better-investment-analysis:/cache" \
-  ghcr.io/guilhermebkel/better-investment-analysis-mcp
+  -v "$HOME/.cache/better-investment:/cache" \
+  ghcr.io/guilhermebkel/better-investment-mcp
 ```
 
 With Docker over HTTP, the same mount goes into the HTTP command:
@@ -168,8 +168,8 @@ docker run -d --name investment-mcp -p 127.0.0.1:3100:3100 \
   -e INVESTMENT_MCP_TRANSPORT=http \
   -e INVESTMENT_MCP_HTTP_HOST=0.0.0.0 \
   -e INVESTMENT_MCP_HTTP_TOKEN='your-long-random-secret' \
-  -v "$HOME/.cache/better-investment-analysis:/cache" \
-  ghcr.io/guilhermebkel/better-investment-analysis-mcp
+  -v "$HOME/.cache/better-investment:/cache" \
+  ghcr.io/guilhermebkel/better-investment-mcp
 ```
 
 Two things to know. The container writes to the folder as your user, which the `--user` line allows; without it the container runs as `node` (user 1000), and the server stops with `Permission denied` when the folder belongs to someone else. And one cache file serves one running server at a time: a second server that opens the same file stops with `in use by another process`, so give each running server its own folder. The `--user` form was tested on Linux.
