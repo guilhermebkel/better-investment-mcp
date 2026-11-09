@@ -80,22 +80,26 @@ export class CvmDisclosureAdapter implements ProviderPort<"disclosures"> {
       items.push({
         asset_id: assetId, filing_id: filingId, section: String(row.section), row_json: String(row.row_json),
       });
-      if (!filingIdToRow.has(filingId)) {
-        filingIdToRow.set(filingId, {
-          filing_id: filingId,
-          asset_id: assetId,
-          document_type: String(row.dataset),
-          category: null,
-          subject: null,
-          reference_time_start: reference,
-          reference_time_end: reference,
-          published_at: null,
-          version: version === null ? null : Number(version),
-          url: null,
-          file_hash: null,
-          source_file: row.source_file ?? null,
-        });
+      // Why: only the main section of a document carries its link (LINK_DOC), so a later section of the same document fills the url when the first one had none.
+      const existing = filingIdToRow.get(filingId);
+      if (existing !== undefined) {
+        existing.url ??= row.link ?? null;
+        continue;
       }
+      filingIdToRow.set(filingId, {
+        filing_id: filingId,
+        asset_id: assetId,
+        document_type: String(row.dataset),
+        category: null,
+        subject: null,
+        reference_time_start: reference,
+        reference_time_end: reference,
+        published_at: null,
+        version: version === null ? null : Number(version),
+        url: row.link ?? null,
+        file_hash: null,
+        source_file: row.source_file ?? null,
+      });
     }
     return { asset_filings: [...filingIdToRow.values()], asset_filing_items: items };
   }
@@ -134,6 +138,7 @@ export class CvmDisclosureAdapter implements ProviderPort<"disclosures"> {
           version: CsvUtil.readText(record.VERSAO ?? record.Versao),
           document_id: CsvUtil.readText(record.ID_Documento),
           row_json: JSON.stringify(record),
+          link: CsvUtil.readText(record.LINK_DOC),
           source_file: entry.name,
           source: CvmDisclosureAdapter.VENDOR,
         });
