@@ -47,13 +47,18 @@ describe("StoreService.open()", () => {
         "assets",
         "cache_runs",
         "chunks",
+        "company_registry",
         "cvm_files",
         "dividends",
         "document_text",
         "fii_monthly",
         "filings",
         "financial_statements",
+        "fund_daily",
+        "fund_holdings",
+        "fund_registry",
         "fundamentals",
+        "fx_rates",
         "macro_series",
         "market_expectations",
         "quotes",
@@ -80,7 +85,7 @@ describe("StoreService.open()", () => {
       store = await StoreService.open(buildEnv());
 
       expect(stderr).toHaveBeenCalledWith(expect.stringContaining("\"event\":\"store_replaced\""));
-      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 5 }]);
+      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 6 }]);
     });
   });
 
@@ -91,7 +96,7 @@ describe("StoreService.open()", () => {
       store = await StoreService.open(buildEnv());
 
       expect(stderr).toHaveBeenCalledWith(expect.stringContaining("\"reason\":\"it cannot be opened\""));
-      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 5 }]);
+      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 6 }]);
     });
   });
 

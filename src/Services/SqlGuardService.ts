@@ -57,6 +57,11 @@ export class SqlGuardService implements SqlGuardPort {
     treasury_prices: "treasury",
     market_expectations: "expectations",
     asset_identifiers: "identifiers",
+    company_registry: "registry",
+    fx_rates: "fx",
+    fund_registry: "fund",
+    fund_daily: "fund",
+    fund_holdings: "fund",
   };
 
   // Why: a keyed table is loaded per value of its key column (a series, a bond family, an indicator); each value is one load in the market the category serves.
@@ -64,6 +69,10 @@ export class SqlGuardService implements SqlGuardPort {
     macro_series: { market: "SERIES", column: "series" },
     treasury_prices: { market: "TDIR", column: "bond_type" },
     market_expectations: { market: "FOCUS", column: "indicator" },
+    fx_rates: { market: "FX", column: "currency" },
+    fund_registry: { market: "FUND", column: "cnpj" },
+    fund_daily: { market: "FUND", column: "cnpj" },
+    fund_holdings: { market: "FUND", column: "cnpj" },
   };
 
   static readonly MARKET_FILTERS: TableFilters = { columns: ["market", "ticker", "asset_type"], anyOf: [] };
@@ -77,6 +86,11 @@ export class SqlGuardService implements SqlGuardPort {
     filings: SqlGuardService.MARKET_FILTERS,
     chunks: { columns: ["market", "ticker", "asset_type"], anyOf: ["filing_type", "filing_id"] },
     asset_identifiers: SqlGuardService.MARKET_FILTERS,
+    company_registry: SqlGuardService.MARKET_FILTERS,
+    fx_rates: { columns: ["currency"], anyOf: [] },
+    fund_registry: { columns: ["cnpj"], anyOf: [] },
+    fund_daily: { columns: ["cnpj"], anyOf: [] },
+    fund_holdings: { columns: ["cnpj"], anyOf: [] },
     macro_series: { columns: ["series"], anyOf: [] },
     treasury_prices: { columns: ["bond_type"], anyOf: [] },
     market_expectations: { columns: ["indicator"], anyOf: [] },

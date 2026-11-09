@@ -13,7 +13,12 @@ export type DataTable
     | "macro_series"
     | "treasury_prices"
     | "market_expectations"
-    | "asset_identifiers";
+    | "asset_identifiers"
+    | "company_registry"
+    | "fx_rates"
+    | "fund_registry"
+    | "fund_daily"
+    | "fund_holdings";
 
 export type KeyedSource = {
   market: string;

@@ -36,4 +36,7 @@ export const RawEnvSchema: z.ZodType<Env> = z.object({
   INVESTMENT_MCP_TREASURY_PROVIDER: OptionalTextSchema,
   INVESTMENT_MCP_EXPECTATIONS_PROVIDER: OptionalTextSchema,
   INVESTMENT_MCP_IDENTIFIERS_PROVIDER: OptionalTextSchema,
+  INVESTMENT_MCP_REGISTRY_PROVIDER: OptionalTextSchema,
+  INVESTMENT_MCP_FX_PROVIDER: OptionalTextSchema,
+  INVESTMENT_MCP_FUND_PROVIDER: OptionalTextSchema,
 });

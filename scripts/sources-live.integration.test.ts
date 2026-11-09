@@ -1,0 +1,80 @@
+import { describe, expect, it } from "vitest";
+import { B3ListingAdapter } from "@/Adapters/B3/B3ListingAdapter.ts";
+import { BcbPtaxAdapter } from "@/Adapters/Bcb/BcbPtaxAdapter.ts";
+import { HttpAdapter } from "@/Adapters/Http/HttpAdapter.ts";
+import { CvmAdapter } from "@/Adapters/Cvm/CvmAdapter.ts";
+import { CvmFundAdapter } from "@/Adapters/Cvm/CvmFundAdapter.ts";
+import { CvmRegistryAdapter } from "@/Adapters/Cvm/CvmRegistryAdapter.ts";
+import { CvmTickerAdapter } from "@/Adapters/Cvm/CvmTickerAdapter.ts";
+
+// Why: this contract reaches the live B3, BCB Olinda and CVM services, so it runs with `pnpm test:integration` and never in `pnpm test`; it proves the paths and the shapes the adapters read still match the services.
+const BR = "BR";
+const TIMEOUT_MS = 600_000;
+const FUND_CNPJ = "00.017.024/0001-53";
+const PETROBRAS_CNPJ = "33.000.167/0001-01";
+const B3_FII_TICKERS = ["HGLG11", "IRIM11"] as const;
+
+describe("B3ListingAdapter against the live service", () => {
+  it("resolves the CNPJ of a FII from its listing and detail", async () => {
+    const http = new HttpAdapter({ allowedHosts: [B3ListingAdapter.HOST] });
+    const adapter = new B3ListingAdapter(http);
+
+    for (const ticker of B3_FII_TICKERS) {
+      const result = await adapter.fetchTables({ market: BR, ticker, assetType: "fii" });
+      expect(result.tables.asset_identifiers?.[0]).toMatchObject({ ticker, asset_type: "fii" });
+      expect(String(result.tables.asset_identifiers?.[0]?.legal_id)).toMatch(/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/u);
+    }
+  }, TIMEOUT_MS);
+
+  it("resolves the ISIN and CNPJ of a stock from its issuer's detail", async () => {
+    const http = new HttpAdapter({ allowedHosts: [B3ListingAdapter.HOST] });
+    const adapter = new B3ListingAdapter(http);
+
+    const result = await adapter.fetchTables({ market: BR, ticker: "VALE3", assetType: "stock" });
+
+    expect(result.tables.asset_identifiers?.[0]).toMatchObject({ ticker: "VALE3", legal_id: "33.592.510/0001-54" });
+    expect(String(result.tables.asset_identifiers?.[0]?.isin)).toMatch(/^BR[A-Z0-9]{10}$/u);
+  }, TIMEOUT_MS);
+});
+
+describe("BcbPtaxAdapter against the live service", () => {
+  it("returns the closing rate of USD for the current year", async () => {
+    const http = new HttpAdapter({ allowedHosts: ["olinda.bcb.gov.br"] });
+    const adapter = new BcbPtaxAdapter(http);
+
+    const result = await adapter.fetchTables({ market: "FX", ticker: "USD" });
+    const rows = result.tables.fx_rates ?? [];
+
+    expect(rows.length).toBeGreaterThan(100);
+    expect(rows.every((row) => typeof row.sell_rate === "number" && Number(row.sell_rate) > 1)).toBe(true);
+  }, TIMEOUT_MS);
+});
+
+describe("CVM registry and fund adapters against the live files", () => {
+  it("writes the company registry of Petrobras with its sector", async () => {
+    const http = new HttpAdapter({ allowedHosts: [CvmAdapter.HOST], maxBytes: CvmAdapter.MAX_FILE_BYTES, timeoutMs: TIMEOUT_MS });
+    const adapter = new CvmRegistryAdapter(http, () => Promise.resolve(PETROBRAS_CNPJ));
+
+    const result = await adapter.fetchTables({ market: BR, ticker: "PETR4", assetType: "stock" });
+
+    expect(result.tables.company_registry?.[0]).toMatchObject({ legal_id: PETROBRAS_CNPJ, sector: "Petróleo e Gás" });
+  }, TIMEOUT_MS);
+
+  it("writes a fund's registry and its monthly rows from the last twelve months", async () => {
+    const http = new HttpAdapter({ allowedHosts: [CvmAdapter.HOST], maxBytes: CvmAdapter.MAX_FILE_BYTES, timeoutMs: TIMEOUT_MS });
+    const adapter = new CvmFundAdapter(http);
+
+    const result = await adapter.fetchTables({ market: "FUND", ticker: FUND_CNPJ });
+
+    expect(result.tables.fund_registry?.length).toBe(1);
+    expect(result.tables.fund_daily?.length).toBeGreaterThan(0);
+    expect(result.tables.fund_holdings?.length).toBeGreaterThan(0);
+  }, TIMEOUT_MS);
+
+  it("keeps the ticker lookup of CVM's company list reachable", async () => {
+    const http = new HttpAdapter({ allowedHosts: [CvmAdapter.HOST], maxBytes: CvmAdapter.MAX_FILE_BYTES, timeoutMs: TIMEOUT_MS });
+    const lookup = new CvmTickerAdapter(http);
+
+    await expect(lookup.resolveCnpj(BR, "PETR4")).resolves.toBe(PETROBRAS_CNPJ);
+  }, TIMEOUT_MS);
+});

@@ -11,6 +11,9 @@ import type { QuoteProvider } from "@/Protocols/QuoteProviderProtocol.ts";
 import type { StatementProvider } from "@/Protocols/StatementProviderProtocol.ts";
 import type { ExpectationsProvider } from "@/Protocols/ExpectationsProviderProtocol.ts";
 import type { IdentifiersProvider } from "@/Protocols/IdentifiersProviderProtocol.ts";
+import type { FundProvider } from "@/Protocols/FundProviderProtocol.ts";
+import type { FxProvider } from "@/Protocols/FxProviderProtocol.ts";
+import type { RegistryProvider } from "@/Protocols/RegistryProviderProtocol.ts";
 import type { TreasuryProvider } from "@/Protocols/TreasuryProviderProtocol.ts";
 
 export type ColumnToValue = Record<string, DatabaseValue>;
@@ -70,7 +73,10 @@ export type ProviderSettingName
     | "INVESTMENT_MCP_MACRO_PROVIDER"
     | "INVESTMENT_MCP_TREASURY_PROVIDER"
     | "INVESTMENT_MCP_EXPECTATIONS_PROVIDER"
-    | "INVESTMENT_MCP_IDENTIFIERS_PROVIDER";
+    | "INVESTMENT_MCP_IDENTIFIERS_PROVIDER"
+    | "INVESTMENT_MCP_REGISTRY_PROVIDER"
+    | "INVESTMENT_MCP_FX_PROVIDER"
+    | "INVESTMENT_MCP_FUND_PROVIDER";
 
 export type VendorToProvider<Provider> = Record<string, Provider>;
 
@@ -86,6 +92,9 @@ export type CategoryToVendors = {
   treasury: VendorToProvider<TreasuryProvider>;
   expectations: VendorToProvider<ExpectationsProvider>;
   identifiers: VendorToProvider<IdentifiersProvider>;
+  registry: VendorToProvider<RegistryProvider>;
+  fx: VendorToProvider<FxProvider>;
+  fund: VendorToProvider<FundProvider>;
 };
 
 export type MarketToVendor = Record<string, string>;

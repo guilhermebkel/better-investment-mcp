@@ -5,6 +5,9 @@ import { BcbFocusAdapter } from "@/Adapters/Bcb/BcbFocusAdapter.ts";
 import { CvmAdapter } from "@/Adapters/Cvm/CvmAdapter.ts";
 import { CvmDocumentAdapter } from "@/Adapters/Cvm/CvmDocumentAdapter.ts";
 import { CvmFundMonthlyAdapter } from "@/Adapters/Cvm/CvmFundMonthlyAdapter.ts";
+import { CvmFundAdapter } from "@/Adapters/Cvm/CvmFundAdapter.ts";
+import { CvmRegistryAdapter } from "@/Adapters/Cvm/CvmRegistryAdapter.ts";
+import { BcbPtaxAdapter } from "@/Adapters/Bcb/BcbPtaxAdapter.ts";
 import { CvmStatementAdapter } from "@/Adapters/Cvm/CvmStatementAdapter.ts";
 import { CvmTickerAdapter } from "@/Adapters/Cvm/CvmTickerAdapter.ts";
 import { HttpAdapter } from "@/Adapters/Http/HttpAdapter.ts";
@@ -14,12 +17,18 @@ import { YahooAdapter } from "@/Adapters/Yahoo/YahooAdapter.ts";
 import type { CategoryToVendors } from "@/Protocols/ProviderProtocol.ts";
 import { ProviderRegistryService } from "@/Services/ProviderRegistryService.ts";
 
+const CVM_FILE_TIMEOUT_MS = 120_000;
+
 export class VendorCatalogService {
   static build(): CategoryToVendors {
     // Why: the adapters are built here, in a service, because the entry points in src/Setup/ never import an adapter.
     const yahooHttp = new HttpAdapter({ allowedHosts: YahooAdapter.HOSTS, headers: YahooAdapter.HEADERS });
     const bcbHttp = new HttpAdapter({ allowedHosts: [BcbAdapter.HOST] });
-    const cvmHttp = new HttpAdapter({ allowedHosts: [CvmAdapter.HOST], maxBytes: CvmAdapter.MAX_FILE_BYTES });
+    const cvmHttp = new HttpAdapter({
+      allowedHosts: [CvmAdapter.HOST],
+      maxBytes: CvmAdapter.MAX_FILE_BYTES,
+      timeoutMs: CVM_FILE_TIMEOUT_MS,
+    });
     const cvmDocumentHttp = new HttpAdapter({
       allowedHosts: CvmDocumentAdapter.HOSTS,
       maxBytes: CvmDocumentAdapter.MAX_DOCUMENT_BYTES,
@@ -64,6 +73,9 @@ export class VendorCatalogService {
       treasury: { tesouro: new TesouroAdapter(tesouroHttp) },
       expectations: { bcb: new BcbFocusAdapter(focusHttp) },
       identifiers: { b3: b3Listing },
+      registry: { cvm: new CvmRegistryAdapter(cvmHttp, cvmTicker.resolveCnpj) },
+      fx: { bcb: new BcbPtaxAdapter(focusHttp) },
+      fund: { cvm: new CvmFundAdapter(cvmHttp) },
     };
   }
 }
