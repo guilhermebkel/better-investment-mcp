@@ -1,4 +1,5 @@
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
+import type { PtaxBulletin } from "@/Protocols/PtaxProtocol.ts";
 import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow } from "@/Protocols/ProviderProtocol.ts";
 import { BcbPtaxSchema } from "@/Schemas/BcbPtaxSchema.ts";
 
@@ -59,7 +60,7 @@ export class BcbPtaxAdapter implements ProviderPort<"fx"> {
       throw new Error(`the response format changed: the PTAX service sent an unknown shape for ${currency}; no row was written`);
     }
     // Why: the service can reissue a day's closing bulletin; the later one (by its time) is the rate of that day.
-    const dateToBulletin = new Map<string, { time: string; buy: number | null; sell: number | null }>();
+    const dateToBulletin = new Map<string, PtaxBulletin>();
     for (const bulletin of parsed.data.value) {
       if (bulletin.tipoBoletim !== CLOSING_BULLETIN) {
         continue;
@@ -67,7 +68,11 @@ export class BcbPtaxAdapter implements ProviderPort<"fx"> {
       const date = bulletin.dataHoraCotacao.slice(0, DATE_LENGTH);
       const known = dateToBulletin.get(date);
       if (known === undefined || bulletin.dataHoraCotacao > known.time) {
-        dateToBulletin.set(date, { time: bulletin.dataHoraCotacao, buy: bulletin.cotacaoCompra, sell: bulletin.cotacaoVenda });
+        dateToBulletin.set(date, {
+          time: bulletin.dataHoraCotacao,
+          buy: bulletin.cotacaoCompra,
+          sell: bulletin.cotacaoVenda,
+        });
       }
     }
     return [...dateToBulletin].sort(([left], [right]) => left.localeCompare(right)).map(([date, bulletin]) => ({

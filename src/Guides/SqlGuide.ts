@@ -10,6 +10,9 @@ Every data table in the query needs WHERE filters that compare with = or IN and 
 - macro_series: series.
 - treasury_prices: bond_type (a Tesouro Direto family, such as 'Tesouro Selic').
 - market_expectations: indicator (ipca, selic, pib_total or cambio).
+- fx_rates: currency (USD, EUR).
+- fund_registry, fund_daily, fund_holdings: cnpj (the fund class CNPJ, as CVM writes it, for example 00.017.024/0001-53).
+- asset_identifiers, company_registry: market, ticker and asset_type.
 - assets, cache_runs, asset_coverage: no filter.
 
 A query without its filters is refused, and the answer names the filter to add.

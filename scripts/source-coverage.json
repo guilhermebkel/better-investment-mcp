@@ -39,6 +39,22 @@
     "ExpectationsProvider": {
       "status": "implemented",
       "reason": "Annual market expectations from the BCB Focus survey (Olinda); the Focus adapter fills market_expectations for ipca, selic, pib_total and cambio."
+    },
+    "IdentifiersProvider": {
+      "status": "implemented",
+      "reason": "A ticker's CNPJ and ISIN from the B3 listing and detail routes; the B3 listing adapter fills asset_identifiers, and CVM uses it for a FII outside its curated list."
+    },
+    "RegistryProvider": {
+      "status": "implemented",
+      "reason": "A company's legal name, sector and situation from CVM's company file (cad_cia_aberta); the CVM registry adapter fills company_registry."
+    },
+    "FxProvider": {
+      "status": "implemented",
+      "reason": "The closing PTAX rate of a currency per day from the BCB Olinda service; the PTAX adapter fills fx_rates."
+    },
+    "FundProvider": {
+      "status": "implemented",
+      "reason": "A fund's registry, daily quota and holdings from CVM's open files, keyed by the fund CNPJ; the fund adapter fills fund_registry, fund_daily and fund_holdings."
     }
   }
 }

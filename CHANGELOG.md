@@ -6,6 +6,11 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Added
 
+- B3 identifiers: a ticker's CNPJ and ISIN from the B3 listing and detail, so a FII outside the curated list resolves (IRIM11 now too).
+- B3 COTAHIST daily quotes (`quotes`, `INVESTMENT_MCP_QUOTES_PROVIDER=BR:b3`), streamed from the yearly file.
+- yfinance (Python library) for quotes and dividends, as the source map asks: `INVESTMENT_MCP_QUOTES_PROVIDER=BR:yfinance`. Needs `python3` and `pip install yfinance`.
+- CVM company registry with the sector (`company_registry`), and CVM fund registry, daily quota and holdings keyed by CNPJ (`fund_registry`, `fund_daily`, `fund_holdings`).
+- BCB PTAX closing rate per currency (`fx_rates`).
 - Tesouro Direto prices and rates (Tesouro Transparente file, daily history from 2004) in `treasury_prices`, loaded per bond family with `bond_type = '...'`. Set `INVESTMENT_MCP_TREASURY_PROVIDER=TDIR:tesouro`.
 - Annual market expectations from the BCB Focus survey (ipca, selic, pib_total, cambio) in `market_expectations`. Set `INVESTMENT_MCP_EXPECTATIONS_PROVIDER=FOCUS:bcb`.
 - Loads write their rows in batches of 500 per statement; a full history that took minutes now takes seconds.

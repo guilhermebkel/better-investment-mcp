@@ -41,8 +41,8 @@ These rules are enforced in code, not in a prompt (`docs/adr/0006-the-query-must
 One interface per data category, one adapter per vendor (`docs/adr/0005-one-provider-interface-per-data-category.md`). The environment variable of a category maps each market to a vendor, for example `BR:yahoo,US:yahoo`. Every row keeps the `source` that produced it. Issue #5 builds the registry and the loader.
 
 <!-- providers:start -->
-- `QuoteProvider`: prices and splits. `INVESTMENT_MCP_QUOTES_PROVIDER`. Yahoo Finance.
-- `DividendProvider`: dividends. `INVESTMENT_MCP_DIVIDENDS_PROVIDER`. Yahoo Finance.
+- `QuoteProvider`: prices and splits. `INVESTMENT_MCP_QUOTES_PROVIDER`. Yahoo Finance, the yfinance library, and B3 COTAHIST (daily quotes).
+- `DividendProvider`: dividends. `INVESTMENT_MCP_DIVIDENDS_PROVIDER`. Yahoo Finance and the yfinance library.
 - `FundamentalsProvider`: yearly fundamentals. `INVESTMENT_MCP_FUNDAMENTALS_PROVIDER`. StatusInvest.
 - `StatementProvider`: financial statements (ITR, DFP). `INVESTMENT_MCP_STATEMENTS_PROVIDER`. CVM.
 - `FundDataProvider`: periodic fund data (FII monthly). `INVESTMENT_MCP_FUND_DATA_PROVIDER`. CVM (StatusInvest is blocked).
@@ -51,6 +51,10 @@ One interface per data category, one adapter per vendor (`docs/adr/0005-one-prov
 - `MacroProvider`: macro series. `INVESTMENT_MCP_MACRO_PROVIDER`. BCB SGS.
 - `TreasuryProvider`: Tesouro Direto prices and rates per bond family. `INVESTMENT_MCP_TREASURY_PROVIDER`. Tesouro Transparente.
 - `ExpectationsProvider`: annual market expectations (the BCB Focus survey). `INVESTMENT_MCP_EXPECTATIONS_PROVIDER`. BCB Olinda.
+- `IdentifiersProvider`: a ticker's CNPJ and ISIN, from the B3 listing and detail. `INVESTMENT_MCP_IDENTIFIERS_PROVIDER`. B3.
+- `RegistryProvider`: a company's legal name, sector and situation. `INVESTMENT_MCP_REGISTRY_PROVIDER`. CVM.
+- `FxProvider`: the closing PTAX rate of a currency per day. `INVESTMENT_MCP_FX_PROVIDER`. BCB Olinda.
+- `FundProvider`: a fund's registry, daily quota and holdings, keyed by CNPJ. `INVESTMENT_MCP_FUND_PROVIDER`. CVM.
 <!-- providers:end -->
 
 `scripts/source-coverage.json` classifies each provider as `implemented`, `planned` or `excluded` with a reason, and `pnpm source:drift` fails when this list and that file disagree.

@@ -8,6 +8,10 @@ Each row keeps the source that produced it, in the source column. Each answer al
 - BCB SGS (source bcb): macro_series for the series ipca, cdi, selic, ptax and igpm. Open data.
 - StatusInvest (source statusinvest): fundamentals and fii_monthly. The site may block the requests; a blocked load says so and writes nothing.
 - CVM (source cvm): filings for a company, from the yearly IPE file. Filing types: material_fact, sustainability and other. Not every ticker has a CVM company yet.
+- B3 (source b3): asset_identifiers (CNPJ and ISIN of a ticker); quotes for BR tickers when INVESTMENT_MCP_QUOTES_PROVIDER names b3 (COTAHIST, the current and the previous year, unit-factor prices only).
+- CVM company file (source cvm): company_registry, the sector and legal name of a stock.
+- CVM fund files (source cvm): fund_registry, fund_daily and fund_holdings for a fund CNPJ, the last twelve months.
+- BCB PTAX (source bcb): fx_rates, the closing rate per currency and day.
 - Tesouro Transparente (source tesouro): treasury_prices for one bond family per load (bond_type), daily prices and rates from 2004. Open data.
 - BCB Focus (source bcb): market_expectations for ipca, selic, pib_total and cambio, the annual mean and median of the survey. Open data.
 

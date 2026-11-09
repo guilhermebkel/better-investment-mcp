@@ -110,6 +110,10 @@ _Avoid_: indicator, index
 A Tesouro Direto group of bonds that the file names alike, such as `Tesouro Selic` or `Tesouro IPCA+`. It is the ticker of a load of `treasury_prices`, whose registry market is `TDIR`.
 _Avoid_: product, bond type
 
+**Fund key**:
+The CNPJ of a fund class, the key of `fund_registry`, `fund_daily` and `fund_holdings`. CVM's fund files cover FI, FIDC and FIF, not FII.
+_Avoid_: fund ticker
+
 **Focus**:
 The BCB survey of market expectations. `market_expectations` holds its annual mean and median for `ipca`, `selic`, `pib_total` and `cambio`, one row per survey date and reference year. Its registry market is `FOCUS`.
 _Avoid_: forecast, projection

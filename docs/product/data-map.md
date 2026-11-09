@@ -20,6 +20,12 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 | `macro_series` | **series**, **date**, value, source | BCB SGS (ipca 433, cdi 12, selic 432, ptax 1, igpm 189) | #7 |
 | `treasury_prices` | **bond_type**, **maturity**, **base_date**, buy_rate, sell_rate, buy_unit_price, sell_unit_price, base_unit_price, source | Tesouro Transparente (`precotaxatesourodireto.csv`) | PR #30 |
 | `market_expectations` | **indicator**, **reference_year**, **survey_date**, **calculation_base**, mean_value, median_value, std_dev, min_value, max_value, respondents, source | BCB Focus (Olinda `ExpectativasMercadoAnuais`) | PR #30 |
+| `asset_identifiers` | **market**, **ticker**, **asset_type**, legal_id (CNPJ), isin, company_name, source | B3 listing and detail routes | PR #30 |
+| `company_registry` | **market**, **ticker**, **asset_type**, legal_id (CNPJ), company_name, trade_name, sector, situation, cvm_code, source | CVM company file (`cad_cia_aberta.csv`) | PR #30 |
+| `fx_rates` | **currency**, **date**, buy_rate, sell_rate, source | BCB PTAX (Olinda, closing bulletin) | PR #30 |
+| `fund_registry` | **cnpj**, fund_name, fund_type, class_name, situation, administrator, administrator_cnpj, manager, net_worth, net_worth_date, source | CVM fund file (`cad_fi.csv`) | PR #30 |
+| `fund_daily` | **cnpj**, **date**, quota, net_worth, total_value, subscriptions, redemptions, holders, source | CVM daily informe (`inf_diario_fi`, the last twelve months) | PR #30 |
+| `fund_holdings` | **cnpj**, **period**, **block**, application_type, asset_category, asset_code, asset_description, issuer, quantity, market_value, source_file, source | CVM CDA (`cda_fi`, blocks 1 to 8, the last twelve months) | PR #30 |
 | `cache_runs` | run_id, category, market, ticker, source, started_at, finished_at, expires_at, rows_read, error, filing_id, period_from, period_to | the loader (`filing_id` set for a document; the period columns set for a period load) | #3, #5, #10, #28 |
 | `cvm_files` | **url**, **sha256**, dataset, reference_year, size_bytes, fetched_at, is_current | the loader: one record per downloaded CVM file and version | #28 |
 | `schema_version` | version | the store (one row, the schema version of the file) | #3 |
@@ -44,6 +50,9 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 | `macro_series` | `series` | none |
 | `treasury_prices` | `bond_type` | none |
 | `market_expectations` | `indicator` | none |
+| `fx_rates` | `currency` | none |
+| `fund_registry`, `fund_daily`, `fund_holdings` | `cnpj` (the fund class CNPJ, as CVM writes it) | none |
+| `asset_identifiers`, `company_registry` | `market`, `ticker`, `asset_type` | none |
 | `assets`, `cache_runs`, `asset_coverage`, `schema_version`, `cvm_files` | nothing | none |
 
 A period filter compares its column with a date literal, with `=`, `>=`, `>`, `<=`, `<`, `BETWEEN` or `IN`, for example `period_end BETWEEN '2024-01-01' AND '2024-12-31'` or `period >= DATE '2025-01-01'`. The loader loads the years of the period. A query with no period filter loads the last three years (the current year and the two before it). A bound given alone is completed with the default: a missing end runs to the end of the current year, and a missing start reaches back to the default start or to the end, whichever is earlier. A period longer than 10 years is refused with the reason, because each yearly file is tens of megabytes. A period filter that is not a date literal, or sits inside an `OR`, is not read as a bound and loads the default period.
@@ -110,14 +119,13 @@ The map of the CVM open data that serves the tables above. CVM is the primary so
 - A document is downloaded only from `www.rad.cvm.gov.br` (CVM) or `fnet.bmfbovespa.com.br` (FNET, the host of the FII reports linked by CVM), over https, and only when a query asks for its chunks. The text is indexed in `chunks` and searched with `search_chunks`. A scanned PDF without text is not read (no OCR).
 - A load that cannot finish says which class of failure it is (HTTP error, blocked request, file that could not be read, or unmapped ticker); a CVM failure never falls back to another source.
 
-## Known gap: tickers and CNPJ
+## Tickers and CNPJ
 
-CVM's files carry the CNPJ of a company or a fund, not its ticker. The CVM adapters resolve a ticker in two places, and nothing else:
+A FII ticker resolves to its CNPJ through B3 (`asset_identifiers`): the B3 listing filters the ticker to a fund by its short name, the detail gives the CNPJ, and the ticker must be the fund's trading code or one of its other codes. A stock's CNPJ and ISIN come from the B3 detail of its issuer. The CVM adapters use the B3 CNPJ for a FII that the curated list does not hold. IRIM11 resolves to `41.076.564/0001-95`, the CNPJ of the CVM name `IRIDIUM CRI FII`.
 
-- **Stocks**: the CVM company list (`fca_cia_aberta_valor_mobiliario`, the field `Codigo_Negociacao`), read for the current and the previous year. A ticker that is not in the list is **pending**: the load fails with the ticker named, and no CNPJ is guessed from a name or an ISIN. The list was checked for PETR4, VALE3 and BBAS3 (`src/Testing/fixtures/cvm/recorded-fca-valor-mobiliario-2025-sample.csv`), not for every company.
-- **Funds (FIIs)**: CVM's datasets carry no ticker for a fund, and `cda_fie` gives only a partial lookup. The server keeps a short list in `CvmTickerAdapter` of the funds whose CNPJ was checked against CVM's own name. Today: `IRDM11`, CNPJ `28.830.325/0001-10`, CVM name `IRIDIUM REC IMOB FII`. Every other FII ticker is **pending** until its CNPJ is added to that list with its CVM name.
+## Succession of IRDM11 and IRIM11
 
-The succession of IRDM11 and IRIM11 (issue #28, S6): IRIM11's CNPJ was not confirmed. The CVM names with `IRIDIUM` that the 2025 monthly file holds are IRDM11's fund and `IRIDIUM CRI FII` (`41.076.564/0001-95`), which is not identified as IRIM11; so IRIM11 is pending. Queries for each ticker keep their own history; no concatenated series is built. The policy for joining the two series (adjusted or not, the factor, and the date of the event) is undecided and is an open decision of issue #28.
+Issue #28, S6. Each ticker keeps its own history: no concatenated series is built. The policy for joining the two series (adjusted or not, the factor, and the date of the event) is undecided and is an open decision of issue #28. B3 confirms the CNPJ of IRIM11 (`41.076.564/0001-95`), which is the CNPJ of the CVM name `IRIDIUM CRI FII`, so the two tickers are now resolved to their own funds.
 
 ## Not built in this release
 
@@ -125,5 +133,8 @@ The succession of IRDM11 and IRIM11 (issue #28, S6): IRIM11's CNPJ was not confi
 - Fund NAV, holdings and credit funds (`fi-doc-inf_diario`, `fi-doc-cda`, FIDC, FIP, FIAGRO, securitization): Phase 2 of issue #28, each as its own unit when a use case asks for it.
 - The policy for joining IRDM11 and IRIM11 into one series (adjusted or not, the factor and the date of the event). Until it is decided, each ticker keeps its own history.
 - The per-unit distribution of FIIs with ex and payment dates. CVM does not publish one in these datasets (P4).
-- PTAX by currency (the BCB Olinda PTAX service), the CVM company and fund registries (sector and legal name of a company, `cad_fi` for funds), the daily NAV and holdings of funds, and the B3 COTAHIST history. COTAHIST waits for the owner's decision on its licence terms; the B3 site routes are not documented, so they are not used.
+- The history of quotes before the current and the previous year, in COTAHIST, which a query does not reach yet (a period filter on `quotes` is not built).
+- Fund files for FII: CVM's fund files cover FI, FIDC and FIF, not FII, so a FII has no daily quota or holdings in CVM's open data.
+- The CVM registry of a fund class with no CNPJ match in `cad_fi` (a multi-class fund's class CNPJ can differ from the fund's CNPJ): the registry row is empty, not guessed.
+- StatusInvest: blocked by a Cloudflare challenge. The server does not bypass it.
 

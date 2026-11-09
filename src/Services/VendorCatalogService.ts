@@ -14,6 +14,7 @@ import { HttpAdapter } from "@/Adapters/Http/HttpAdapter.ts";
 import { StatusInvestAdapter } from "@/Adapters/StatusInvest/StatusInvestAdapter.ts";
 import { TesouroAdapter } from "@/Adapters/Tesouro/TesouroAdapter.ts";
 import { YahooAdapter } from "@/Adapters/Yahoo/YahooAdapter.ts";
+import { YfinanceAdapter } from "@/Adapters/Yfinance/YfinanceAdapter.ts";
 import type { CategoryToVendors } from "@/Protocols/ProviderProtocol.ts";
 import { ProviderRegistryService } from "@/Services/ProviderRegistryService.ts";
 
@@ -59,8 +60,12 @@ export class VendorCatalogService {
     const cvmTicker = new CvmTickerAdapter(cvmHttp, CvmAdapter.BASE_URL, undefined, findFundCnpj);
     return {
       ...ProviderRegistryService.buildEmptyCatalog(),
-      quotes: { yahoo: new YahooAdapter("quotes", yahooHttp), b3: new B3CotahistAdapter(b3CotahistHttp) },
-      dividends: { yahoo: new YahooAdapter("dividends", yahooHttp) },
+      quotes: {
+        yahoo: new YahooAdapter("quotes", yahooHttp),
+        yfinance: new YfinanceAdapter("quotes"),
+        b3: new B3CotahistAdapter(b3CotahistHttp),
+      },
+      dividends: { yahoo: new YahooAdapter("dividends", yahooHttp), yfinance: new YfinanceAdapter("dividends") },
       fundamentals: { statusinvest: new StatusInvestAdapter("fundamentals", statusInvestHttp) },
       fund_data: {
         statusinvest: new StatusInvestAdapter("fund_data", statusInvestHttp),
