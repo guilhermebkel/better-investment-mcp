@@ -138,7 +138,8 @@ export class CvmDisclosureAdapter implements ProviderPort<"disclosures"> {
           version: CsvUtil.readText(record.VERSAO ?? record.Versao),
           document_id: CsvUtil.readText(record.ID_Documento),
           row_json: JSON.stringify(record),
-          link: CsvUtil.readText(record.LINK_DOC),
+          // Why: the reference form names its link LINK_DOC; the holdings file (VLMO) names it Link_Download, and a row with neither has no document to read.
+          link: CsvUtil.readText(record.LINK_DOC ?? record.Link_Download),
           source_file: entry.name,
           source: CvmDisclosureAdapter.VENDOR,
         });
