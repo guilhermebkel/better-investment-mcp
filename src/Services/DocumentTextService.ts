@@ -1,6 +1,6 @@
 import { HTMLElement, NodeType, parse } from "node-html-parser";
 import type { ExtractedDocument, ExtractedSegment, HtmlReadState } from "@/Protocols/DocumentTextProtocol.ts";
-import { FormReferenceService } from "@/Services/FormReferenceService.ts";
+import { ZipDocumentService } from "@/Services/ZipDocumentService.ts";
 import { PdfTextService } from "@/Services/PdfTextService.ts";
 import { TextUtil } from "@/Utils/TextUtil.ts";
 import { ZipFileUtil } from "@/Utils/ZipFileUtil.ts";
@@ -18,7 +18,7 @@ export class DocumentTextService {
   static async extract(bytes: Uint8Array): Promise<ExtractedDocument> {
     // Why: the format is read from the bytes, not from the content type, because CVM sends PDFs as text/html.
     if (ZipFileUtil.isZip(bytes)) {
-      return FormReferenceService.extract(bytes);
+      return ZipDocumentService.extract(bytes);
     }
     if (DocumentTextService.isPdf(bytes)) {
       return PdfTextService.extract(bytes);
