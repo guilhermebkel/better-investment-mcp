@@ -8,7 +8,8 @@ Some filings are scanned images with no text layer, and their tables are lost wh
 
 - Pages with no text are read by OCR: OCRmyPDF with `--skip-text` (pages that already have text stay as they are), languages `por+eng`. The bytes go to OCRmyPDF through its standard input and output, so no file is written by the server.
 - The tables of each page are read by PyMuPDF (`find_tables`) from the native structure of the PDF. Each table is one chunk with section `table`.
-- Both are optional tools, named by `INVESTMENT_MCP_OCRMYPDF` and `INVESTMENT_MCP_PYTHON`. When a tool is missing or fails, the document keeps the text it has, and the pages without text are counted and reported in the answer.
+- Running the server, the tools are optional: they are named by `INVESTMENT_MCP_OCRMYPDF` and `INVESTMENT_MCP_PYTHON`, and when one is missing or fails, the document keeps the text it has; the pages without text are counted and reported in the answer.
+- Installing them is required: `pnpm ensure-deps` fails when a tool is missing, and the Dockerfile installs them. So, when installed, they are used by default: OCR on the pages without text, and the table reading on every PDF.
 - PyMuPDF is licensed under AGPL. The owner accepted it for this project.
 
 ## Consequences
