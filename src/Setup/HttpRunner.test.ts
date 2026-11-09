@@ -103,7 +103,7 @@ describe("HttpRunner.start()", () => {
     await client.close();
 
     expect(tools.tools.map((tool) => tool.name).sort()).toStrictEqual(TOOL_NAMES);
-    expect(serverName).toBe("better-investment-analysis-mcp");
+    expect(serverName).toBe("better-investment-mcp");
   });
 
   it("never writes the token to stderr", async () => {

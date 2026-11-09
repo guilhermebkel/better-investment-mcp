@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { checkHttpRun, checkRun, parseCommand } from "./package-smoke.mjs";
 
 const GOOD_STDERR = "{\"level\":\"info\",\"event\":\"environment_valid\"}\n";
-const SERVER_NAME = "better-investment-analysis-mcp";
+const SERVER_NAME = "better-investment-mcp";
 const GOOD_INSTRUCTIONS = "This server only reads.";
 const GOOD_INITIALIZE = JSON.stringify({
   jsonrpc: "2.0",

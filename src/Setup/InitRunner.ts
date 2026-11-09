@@ -1,7 +1,7 @@
 import { LogUtil } from "@/Utils/LogUtil.ts";
 
 const MCP_SERVERS_OPEN = "  \"mcpServers\": {";
-const SERVER_OPEN = "    \"better-investment-analysis\": {";
+const SERVER_OPEN = "    \"better-investment\": {";
 
 export class InitRunner {
   static readonly CLIENT_CONFIG_TEXT = [
@@ -13,16 +13,16 @@ export class InitRunner {
     MCP_SERVERS_OPEN,
     SERVER_OPEN,
     "      \"command\": \"npx\",",
-    "      \"args\": [\"-y\", \"better-investment-analysis-mcp\"]",
+    "      \"args\": [\"-y\", \"better-investment-mcp\"]",
     "    }",
     "  }",
     "}",
     "",
     "Codex reads this TOML (~/.codex/config.toml):",
     "",
-    "[mcp_servers.better-investment-analysis]",
+    "[mcp_servers.better-investment]",
     "command = \"npx\"",
-    "args = [\"-y\", \"better-investment-analysis-mcp\"]",
+    "args = [\"-y\", \"better-investment-mcp\"]",
     "",
     "Docker (the image runs over stdio, and its cache is a named volume):",
     "",
@@ -30,7 +30,7 @@ export class InitRunner {
     MCP_SERVERS_OPEN,
     SERVER_OPEN,
     "      \"command\": \"docker\",",
-    "      \"args\": [\"run\", \"-i\", \"--rm\", \"-v\", \"better-investment-analysis-cache:/cache\", \"ghcr.io/guilhermebkel/better-investment-analysis-mcp\"]",
+    "      \"args\": [\"run\", \"-i\", \"--rm\", \"-v\", \"better-investment-cache:/cache\", \"ghcr.io/guilhermebkel/better-investment-mcp\"]",
     "    }",
     "  }",
     "}",
@@ -40,7 +40,7 @@ export class InitRunner {
     "docker run -d --name investment-mcp -p 127.0.0.1:3100:3100 \\",
     "  -e INVESTMENT_MCP_TRANSPORT=http -e INVESTMENT_MCP_HTTP_HOST=0.0.0.0 \\",
     "  -e INVESTMENT_MCP_HTTP_TOKEN='your-long-random-secret' \\",
-    "  -v better-investment-analysis-cache:/cache ghcr.io/guilhermebkel/better-investment-analysis-mcp",
+    "  -v better-investment-cache:/cache ghcr.io/guilhermebkel/better-investment-mcp",
     "",
     "{",
     MCP_SERVERS_OPEN,

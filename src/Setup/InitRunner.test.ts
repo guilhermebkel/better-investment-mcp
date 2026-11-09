@@ -12,7 +12,7 @@ describe("InitRunner.run()", () => {
 
     InitRunner.run();
 
-    expect(stderr).toHaveBeenCalledWith(expect.stringContaining("{\n  \"mcpServers\": {\n    \"better-investment-analysis\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"better-investment-analysis-mcp\"]\n    }\n  }\n}"));
+    expect(stderr).toHaveBeenCalledWith(expect.stringContaining("{\n  \"mcpServers\": {\n    \"better-investment\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"better-investment-mcp\"]\n    }\n  }\n}"));
   });
 
   it("prints the Codex configuration as TOML, since Codex does not read JSON", () => {
@@ -20,7 +20,7 @@ describe("InitRunner.run()", () => {
 
     InitRunner.run();
 
-    expect(stderr).toHaveBeenCalledWith(expect.stringContaining("[mcp_servers.better-investment-analysis]\ncommand = \"npx\"\nargs = [\"-y\", \"better-investment-analysis-mcp\"]"));
+    expect(stderr).toHaveBeenCalledWith(expect.stringContaining("[mcp_servers.better-investment]\ncommand = \"npx\"\nargs = [\"-y\", \"better-investment-mcp\"]"));
   });
 
   it("prints the Docker configuration with the cache in a named volume", () => {
@@ -29,7 +29,7 @@ describe("InitRunner.run()", () => {
     InitRunner.run();
 
     expect(stderr).toHaveBeenCalledWith(expect.stringContaining("\"command\": \"docker\""));
-    expect(stderr).toHaveBeenCalledWith(expect.stringContaining("\"-v\", \"better-investment-analysis-cache:/cache\""));
+    expect(stderr).toHaveBeenCalledWith(expect.stringContaining("\"-v\", \"better-investment-cache:/cache\""));
   });
 
   it("prints the Docker HTTP command with a placeholder token, never a value from the environment", () => {

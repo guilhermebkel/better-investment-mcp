@@ -1,4 +1,4 @@
-# better-investment-analysis-mcp
+# better-investment-mcp
 
 An MCP server that gives AI agents data on Brazilian assets through one read-only SQL tool. Unofficial; not investment advice.
 

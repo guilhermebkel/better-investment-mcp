@@ -1,0 +1,26 @@
+{
+  "brand": "better-investment-mcp",
+  "tagline": "Brazilian market data for your AI agent",
+  "brief": "An open source MCP server that gives AI agents (Claude, Cursor, Codex) data on Brazilian assets through one read-only SQL tool over a local DuckDB cache: connected, precise and trustworthy.",
+  "adjectives": ["connected", "precise", "trustworthy", "open"],
+  "criteria": "Recognisable at 16 px, works in one colour, and distinct from the usual rising-arrow and bar-chart marks of finance.",
+  "industry": "developer-tool",
+  "nav": ["Docs", "Sources", "GitHub"],
+  "brand_color": "#1FB36D",
+  "greyscale": false,
+  "designer": "Claude",
+  "round": 1,
+  "concepts": [
+    {
+      "name": "Data hub",
+      "symbol": "../svg/symbol-light.svg",
+      "lockup": "../svg/horizontal-light.svg",
+      "idea": "A core with bars of different lengths radiating from it: many data sources, one place to read them.",
+      "rationale": [
+        "The hub is the one SQL tool; the bars are prices, filings and macro series of different sizes",
+        "Green is the colour of money without the usual arrow or coin",
+        "Reads at 16 px with six heavier bars and works in one colour"
+      ]
+    }
+  ]
+}

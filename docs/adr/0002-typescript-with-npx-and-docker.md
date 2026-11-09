@@ -1,6 +1,6 @@
 # TypeScript, run with npx or Docker
 
-The server is written in TypeScript on Node 22 and bundled into one file with tsup. A person runs it with `npx -y better-investment-analysis-mcp` or with a Docker image over stdio.
+The server is written in TypeScript on Node 22 and bundled into one file with tsup. A person runs it with `npx -y better-investment-mcp` or with a Docker image over stdio. The project was first called `better-investment-analysis-mcp` (`docs/adr/0026-the-project-is-named-better-investment-mcp.md`).
 
 ## Considered options
 

@@ -5,9 +5,9 @@ import { OperationOutputSchema } from "@/Schemas/OperationSchema.ts";
 import { OperationManifestSurface } from "@/Surfaces/OperationManifestSurface.ts";
 
 export class McpServerSurface {
-  static readonly NAME = "better-investment-analysis-mcp";
+  static readonly NAME = "better-investment-mcp";
   static readonly INSTRUCTIONS = [
-    "Better Investment Analysis gives data on Brazilian assets: prices, dividends, fundamentals, filings, FII reports and macro series.",
+    "Better Investment gives data on Brazilian assets: prices, dividends, fundamentals, filings, FII reports and macro series.",
     "This server only reads. It never changes anything outside itself.",
     "Start with get_overview to see what the server does, and get_guide to learn how to write a query.",
     "All data comes from query_sql, which runs one read-only SELECT.",
