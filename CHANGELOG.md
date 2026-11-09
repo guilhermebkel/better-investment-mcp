@@ -18,6 +18,9 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Fixed
 
+- The answer of `query_sql` names only the periods that loaded; a failed load's period is no longer reported as loaded.
+- A missing search index is named (`search_chunks is not available`) instead of DuckDB's catalog error.
+- The unknown-series and unknown-indicator errors name the asset type, so `tax_rate:CDI` is not reported as absent from a list that has it.
 - A period load no longer fails with `Failed to bind value` when the provider also sends a table with no period column (such as `asset_splits` from yfinance). That error hid the quotes and dividends of every asset once the period check passed.
 - The BCB macro series and the Focus expectations return only the period asked for, as the Yahoo and yfinance adapters already did. Before, the whole history reached the loader, which refused it.
 - The Docker image installs `python3` and `yfinance` (pinned to 1.8.0) in a virtualenv, so the yfinance source works in the container. Before, the image had no Python, so the quotes and dividends fell back to the rate-limited Yahoo adapter. The Python tools stay out of the final image: pip and the build tools are in a build stage.

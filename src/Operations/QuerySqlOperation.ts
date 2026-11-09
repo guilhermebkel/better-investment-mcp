@@ -57,7 +57,7 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
     try {
       rows = await reader.readRows(input.sql);
     } catch (error) {
-      return { isError: true, message: `The query failed: ${error instanceof Error ? error.message : "unknown error"}` };
+      return { isError: true, message: `The query failed: ${QuerySqlOperation.describeError(error)}` };
     } finally {
       reader.close();
     }
@@ -122,9 +122,26 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
     return rowCount === 0 && periodicity !== undefined ? ` Published periodicity: ${periodicity}.` : "";
   }
 
+  static describeError(error: unknown): string {
+    const text = error instanceof Error ? error.message : "unknown error";
+    // Why: search_chunks is a macro over the full-text index, which a rebuild drops and creates again; while it is missing DuckDB's catalog error is named here, with the way back.
+    if (text.includes("search_chunks") && text.includes("does not exist")) {
+      return "search_chunks is not available: the full-text index is not built. A load of documents builds it; run the query again once that load has finished.";
+    }
+    return text;
+  }
+
+  private static isLoaded(entry: LoadedEntry): boolean {
+    return entry.status !== "failed";
+  }
+
   private static describePeriods(loaded: LoadedEntry[]): string {
+    // Why: a failed load was not read, so its period is not a period the answer can say was loaded.
     const windows = [...new Set(loaded.flatMap((entry) => {
-      return entry.requestedPeriod === undefined ? [] : [`${entry.requestedPeriod.from} to ${entry.requestedPeriod.to}`];
+      if (entry.requestedPeriod === undefined || !QuerySqlOperation.isLoaded(entry)) {
+        return [];
+      }
+      return [`${entry.requestedPeriod.from} to ${entry.requestedPeriod.to}`];
     }))];
     if (windows.length === 0) {
       return "";

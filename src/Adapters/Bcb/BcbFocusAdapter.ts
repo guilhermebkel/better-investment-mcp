@@ -47,8 +47,8 @@ export class BcbFocusAdapter implements ProviderPort<"expectations"> {
       (candidate) => candidate.code === request.ticker && candidate.assetType === request.assetType,
     );
     if (indicator === undefined) {
-      const known = INDICATORS.map((candidate) => candidate.code).join(", ");
-      throw new Error(`unknown Focus indicator ${request.ticker}; the known indicators are ${known}`);
+      const known = INDICATORS.map((candidate) => `${candidate.assetType}:${candidate.code}`).join(", ");
+      throw new Error(`unknown Focus indicator ${request.assetType}:${request.ticker}; the known indicators are ${known}`);
     }
     const filter = encodeURIComponent(`Indicador eq '${indicator.odataName}'`);
     const url = `${this.baseUrl}/ExpectativasMercadoAnuais?$filter=${filter}&$format=json`;

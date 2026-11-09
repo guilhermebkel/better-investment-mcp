@@ -277,6 +277,53 @@ describe("QuerySqlOperation.execute()", () => {
     });
   });
 
+  describe("for a load that failed", () => {
+    const MONTH_START = "2024-05-01";
+    const MONTH_END = "2024-05-31";
+    const MONTH_SQL = `SELECT value FROM asset_metrics WHERE ${FILTER} AND metric = 'statement.dre_con.3_01' AND reference_time_start BETWEEN '${MONTH_START}' AND '${MONTH_END}'`;
+
+    it("does not say the period was loaded when the load failed", async () => {
+      const directory = mkdtempSync(TEMP_PREFIX);
+      vi.spyOn(process.stderr, "write").mockReturnValue(true);
+      const store = await StoreService.open(
+        { INVESTMENT_MCP_LOG_LEVEL: "error", INVESTMENT_MCP_CACHE_DIR: directory, INVESTMENT_MCP_CACHE_TTL_SECONDS: 60 },
+        () => START_MS,
+      );
+      const loader = {
+        ensure: () => Promise.resolve([{
+          market: BR_MARKET,
+          ticker: PETR4_TICKER,
+          category: "statements" as const,
+          status: "failed" as const,
+          isFallback: false,
+          rowsWritten: 0,
+          error: "the provider is down",
+          requestedPeriod: { from: MONTH_START, to: MONTH_END },
+        }]),
+      };
+      const operation = new QuerySqlOperation({
+        loader,
+        guard: new SqlGuardService(store.writer),
+        openReader: () => store.openReader(),
+      });
+      const answer = await operation.execute({ sql: MONTH_SQL });
+      store.close();
+      rmSync(directory, { recursive: true, force: true });
+      expect(answer.message).not.toContain("Reference period loaded");
+    });
+  });
+
+  describe("describeError()", () => {
+    it("names a missing search index and the way back", () => {
+      const message = QuerySqlOperation.describeError(new Error("Catalog Error: Table Function with name search_chunks does not exist!"));
+      expect(message).toContain("search_chunks is not available: the full-text index is not built.");
+    });
+
+    it("passes any other error through unchanged", () => {
+      expect(QuerySqlOperation.describeError(new Error("Parser Error: syntax error"))).toBe("Parser Error: syntax error");
+    });
+  });
+
   it("answers past the threshold with the rows already stored, a warning that they may be incomplete, and the load id", async () => {
     const directory = mkdtempSync(TEMP_PREFIX);
     vi.spyOn(process.stderr, "write").mockReturnValue(true);

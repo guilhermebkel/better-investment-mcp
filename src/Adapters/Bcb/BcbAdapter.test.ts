@@ -96,7 +96,7 @@ describe("BcbAdapter.fetchTables()", () => {
   it("refuses an unknown series and lists the known ones (AC2)", async () => {
     const { http } = buildHttpAnswering(() => "[]");
     await expect(new BcbAdapter(http).fetchTables({ market: "BR", assetType: "index", ticker: "IBOV" }))
-      .rejects.toThrow("the known series are IPCA, CDI, SELIC, IGPM");
+      .rejects.toThrow("unknown series index:IBOV; the known series are index:IPCA, tax_rate:CDI, tax_rate:SELIC, index:IGPM");
   });
 
   it("reads every window of a long period with no gap or duplicate date (AC3)", async () => {

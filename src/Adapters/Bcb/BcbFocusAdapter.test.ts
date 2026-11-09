@@ -77,7 +77,7 @@ describe("BcbFocusAdapter.fetchTables()", () => {
     const adapter = new BcbFocusAdapter(buildHttp(() => Promise.resolve("{}"), urls));
 
     await expect(adapter.fetchTables({ market: "BR", assetType: "index", ticker: "INFLACAO" })).rejects.toThrow(
-      "unknown Focus indicator INFLACAO; the known indicators are IPCA, SELIC, PIB_TOTAL, USD",
+      "unknown Focus indicator index:INFLACAO; the known indicators are index:IPCA, tax_rate:SELIC, index:PIB_TOTAL, currency:USD",
     );
     expect(urls).toStrictEqual([]);
   });
