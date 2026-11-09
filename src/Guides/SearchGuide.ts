@@ -4,9 +4,9 @@ Filings and reports are read as chunks: text cut by section and page.
 
 ## Full-text search
 
-search_chunks finds chunks by the words of the query, ranked by score (BM25). Its four arguments are the query text, asset_id, document_type and section; section is NULL when no section is wanted.
+search_chunks finds chunks by the words of the query, ranked by score (BM25). Its five arguments are the query text, asset_id, document_type, section and mode. Section is NULL when no section is wanted. The only mode for now is 'text'; other modes are refused.
 
-Example: \`SELECT text, score, section, page FROM search_chunks('lucro líquido', 'BR:stock:PETR4', 'material_fact', NULL)\`.
+Example: \`SELECT text, score, section, page FROM search_chunks('lucro líquido', 'BR:stock:PETR4', 'material_fact', NULL, 'text')\`.
 
 Stemming is Portuguese, so a verb form finds the other forms of its word. Stop words such as "de" and "a" are not searched. Numbers are searched as their digits.
 

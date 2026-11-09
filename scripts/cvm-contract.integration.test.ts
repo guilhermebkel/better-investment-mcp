@@ -105,7 +105,7 @@ describe("CvmDocumentAdapter.fetchDocument() for an FNET report", () => {
       await FullTextIndexService.buildIndex(store.writer);
       const reader = await store.openReader();
       try {
-        const hits = await reader.readRows(`SELECT text FROM search_chunks('${word}', 'BR:fii:IRDM11', 'management_report', NULL)`);
+        const hits = await reader.readRows(`SELECT text FROM search_chunks('${word}', 'BR:fii:IRDM11', 'management_report', NULL, 'text')`);
         expect(hits.length).toBeGreaterThan(0);
       } finally {
         reader.close();

@@ -32,9 +32,9 @@ const seedDatabase = async (database: DatabasePort): Promise<void> => {
   await database.run("INSERT INTO asset_filings (filing_id, asset_id, document_type, category, subject, reference_time_start, reference_time_end, published_at, version, url, file_hash) VALUES ('f1', 'BR:stock:PETR4', 'material_fact', 'Fato Relevante', 'Ata', DATE '2024-03-22', DATE '2024-03-22', TIMESTAMPTZ '2024-03-22 00:00:00-03', 1, 'https://www.rad.cvm.gov.br/ENET/f1', NULL)");
   await database.run("INSERT INTO asset_filing_chunks (filing_id, asset_id, document_type, section, page, seq, text) VALUES ('f1', 'BR:stock:PETR4', 'material_fact', 'Dividendos', 1, 1, 'Pagamento de dividendos e lucro líquido do exercício')");
   // Why: search_chunks is built on the full-text extension, which the unit suite does not install; this stand-in has the same arguments and columns, so the example runs on the same schema.
-  await database.run(`CREATE OR REPLACE MACRO search_chunks(q_text, q_asset_id, q_document_type, q_section) AS TABLE
+  await database.run(`CREATE OR REPLACE MACRO search_chunks(q_text, q_asset_id, q_document_type, q_section, q_mode) AS TABLE
     SELECT 1.0 AS score, text, section, page FROM asset_filing_chunks
-    WHERE asset_id = q_asset_id AND document_type = q_document_type AND (q_section IS NULL OR section = q_section) AND text ILIKE '%' || q_text || '%'`);
+    WHERE q_mode = 'text' AND asset_id = q_asset_id AND document_type = q_document_type AND (q_section IS NULL OR section = q_section) AND text ILIKE '%' || q_text || '%'`);
 };
 
 describe("GuideTexts.topicToText()", () => {

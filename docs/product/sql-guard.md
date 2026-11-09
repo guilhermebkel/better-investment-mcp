@@ -11,7 +11,7 @@
 - A period filter on `reference_time_start` (`ex_time` for `asset_dividends`): a comparison with a date literal (`=`, `<`, `<=`, `>`, `>=`), or `BETWEEN`. The period sets the years the loader loads.
 - An `OR` when every branch filters the same column.
 - The catalog tables without filters: `asset_coverage`, `load_runs` and `load_files`, and the `schema_version` table.
-- `search_chunks(query, asset_id, document_type, section)`: the full-text search. Its query is a literal string; `section` is NULL when no section is wanted.
+- `search_chunks(query, asset_id, document_type, section, mode)`: the full-text search. Its query is a literal string; `section` is NULL when no section is wanted; `mode` is `'text'`, the only mode for now (ADR 0023).
 
 ## What is refused
 
@@ -23,7 +23,7 @@
 - A `metric` whose group is not one of the known groups (`statement`, `fundamental`, `fii`, `fund`, `macro`, `treasury`, `fx`).
 - A filter that is a subquery, a value taken from another table, or one branch of an `OR` only.
 - More than one statement, and any statement other than a `SELECT` (`PRAGMA`, `COPY`, `ATTACH`, and the rest).
-- Table functions other than `search_chunks`, such as the file readers. `search_chunks` needs its four arguments and a literal query text.
+- Table functions other than `search_chunks`, such as the file readers. `search_chunks` needs its five arguments, a literal query text and a mode the guard lists.
 
 A join is accepted when each asset table in it has its own `asset_id` filter. The guard does not pass a filter from one table to another.
 

@@ -12,7 +12,7 @@ const FIRST_PAGE = 1;
 const NEXT = 1;
 const buildSearchSql = (query: string, section: string | null = null): string => {
   const sectionArgument = section === null ? "NULL" : `'${section}'`;
-  return `SELECT text, section, page, score FROM search_chunks('${query}', 'BR:stock:PETR4', 'material_fact', ${sectionArgument}) ORDER BY score DESC`;
+  return `SELECT text, section, page, score FROM search_chunks('${query}', 'BR:stock:PETR4', 'material_fact', ${sectionArgument}, 'text') ORDER BY score DESC`;
 };
 
 describe("FullTextIndexService.buildIndex()", () => {

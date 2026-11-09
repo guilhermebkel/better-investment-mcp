@@ -60,6 +60,8 @@ const REFUSED: [string, string, string][] = [
   ["metrics without a metric filter", "SELECT value FROM asset_metrics WHERE asset_id = 'BR:stock:PETR4'", "asset_metrics needs a WHERE filter on metric"],
   ["a join where one side has no asset_id", "SELECT q.close, d.ex_time FROM asset_quotes q JOIN asset_dividends d ON d.kind = q.asset_id WHERE q.asset_id = 'BR:stock:PETR4'", "asset_dividends (as d) needs a WHERE filter on asset_id"],
   ["chunks without document_type or filing_id", "SELECT text FROM asset_filing_chunks WHERE asset_id = 'BR:stock:PETR4'", "asset_filing_chunks needs a WHERE filter on document_type or filing_id"],
+  ["a search mode that is not built yet", "SELECT text FROM search_chunks('lucro', 'BR:stock:PETR4', 'material_fact', NULL, 'semantic')", "search_chunks mode semantic is not available; the modes are text."],
+  ["a search without its mode argument", "SELECT text FROM search_chunks('lucro', 'BR:stock:PETR4', 'material_fact', NULL)", "search_chunks takes 5 arguments"],
 ];
 
 describe("SqlGuardService.checkSql()", () => {

@@ -33,7 +33,7 @@ import {
 } from "@/Schemas/SqlGuardSchema.ts";
 import { PeriodService } from "@/Services/PeriodService.ts";
 import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
-import type { AssetReading, CategoryReading, MetricGroup } from "@/Protocols/SqlGuardProtocol.ts";
+import type { AssetReading, CategoryReading, MetricGroup, SearchMode } from "@/Protocols/SqlGuardProtocol.ts";
 import type { AssetIdParts } from "@/Protocols/AssetIdProtocol.ts";
 
 const SELECT_TYPES: readonly ("SELECT_NODE" | "SET_OPERATION_NODE")[] = ["SELECT_NODE", "SET_OPERATION_NODE"];
@@ -42,7 +42,11 @@ const isSelectType = (value: string): boolean => SELECT_TYPES.some((candidate) =
 const QUALIFIED_COLUMN_PARTS = 2;
 const SEARCH_MACRO = "search_chunks";
 const SEARCH_MACRO_FILTERS = ["asset_id", "document_type", "section"] as const;
-const SEARCH_MACRO_ARGUMENT_COUNT = SEARCH_MACRO_FILTERS.length + 1;
+// Why: the modes are listed here so a mode not built yet is refused by name, before any query runs.
+const SEARCH_MACRO_MODES: readonly SearchMode[] = ["text"];
+// Why: the query text and the mode are the two arguments that are not filters.
+const SEARCH_MACRO_NON_FILTER_ARGUMENTS = 2;
+const SEARCH_MACRO_ARGUMENT_COUNT = SEARCH_MACRO_FILTERS.length + SEARCH_MACRO_NON_FILTER_ARGUMENTS;
 
 export class SqlGuardService implements SqlGuardPort {
   static readonly TABLE_TO_CATEGORY: Partial<Record<DataTable, CacheCategory>> = {
@@ -250,8 +254,12 @@ export class SqlGuardService implements SqlGuardPort {
     return { refs, joinConditions, problems, constraints };
   }
 
+  private static isSearchMode(value: unknown): value is SearchMode {
+    return SEARCH_MACRO_MODES.some((known) => known === value);
+  }
+
   private static readSearchMacro(args: readonly { expression?: unknown }[]): MacroReading {
-    const expected = `search_chunks takes ${SEARCH_MACRO_ARGUMENT_COUNT} arguments: query text, asset_id, document_type and section (NULL for no section).`;
+    const expected = `search_chunks takes ${SEARCH_MACRO_ARGUMENT_COUNT} arguments: query text, asset_id, document_type, section (NULL for no section) and mode ('text').`;
     if (args.length !== SEARCH_MACRO_ARGUMENT_COUNT) {
       return { problems: [expected], constraints: [] };
     }
@@ -259,6 +267,10 @@ export class SqlGuardService implements SqlGuardPort {
     const [queryText] = values;
     if (queryText === undefined || queryText === null) {
       return { problems: ["search_chunks needs the query text as a literal string, first."], constraints: [] };
+    }
+    const mode = values[SEARCH_MACRO_FILTERS.length + 1];
+    if (!SqlGuardService.isSearchMode(mode)) {
+      return { problems: [`search_chunks mode ${mode ?? "NULL"} is not available; the modes are ${SEARCH_MACRO_MODES.join(", ")}.`], constraints: [] };
     }
     // Why: a NULL argument is no filter, so it adds no constraint.
     const constraints = SEARCH_MACRO_FILTERS.flatMap((column, index): Constraint[] => {

@@ -39,11 +39,11 @@ A document is loaded only when a query asks for `asset_filing_chunks` with a `fi
 
 ```sql
 SELECT text, score, filing_id, section, page
-FROM search_chunks('lucro líquido', 'BR', 'PETR4', 'stock', 'material_fact', NULL)
+FROM search_chunks('lucro líquido', 'BR:stock:PETR4', 'material_fact', NULL, 'text')
 ORDER BY score DESC
 ```
 
-- Arguments, in order: the query text, `asset_id`, `document_type`, `section`. The last one is NULL for no section.
+- Arguments, in order: the query text, `asset_id`, `document_type`, `section` and `mode`. `section` is NULL for no section; `mode` is `'text'`, the only one for now (ADR 0023).
 - The macro's arguments count as filters for the SQL guard (`docs/product/sql-guard.md`). A query that passes `NULL` for `asset_id` or `document_type` is refused with the missing filter.
 - The score is BM25 from the index. Rows are not sorted by the macro; add `ORDER BY score DESC`.
 - A query that matches nothing returns zero rows, and the answer says the filing was indexed.

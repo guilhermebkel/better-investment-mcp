@@ -32,13 +32,13 @@ export class FullTextIndexService {
   }
 
   static buildMacro(): string {
-    // Why: the macro's arguments are the filters the SQL guard reads (asset_id, document_type, section); the score is BM25 from the index.
+    // Why: the macro's arguments are the filters the SQL guard reads (asset_id, document_type, section) and the search mode; the score is BM25 from the index. Only the text mode exists for now; any other mode returns no rows, and the guard refuses it before the query runs.
     return [
-      `CREATE OR REPLACE MACRO ${FullTextIndexService.MACRO}(q_text, q_asset_id, q_document_type, q_section) AS TABLE`,
+      `CREATE OR REPLACE MACRO ${FullTextIndexService.MACRO}(q_text, q_asset_id, q_document_type, q_section, q_mode) AS TABLE`,
       "SELECT c.asset_id, c.document_type, c.filing_id, c.section, c.page, c.text, s.score",
       `FROM (SELECT chunk_id, ${FullTextIndexService.INDEX_SCHEMA}.match_bm25(chunk_id, q_text) AS score FROM ${FullTextIndexService.SEARCH_TABLE}) s`,
       "JOIN asset_filing_chunks c ON c.filing_id || ':' || CAST(c.seq AS VARCHAR) = s.chunk_id",
-      "WHERE s.score IS NOT NULL AND c.asset_id = q_asset_id",
+      "WHERE s.score IS NOT NULL AND q_mode = 'text' AND c.asset_id = q_asset_id",
       "AND c.document_type = q_document_type AND (q_section IS NULL OR c.section = q_section)",
       "ORDER BY s.score DESC",
     ].join(" ");

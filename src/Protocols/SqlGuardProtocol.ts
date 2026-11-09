@@ -109,3 +109,5 @@ export type CategoryReading = {
 };
 
 export type MetricGroup = "statement" | "fundamental" | "fii" | "fund" | "macro" | "treasury" | "fx";
+
+export type SearchMode = "text";
