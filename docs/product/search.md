@@ -19,6 +19,7 @@ A document is loaded only when a query asks for `asset_filing_chunks` with a `fi
 - An HTML page is read by block. A heading (`h1` to `h4`) starts a section; the text under it is one segment per paragraph. Scripts, styles and the head are dropped.
 - The format is read from the bytes, not from the content type. CVM sends PDFs with `text/html`.
 - A CVM reference form (FRE) is a zip with one XML. Its items are PDFs inside the XML, read the same way (ADR 0024): each chunk's `section` is the form section and the item number, for example `FatoresRisco 4.1`, and its `page` is the page of that item's PDF. A blank slot of the form is skipped. The XML is read as cp1252, although it declares UTF-8.
+- A document is read from the link the filing names, on any http or https host; the size limit (20 MiB) and the timeout (60 seconds) still apply. The server does not check the host of a document link.
 - For CVM, only a PDF or a form zip is stored. The CVM site sometimes answers 200 with an HTML error page; that page is refused (`CvmDocumentAdapter`).
 
 ## Chunking rules

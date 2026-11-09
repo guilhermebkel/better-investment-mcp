@@ -25,6 +25,7 @@ export class HttpAdapter implements HttpPort {
   static readonly USER_AGENT = "PostmanRuntime/7.44.1";
 
   private readonly allowedHosts: ReadonlySet<string>;
+  private readonly isAnyHostAllowed: boolean;
   private readonly headers: HeaderNameToValue;
   private readonly maxBytes: number;
   private readonly timeoutMs: number;
@@ -32,6 +33,7 @@ export class HttpAdapter implements HttpPort {
 
   constructor(options: HttpOptions) {
     this.allowedHosts = new Set(options.allowedHosts);
+    this.isAnyHostAllowed = options.isAnyHostAllowed ?? false;
     this.headers = options.headers ?? {};
     this.maxBytes = options.maxBytes ?? HttpAdapter.DEFAULT_MAX_BYTES;
     this.timeoutMs = options.timeoutMs ?? HttpAdapter.DEFAULT_TIMEOUT_MS;
@@ -133,6 +135,10 @@ export class HttpAdapter implements HttpPort {
   }
 
   private checkHost(url: string): void {
+    // Why: a document link is taken as the filing names it, so the host is not checked for that download; the size limit and the timeout still apply.
+    if (this.isAnyHostAllowed) {
+      return;
+    }
     const host = new URL(url).hostname;
     if (!this.allowedHosts.has(host)) {
       throw new HttpRefusedError(`${host} is not in the host list of this adapter`);

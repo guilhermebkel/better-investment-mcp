@@ -32,7 +32,8 @@ export class VendorCatalogService {
       timeoutMs: CVM_FILE_TIMEOUT_MS,
     });
     const cvmDocumentHttp = new HttpAdapter({
-      allowedHosts: CvmDocumentAdapter.HOSTS,
+      allowedHosts: [],
+      isAnyHostAllowed: true,
       maxBytes: CvmDocumentAdapter.MAX_DOCUMENT_BYTES,
       timeoutMs: CvmDocumentAdapter.TIMEOUT_MS,
     });

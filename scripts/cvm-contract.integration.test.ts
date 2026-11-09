@@ -82,7 +82,8 @@ describe("CvmAdapter.fetchTables()", () => {
 describe("CvmDocumentAdapter.fetchDocument() for an FNET report", () => {
   it("downloads IRDM11's October 2025 report from FNET, indexes its text, and a search finds a word of it (P5)", async () => {
     const http = new HttpAdapter({
-      allowedHosts: CvmDocumentAdapter.HOSTS,
+      allowedHosts: [],
+      isAnyHostAllowed: true,
       maxBytes: CvmDocumentAdapter.MAX_DOCUMENT_BYTES,
       timeoutMs: CvmDocumentAdapter.TIMEOUT_MS,
     });

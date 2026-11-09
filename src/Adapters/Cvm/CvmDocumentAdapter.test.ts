@@ -74,17 +74,19 @@ describe("CvmDocumentAdapter.fetchDocument()", () => {
     expect(requested).toStrictEqual([fnetUrl]);
   });
 
-  it("refuses a link to an FNET address without https, and asks for nothing", async () => {
-    const { http, requested } = buildHttp(new Uint8Array());
+  it("reads a link on any http or https host, as the filing names it", async () => {
+    const pdf = new TextEncoder().encode("%PDF-1.7\n%%EOF\n");
+    const { http, requested } = buildHttp(pdf);
 
-    await expect(new CvmDocumentAdapter(http).fetchDocument("http://fnet.bmfbovespa.com.br/x.pdf")).rejects.toThrow("not a CVM or FNET document link");
-    expect(requested).toStrictEqual([]);
+    await new CvmDocumentAdapter(http).fetchDocument("http://example.org/doc.pdf");
+
+    expect(requested).toStrictEqual(["http://example.org/doc.pdf"]);
   });
 
-  it("refuses a link that is not on the CVM or FNET document host, and asks for nothing", async () => {
+  it("refuses a link that is not an http or https address, and asks for nothing", async () => {
     const { http, requested } = buildHttp(new Uint8Array());
 
-    await expect(new CvmDocumentAdapter(http).fetchDocument("https://example.org/doc.pdf")).rejects.toThrow("not a CVM or FNET document link");
+    await expect(new CvmDocumentAdapter(http).fetchDocument("file:///etc/passwd")).rejects.toThrow("not an http or https address");
     expect(requested).toStrictEqual([]);
   });
 });

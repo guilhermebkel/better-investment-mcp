@@ -3,6 +3,7 @@ export type FieldNameToValue = Readonly<Record<string, string>>;
 
 export type HttpOptions = {
   allowedHosts: readonly string[];
+  isAnyHostAllowed?: boolean;
   headers?: HeaderNameToValue;
   maxBytes?: number;
   timeoutMs?: number;

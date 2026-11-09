@@ -6,6 +6,7 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Changed
 
+- The document download reads the link a filing names on any http or https host, with the size limit and the timeout. Before, only the CVM and FNET hosts were read. The server now fetches whatever address the filing data contains.
 - A load that fails is not tried again on every query: after 3 failures of the same asset or filing within 60 minutes, the loader refuses it and names the failures, until the window passes. A source that blocks this server (StatusInvest answers 403) no longer keeps the query waiting.
 - CVM FRE, VLMO and CGVN filings keep their document link (`LINK_DOC` or `Link_Download`, stored as https), and only the highest version of each reference form is kept; the older versions leave the store on the next load.
 - `search_chunks` takes a fifth argument, the mode. Only `'text'` exists for now; the guard refuses any other mode by name. Semantic and hybrid modes come later (ADR 0023).
