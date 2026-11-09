@@ -220,14 +220,14 @@ describe("LoaderService.ensure()", () => {
   });
 
   describe("when the primary fails and a fallback is set", () => {
-    it("the fallback serves the request, its rows carry its name, and the entry says it was a fallback", async () => {
+    it("the fallback serves the request, its rows are written, and the entry says it was a fallback", async () => {
       respond = () => Promise.reject(new Error("rate limit"));
       const loader = buildLoader(FALLBACK_SETTING);
 
       const [entry] = await loader.ensure([PETR4]);
 
       expect(entry).toMatchObject({ status: "loaded", source: "fallback", isFallback: true, rowsWritten: 1 });
-      expect(await store.writer.readRows("SELECT source FROM quotes")).toStrictEqual([{ source: "fallback" }]);
+      expect(await readStoredCloses()).toStrictEqual([30]);
     });
   });
 

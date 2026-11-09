@@ -60,7 +60,7 @@ export class GetOverviewOperation implements OperationPort<GetOverviewInput> {
       if (rows.length === 0) {
         return ["- nothing yet; the first query for an asset loads it."];
       }
-      return rows.map((row) => `- ${String(row.market)}:${String(row.ticker)} ${String(row.asset_type)} ${String(row.category)} from ${String(row.source)}, valid until ${String(row.expires_at)}`);
+      return rows.map((row) => `- ${String(row.market)}:${String(row.ticker)} ${String(row.asset_type)} ${String(row.category)}, valid until ${String(row.expires_at)}`);
     } catch {
       return ["- the loaded list cannot be read now; try query_sql with asset_coverage."];
     }

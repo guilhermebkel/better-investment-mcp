@@ -86,7 +86,7 @@ describe("StoreService.open()", () => {
       store = await StoreService.open(buildEnv());
 
       expect(stderr).toHaveBeenCalledWith(expect.stringContaining("\"event\":\"store_replaced\""));
-      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 7 }]);
+      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 8 }]);
     });
   });
 
@@ -97,7 +97,7 @@ describe("StoreService.open()", () => {
       store = await StoreService.open(buildEnv());
 
       expect(stderr).toHaveBeenCalledWith(expect.stringContaining("\"reason\":\"it cannot be opened\""));
-      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 7 }]);
+      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 8 }]);
     });
   });
 
@@ -133,14 +133,14 @@ describe("StoreService.open()", () => {
       store = await StoreService.open(buildEnv(), () => START_MS);
       await store.writer.run("INSERT INTO assets (market, ticker, asset_type) VALUES ('BR', 'PETR4', 'stock')");
       await store.writer.run(
-        "INSERT INTO quotes (market, ticker, asset_type, date, close, source) VALUES ('BR', 'PETR4', 'stock', DATE '2026-11-02', 30.5, 'yahoo'), ('BR', 'PETR4', 'stock', DATE '2026-11-06', 31.0, 'yahoo')",
+        "INSERT INTO quotes (market, ticker, asset_type, date, close) VALUES ('BR', 'PETR4', 'stock', DATE '2026-11-02', 30.5), ('BR', 'PETR4', 'stock', DATE '2026-11-06', 31.0)",
       );
       const runId = await store.cache.startRun({ category: "quotes", market: "BR", ticker: "PETR4", source: "yahoo" });
       await store.cache.finishRun(runId, { rowsRead: 2 });
 
       const reader = await store.openReader();
       const rows = await reader.readRows(
-        "SELECT category, market, ticker, asset_type, CAST(first_date AS VARCHAR) AS firstDate, CAST(last_date AS VARCHAR) AS lastDate, source, CAST(epoch_ms(expires_at) AS VARCHAR) AS expiresAtMs FROM asset_coverage",
+        "SELECT category, market, ticker, asset_type, CAST(first_date AS VARCHAR) AS firstDate, CAST(last_date AS VARCHAR) AS lastDate, CAST(epoch_ms(expires_at) AS VARCHAR) AS expiresAtMs FROM asset_coverage",
       );
       reader.close();
 
@@ -151,7 +151,6 @@ describe("StoreService.open()", () => {
         asset_type: "stock",
         firstDate: "2026-11-02",
         lastDate: "2026-11-06",
-        source: "yahoo",
         expiresAtMs: String(START_MS + 60_000),
       }]);
     });

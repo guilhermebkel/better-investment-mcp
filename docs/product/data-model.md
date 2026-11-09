@@ -191,7 +191,7 @@ These points come from reviewing the shape above. None of them is implemented. E
 4. **FII has no fund data.** `fund_registry`, `fund_daily` and `fund_holdings` come from CVM's fund files, which do not cover FII. A FII has its CNPJ (from B3) but no daily quota or holdings. Option: accept the gap, or find another source per FII.
 5. **No position entity.** The analysis of a portfolio needs the holdings (asset, quantity, average price, date). There is no table for it. Option: a `positions` table that the user fills, joined to the asset keys above.
 6. **Tables without a primary key.** `splits`, `financial_statements`, `fund_holdings` and `company_disclosures` are not keyed, so a reload relies on the replacement rule alone. Option: key them, and keep the row order and version in the key.
-7. **Mixed sources in one column.** `quotes.adj_close` comes from yfinance or Yahoo and is null from B3. Option: a `price_source` per row, or one quotes table per source.
+7. **Mixed sources in one column.** `quotes.adj_close` comes from yfinance or Yahoo and is null from B3. Resolved in part: no table carries the vendor per row any more (ADR 0020); a key is always one source, so the question is only the meaning of `adj_close`, which the data map states.
 
 ## Where the rules live
 

@@ -5,6 +5,7 @@ import { QuerySqlInputSchema } from "@/Schemas/QuerySqlSchema.ts";
 import type { OutputLimitResult } from "@/Protocols/OutputLimitProtocol.ts";
 import { OutputLimitService } from "@/Services/OutputLimitService.ts";
 
+const VENDOR_KEYS: ReadonlySet<"source" | "isFallback"> = new Set(["source", "isFallback"]);
 const USABLE_STATUSES: ReadonlySet<LoadedEntry["status"]> = new Set<LoadedEntry["status"]>(["loaded", "fresh"]);
 
 const convertValue = (value: unknown): unknown => {
@@ -60,7 +61,7 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
       truncated: limited.isTruncated,
       remainingRows: limited.remainingRows,
       remainingChars: limited.remainingChars,
-      loaded,
+      loaded: loaded.map((entry) => QuerySqlOperation.removeVendorKeys(entry)),
     };
     const message = [
       QuerySqlOperation.describeRows(rows.length, limited.returnedRows, loaded),
@@ -71,6 +72,11 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
       QuerySqlOperation.describeCut(limited),
     ].join("");
     return { isError: false, message: `${message}\n${limited.text}`, structuredResult };
+  }
+
+  private static removeVendorKeys(entry: LoadedEntry): Record<string, unknown> {
+    // Why: the answer never names the vendor that served a load, nor whether a fallback did; that is kept in cache_runs.
+    return Object.fromEntries(Object.entries(entry).filter(([key]) => !VENDOR_KEYS.has(key as "source")));
   }
 
   private static describeRows(rowCount: number, returnedRows: number, loaded: LoadedEntry[]): string {

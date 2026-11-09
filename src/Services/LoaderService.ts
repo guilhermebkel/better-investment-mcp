@@ -421,9 +421,10 @@ export class LoaderService implements LoaderPort {
     await writer.run(`DELETE FROM ${table} WHERE ${deleteWhere}${periodWhere}`, [...keyValues, ...periodValues]);
     const prepared: ProviderRow[] = [];
     for (const original of rows) {
-      LoaderService.checkRow(requirement, table, original, columns);
-      LoaderService.checkPeriod(table, original, window);
-      prepared.push(LoaderService.keepStoredHash(original, filingIdToHash));
+      const row = LoaderService.dropSource(original);
+      LoaderService.checkRow(requirement, table, row, columns);
+      LoaderService.checkPeriod(table, row, window);
+      prepared.push(LoaderService.keepStoredHash(row, filingIdToHash));
     }
     // Why: the rows go in batches of many value groups per statement; one statement per row made a full history of a series take minutes. A column a row does not carry is written as NULL, as before.
     const names = [...new Set(prepared.flatMap((row) => Object.keys(row)))];
@@ -480,6 +481,12 @@ export class LoaderService implements LoaderPort {
     if (isOtherAsset) {
       throw new Error(`the provider sent a row for another asset in ${table}`);
     }
+  }
+
+  private static dropSource(row: ProviderRow): ProviderRow {
+    // Why: a row does not carry the vendor that produced it; the load records its source once, in cache_runs, and every row of a key comes from that one load.
+    const { source: _source, ...withoutSource } = row;
+    return withoutSource;
   }
 
   private static isWritable(table: string): boolean {

@@ -1,6 +1,6 @@
 export const SOURCES_GUIDE = `# Sources guide
 
-Each row keeps the source that produced it, in the source column. Each answer also names what was loaded, from which source, and whether a fallback served it.
+Each answer says what was loaded, with its period and the error if any. It does not name the vendor that served it.
 
 ## Which vendor serves what
 

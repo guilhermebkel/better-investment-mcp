@@ -47,7 +47,7 @@ The code that talks to one vendor, such as Yahoo Finance, and implements one or 
 An outside service that has data: Yahoo Finance, StatusInvest, CVM, FNET or BCB.
 
 **Source**:
-The `source` column on every row: the vendor that produced it.
+The vendor that produced a load. It is recorded once per load, in `cache_runs`, and is not a column of the data tables (ADR 0020).
 
 **Data category**:
 A kind of data with its own provider: quotes and splits, dividends, fundamentals, financial statements, periodic fund data, filing list, document text, macro, Tesouro Direto prices and market expectations.
@@ -69,7 +69,7 @@ Whether a run has not expired yet. A fresh run is not loaded again.
 The code that reads a query before it runs, checks the filters and refuses what it cannot understand.
 
 **Loaded report**:
-The `loaded` part of a `query_sql` answer: per category and asset, the source, the rows, the period and the error if any.
+The `loaded` part of a `query_sql` answer: per category and asset, the status, the rows, the period and the error if any. It does not name the source.
 
 **Filing**:
 A document a company or fund delivers to the regulator: a quarterly report (ITR), an annual statement (DFP), a reference form (FRE), a material fact, an FII management report.

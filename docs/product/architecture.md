@@ -38,7 +38,7 @@ These rules are enforced in code, not in a prompt (`docs/adr/0006-the-query-must
 
 ## Providers
 
-One interface per data category, one adapter per vendor (`docs/adr/0005-one-provider-interface-per-data-category.md`). The environment variable of a category maps each market to a vendor, for example `BR:yahoo,US:yahoo`. Every row keeps the `source` that produced it. Issue #5 builds the registry and the loader.
+One interface per data category, one adapter per vendor (`docs/adr/0005-one-provider-interface-per-data-category.md`). The environment variable of a category maps each market to a vendor, for example `BR:yahoo,US:yahoo`. No row carries the vendor name: each load records its source in `cache_runs`, and the answer does not name it. Issue #5 builds the registry and the loader.
 
 <!-- providers:start -->
 - `QuoteProvider`: prices and splits. `INVESTMENT_MCP_QUOTES_PROVIDER`. Yahoo Finance, the yfinance library, and B3 COTAHIST (daily quotes).

@@ -2,31 +2,31 @@
 
 The tables the agent reads with `query_sql`, and where each one comes from. This page is where the final columns live; the issue that creates a table changes the page in the same pull request. A column list marked *planned* is the starting point of that issue.
 
-Every data row keeps the `source` that produced it. Key columns are in bold.
+No data row carries the vendor that produced it. A load records its source once, in `cache_runs`, and each key (ticker, series, CNPJ) is written by one load, so the rows of a key always come from one source. Key columns are in bold.
 
 ## Tables
 
 | Table | Columns | Source | Built in |
 | --- | --- | --- | --- |
 | `assets` | **market**, **ticker**, asset_type, legal_id, name, sector, currency | Yahoo summary, CVM registry | #3, #6 |
-| `filings` | **filing_id**, market, ticker, asset_type, filing_type, category, reference_date, delivered_at, subject, url, file_hash, source | CVM IPE, ITR/DFP/FRE, CVM eventual fund file (FNET links), FNET | #9, #12, #28 |
+| `filings` | **filing_id**, market, ticker, asset_type, filing_type, category, reference_date, delivered_at, subject, url, file_hash | CVM IPE, ITR/DFP/FRE, CVM eventual fund file (FNET links), FNET | #9, #12, #28 |
 | `chunks` | **filing_id**, **seq**, market, ticker, asset_type, filing_type, section, page, text | text of a filing (CVM PDF, HTML) | #10 |
-| `quotes` | **market**, **ticker**, **date**, asset_type, open, high, low, close, adj_close, volume, is_stale, suspect_tick, source | Yahoo | #6 |
-| `dividends` | **market**, **ticker**, **ex_date**, **kind**, asset_type, pay_date, amount, source | Yahoo | #6 |
-| `splits` | market, ticker, date, asset_type, ratio, source | Yahoo | #6 |
-| `fundamentals` | **market**, **ticker**, **year**, **metric**, asset_type, value, source | StatusInvest | #8 |
-| `financial_statements` | market, ticker, asset_type, period_end, period_type, statement, line_item, value, currency, version, source_file, source | CVM ITR, DFP | #11, #28 |
-| `fii_monthly` | market, ticker, asset_type, period, distribution_per_unit, rental_revenue, property_sales_revenue, other_revenue, total_revenue, distributable_income, management_fee, performance_fee, property_acquisitions, other_expenses, total_expenses, liquidity_requirement, cash_available, government_bonds, corporate_bonds, fixed_income_funds, net_worth, version, source_file, source | CVM monthly fund files (`fii-doc-inf_mensal`); StatusInvest for the columns CVM does not carry is blocked | #8, #28 |
-| `macro_series` | **series**, **date**, value, source | BCB SGS (ipca 433, cdi 12, selic 432, ptax 1, igpm 189) | #7 |
-| `treasury_prices` | **bond_type**, **maturity**, **base_date**, buy_rate, sell_rate, buy_unit_price, sell_unit_price, base_unit_price, source | Tesouro Transparente (`precotaxatesourodireto.csv`) | PR #30 |
-| `market_expectations` | **indicator**, **reference_year**, **survey_date**, **calculation_base**, mean_value, median_value, std_dev, min_value, max_value, respondents, source | BCB Focus (Olinda `ExpectativasMercadoAnuais`) | PR #30 |
-| `asset_identifiers` | **market**, **ticker**, **asset_type**, legal_id (CNPJ), isin, company_name, source | B3 listing and detail routes | PR #30 |
-| `company_registry` | **market**, **ticker**, **asset_type**, legal_id (CNPJ), company_name, trade_name, sector, situation, cvm_code, source | CVM company file (`cad_cia_aberta.csv`) | PR #30 |
-| `fx_rates` | **currency**, **date**, buy_rate, sell_rate, source | BCB PTAX (Olinda, closing bulletin) | PR #30 |
-| `fund_registry` | **cnpj**, fund_name, fund_type, class_name, situation, administrator, administrator_cnpj, manager, net_worth, net_worth_date, source | CVM fund file (`cad_fi.csv`) | PR #30 |
-| `fund_daily` | **cnpj**, **date**, quota, net_worth, total_value, subscriptions, redemptions, holders, source | CVM daily informe (`inf_diario_fi`, the last twelve months) | PR #30 |
-| `company_disclosures` | **market**, **ticker**, **asset_type**, **dataset**, **section**, reference_date, version, document_id, row_json, source_file, source | CVM FRE, VLMO and CGVN yearly zips (`fre_cia_aberta`, `vlmo_cia_aberta`, `cgvn_cia_aberta`) | PR #30 |
-| `fund_holdings` | **cnpj**, **period**, **block**, application_type, asset_category, asset_code, asset_description, issuer, quantity, market_value, source_file, source | CVM CDA (`cda_fi`, blocks 1 to 8, the last twelve months) | PR #30 |
+| `quotes` | **market**, **ticker**, **date**, asset_type, open, high, low, close, adj_close, volume, is_stale, suspect_tick | Yahoo | #6 |
+| `dividends` | **market**, **ticker**, **ex_date**, **kind**, asset_type, pay_date, amount | Yahoo | #6 |
+| `splits` | market, ticker, date, asset_type, ratio | Yahoo | #6 |
+| `fundamentals` | **market**, **ticker**, **year**, **metric**, asset_type, value | StatusInvest | #8 |
+| `financial_statements` | market, ticker, asset_type, period_end, period_type, statement, line_item, value, currency, version, source_file | CVM ITR, DFP | #11, #28 |
+| `fii_monthly` | market, ticker, asset_type, period, distribution_per_unit, rental_revenue, property_sales_revenue, other_revenue, total_revenue, distributable_income, management_fee, performance_fee, property_acquisitions, other_expenses, total_expenses, liquidity_requirement, cash_available, government_bonds, corporate_bonds, fixed_income_funds, net_worth, version, source_file | CVM monthly fund files (`fii-doc-inf_mensal`); StatusInvest for the columns CVM does not carry is blocked | #8, #28 |
+| `macro_series` | **series**, **date**, value | BCB SGS (ipca 433, cdi 12, selic 432, ptax 1, igpm 189) | #7 |
+| `treasury_prices` | **bond_type**, **maturity**, **base_date**, buy_rate, sell_rate, buy_unit_price, sell_unit_price, base_unit_price | Tesouro Transparente (`precotaxatesourodireto.csv`) | PR #30 |
+| `market_expectations` | **indicator**, **reference_year**, **survey_date**, **calculation_base**, mean_value, median_value, std_dev, min_value, max_value, respondents | BCB Focus (Olinda `ExpectativasMercadoAnuais`) | PR #30 |
+| `asset_identifiers` | **market**, **ticker**, **asset_type**, legal_id (CNPJ), isin, company_name | B3 listing and detail routes | PR #30 |
+| `company_registry` | **market**, **ticker**, **asset_type**, legal_id (CNPJ), company_name, trade_name, sector, situation, cvm_code | CVM company file (`cad_cia_aberta.csv`) | PR #30 |
+| `fx_rates` | **currency**, **date**, buy_rate, sell_rate | BCB PTAX (Olinda, closing bulletin) | PR #30 |
+| `fund_registry` | **cnpj**, fund_name, fund_type, class_name, situation, administrator, administrator_cnpj, manager, net_worth, net_worth_date | CVM fund file (`cad_fi.csv`) | PR #30 |
+| `fund_daily` | **cnpj**, **date**, quota, net_worth, total_value, subscriptions, redemptions, holders | CVM daily informe (`inf_diario_fi`, the last twelve months) | PR #30 |
+| `company_disclosures` | **market**, **ticker**, **asset_type**, **dataset**, **section**, reference_date, version, document_id, row_json, source_file | CVM FRE, VLMO and CGVN yearly zips (`fre_cia_aberta`, `vlmo_cia_aberta`, `cgvn_cia_aberta`) | PR #30 |
+| `fund_holdings` | **cnpj**, **period**, **block**, application_type, asset_category, asset_code, asset_description, issuer, quantity, market_value, source_file | CVM CDA (`cda_fi`, blocks 1 to 8, the last twelve months) | PR #30 |
 | `cache_runs` | run_id, category, market, ticker, source, started_at, finished_at, expires_at, rows_read, error, filing_id, period_from, period_to | the loader (`filing_id` set for a document; the period columns set for a period load) | #3, #5, #10, #28 |
 | `cvm_files` | **url**, **sha256**, dataset, reference_year, size_bytes, fetched_at, is_current | the loader: one record per downloaded CVM file and version | #28 |
 | `schema_version` | version | the store (one row, the schema version of the file) | #3 |
@@ -36,7 +36,7 @@ Every data row keeps the `source` that produced it. Key columns are in bold.
 | Name | What it gives | Built in |
 | --- | --- | --- |
 | `document_text` | The chunks of one document in order: `filing_id`, `seq`, `section`, `page`, `text`. | #3, #10 |
-| `asset_coverage` | What is loaded and how long it is valid: `market`, `ticker`, `asset_type`, `category`, `first_date`, `last_date`, `source`, `expires_at`. | #3 |
+| `asset_coverage` | What is loaded and how long it is valid: `market`, `ticker`, `asset_type`, `category`, `first_date`, `last_date`, `expires_at`. | #3 |
 | `search_chunks(query, market, ticker, asset_type, filing_type, section)` | Full-text search over the chunks (BM25, Portuguese stemmer and stop words), with score, filing, section and page. Rules in `search.md`. | #10 |
 | `chunk_search`, `pt_stopwords` | The index source (`filing_id:seq` and the text) and the stop words. Written by the store; not for queries. | #10 |
 

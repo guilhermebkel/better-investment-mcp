@@ -84,7 +84,7 @@ describe("QuerySqlOperation.execute()", () => {
       expect(provider.calls).toBe(1);
     });
 
-    it("reports the asset as loaded with its source and period", async () => {
+    it("reports the asset as loaded with its period, and no vendor name", async () => {
       const result = await operation.execute({ sql: PETR4_SQL });
 
       expect(result.structuredResult?.loaded).toStrictEqual([{
@@ -92,8 +92,6 @@ describe("QuerySqlOperation.execute()", () => {
         market: BR_MARKET,
         ticker: PETR4_TICKER,
         status: "loaded",
-        source: FAKE_VENDOR,
-        isFallback: false,
         rowsWritten: 1,
         period: { from: QUOTE_DATE, to: QUOTE_DATE },
       }]);

@@ -22,7 +22,7 @@ describe("GetOverviewOperation.execute()", () => {
       { market: "BR", ticker: "PETR4", asset_type: "stock", category: "quotes", source: "yahoo", expires_at: "2026-11-09T14:00:00Z" },
     ]).execute();
 
-    expect(result.message).toContain("- BR:PETR4 stock quotes from yahoo, valid until 2026-11-09T14:00:00Z");
+    expect(result.message).toContain("- BR:PETR4 stock quotes, valid until 2026-11-09T14:00:00Z");
   });
 
   it("says nothing is loaded yet when the catalog is empty", async () => {

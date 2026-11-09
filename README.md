@@ -77,7 +77,7 @@ A provider variable is optional: each category has a default (in the table), and
 | CVM | ITR, DFP, Formulário de Referência | Not built (issue #11). |
 | FNET | FII management reports | Built only if a spike passes. |
 
-The `source` of every row names the vendor that produced it.
+Each load records the vendor that produced it in `cache_runs`. The answer of `query_sql` does not name it.
 
 ## Development
 
