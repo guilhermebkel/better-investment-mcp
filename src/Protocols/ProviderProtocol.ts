@@ -42,6 +42,7 @@ export type ProviderResult = {
   source: string;
   tables: TableToRows;
   files?: ProviderFile[];
+  itemErrors?: string[];
 };
 
 export type ProviderPort<Category extends CacheCategory = CacheCategory> = {

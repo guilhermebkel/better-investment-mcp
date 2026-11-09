@@ -17,4 +17,5 @@ export const ProviderResultSchema: z.ZodType<ProviderResult> = z.object({
   source: z.string().min(1),
   tables: z.record(z.string(), z.array(ProviderRowSchema)),
   files: z.array(ProviderFileSchema).optional(),
+  itemErrors: z.array(z.string()).optional(),
 });

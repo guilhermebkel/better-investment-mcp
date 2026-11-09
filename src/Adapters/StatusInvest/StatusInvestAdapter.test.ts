@@ -18,6 +18,8 @@ const EMPTY_MONTHS = "{\"listMonth\":[]}";
 const STOCK = { market: "BR", ticker: "PETR4", assetType: "stock" };
 const FII = { market: "BR", ticker: "KNRI11", assetType: "fii" };
 const AS_PUBLISHED = "as_published";
+const NET_REVENUE = "fundamental.net_revenue";
+const END_2024 = "2024-12-31";
 const PETR4_ASSET = "BR:stock:PETR4";
 const JAN_2024 = "2024-01-01";
 const FEB_2024 = "2024-02-01";
@@ -67,9 +69,63 @@ describe("StatusInvestAdapter.fetchTables()", () => {
 
     expect(result.source).toBe("statusinvest");
     expect(result.tables.asset_metrics).toStrictEqual([
-      { asset_id: PETR4_ASSET, metric: "fundamental.net_revenue", reference_time_start: JAN_2024, reference_time_end: "2024-12-31", value: 300.5, unit: AS_PUBLISHED },
-      { asset_id: PETR4_ASSET, metric: "fundamental.net_revenue", reference_time_start: "2023-01-01", reference_time_end: "2023-12-31", value: null, unit: AS_PUBLISHED },
-      { asset_id: PETR4_ASSET, metric: "fundamental.net_income", reference_time_start: JAN_2024, reference_time_end: "2024-12-31", value: 100, unit: AS_PUBLISHED },
+      {
+        asset_id: PETR4_ASSET,
+        metric: NET_REVENUE,
+        reference_time_start: JAN_2024,
+        reference_time_end: END_2024,
+        value: 300.5,
+        unit: AS_PUBLISHED,
+      },
+      {
+        asset_id: PETR4_ASSET,
+        metric: NET_REVENUE,
+        reference_time_start: "2023-01-01",
+        reference_time_end: "2023-12-31",
+        value: null,
+        unit: AS_PUBLISHED,
+      },
+      {
+        asset_id: PETR4_ASSET,
+        metric: "fundamental.net_income",
+        reference_time_start: JAN_2024,
+        reference_time_end: END_2024,
+        value: 100,
+        unit: AS_PUBLISHED,
+      },
+    ]);
+  });
+
+  it("skips a value that is not a number, names it, and stores the other indicators and years", async () => {
+    const indicators = JSON.stringify({
+      data: [
+        { key: "net_revenue", ranks: [{ rank: 2024, value_F: "300,5" }, { rank: 2023, value_F: null }] },
+        { key: "net_income", ranks: [{ rank: 2024, value_F: 100 }] },
+      ],
+    });
+    const { http } = buildHttpAnswering({ "/acao/indicatorhistorical": () => Promise.resolve(indicators) });
+    const result = await new StatusInvestAdapter("fundamentals", http, NO_PAUSE).fetchTables(STOCK);
+
+    expect(result.itemErrors).toStrictEqual([
+      "fundamental.net_revenue 2024 was not stored: the response format changed: the field value_F is not a number; no row was written",
+    ]);
+    expect(result.tables.asset_metrics).toStrictEqual([
+      {
+        asset_id: PETR4_ASSET,
+        metric: NET_REVENUE,
+        reference_time_start: "2023-01-01",
+        reference_time_end: "2023-12-31",
+        value: null,
+        unit: AS_PUBLISHED,
+      },
+      {
+        asset_id: PETR4_ASSET,
+        metric: "fundamental.net_income",
+        reference_time_start: JAN_2024,
+        reference_time_end: END_2024,
+        value: 100,
+        unit: AS_PUBLISHED,
+      },
     ]);
   });
 

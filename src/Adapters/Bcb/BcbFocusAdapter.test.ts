@@ -9,6 +9,7 @@ const FIXTURES = join(import.meta.dirname, "..", "..", "Testing", "fixtures", "b
 const readFixture = (name: string): string => readFileSync(join(FIXTURES, name), "utf8");
 const NOT_USED = "not used";
 const FIXTURE_NAME = "olinda-focus-ipca-sample.json";
+const YEAR_2014_START = "2014-01-01";
 const IPCA_ASSET = "BR:index:IPCA";
 const YEAR_2000_START = "2000-01-01";
 const YEAR_2000_END = "2000-12-31";
@@ -56,10 +57,19 @@ describe("BcbFocusAdapter.fetchTables()", () => {
         mean: 7, median: 7, std_dev: 0.79, min: null, max: null, respondents: null,
       },
       {
-        asset_id: IPCA_ASSET, reference_time_start: "2014-01-01", reference_time_end: "2014-12-31", survey_time: "2014-01-02", calculation_base: 1,
+        asset_id: IPCA_ASSET, reference_time_start: YEAR_2014_START, reference_time_end: "2014-12-31", survey_time: "2014-01-02", calculation_base: 1,
         mean: 5.89, median: 5.9, std_dev: 0.3, min: 5.15, max: 6.54, respondents: 27,
       },
     ]);
+  });
+
+  it("returns only the reference years of the requested period", async () => {
+    const adapter = new BcbFocusAdapter(buildHttp(() => Promise.resolve(readFixture(FIXTURE_NAME))));
+    const result = await adapter.fetchTables({
+      market: "BR", assetType: "index", ticker: "IPCA", period: { from: YEAR_2014_START, to: "2014-12-31" },
+    });
+
+    expect(result.tables.asset_expectations?.map((row) => row.reference_time_start)).toStrictEqual([YEAR_2014_START]);
   });
 
   it("refuses an indicator that is not one of the four codes, without a request", async () => {

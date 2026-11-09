@@ -14,7 +14,7 @@ import type { ProviderPort, ProviderRequest, ProviderResult, ProviderRow, TableT
 import { PeriodService } from "@/Services/PeriodService.ts";
 import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
 import { IndicatorHistoricalSchema, MonthlySectionSchema, ProventsSchema } from "@/Schemas/StatusInvestSchema.ts";
-import type { KeyColumn } from "@/Protocols/StatusInvestProtocol.ts";
+import type { FundamentalsOutcome, KeyColumn } from "@/Protocols/StatusInvestProtocol.ts";
 
 const FORBIDDEN_STATUS = 403;
 const NOT_FOUND_STATUS = 404;
@@ -98,27 +98,44 @@ export class StatusInvestAdapter<Category extends FundCategory> implements Provi
 
   async fetchTables(request: ProviderRequest): Promise<ProviderResult> {
     if (this.category === "fundamentals") {
-      return { source: StatusInvestAdapter.VENDOR, tables: await this.fetchFundamentals(request) };
+      const { tables, itemErrors } = await this.fetchFundamentals(request);
+      return { source: StatusInvestAdapter.VENDOR, tables, ...(itemErrors.length === 0 ? {} : { itemErrors }) };
     }
     return { source: StatusInvestAdapter.VENDOR, tables: await this.fetchFiiMonthly(request) };
   }
 
-  private async fetchFundamentals(request: ProviderRequest): Promise<TableToRows> {
+  private async fetchFundamentals(request: ProviderRequest): Promise<FundamentalsOutcome> {
     const body = { ticker: request.ticker, time: INDICATOR_YEARS };
     const url = `${this.baseUrl}/acao/indicatorhistorical`;
     const text = await this.callSite(() => this.http.postForm(url, body));
     const parsed = StatusInvestAdapter.parseText(text, IndicatorHistoricalSchema, "indicatorhistorical");
     // Why: a fundamental is a metric of its year (fundamental.<indicator>); its unit is the indicator's, listed in the data map, so the row says as_published.
+    // Why: one value that is not a number is named and skipped; the other indicators and years of the company are still stored.
     const assetId = AssetIdUtil.build({ market: request.market, assetType: "stock", code: request.ticker });
-    const rows: ProviderRow[] = parsed.data.flatMap((indicator) => indicator.ranks.map((rank) => ({
-      asset_id: assetId,
-      metric: `fundamental.${indicator.key}`,
-      reference_time_start: `${rank.rank}-01-01`,
-      reference_time_end: `${rank.rank}-12-31`,
-      value: StatusInvestAdapter.readNumber(Reflect.get(rank, "value_F"), "value_F"),
-      unit: "as_published",
-    })));
-    return { asset_metrics: rows };
+    const rows: ProviderRow[] = [];
+    const itemErrors: string[] = [];
+    for (const indicator of parsed.data) {
+      for (const rank of indicator.ranks) {
+        const referenceYear = String(rank.rank);
+        if (request.period !== undefined && !PeriodService.isWithin(request.period, `${referenceYear}-01-01`)) {
+          continue;
+        }
+        try {
+          rows.push({
+            asset_id: assetId,
+            metric: `fundamental.${indicator.key}`,
+            reference_time_start: `${referenceYear}-01-01`,
+            reference_time_end: `${referenceYear}-12-31`,
+            value: StatusInvestAdapter.readNumber(Reflect.get(rank, "value_F"), "value_F"),
+            unit: "as_published",
+          });
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : String(error);
+          itemErrors.push(`fundamental.${indicator.key} ${referenceYear} was not stored: ${reason}`);
+        }
+      }
+    }
+    return { tables: { asset_metrics: rows }, itemErrors };
   }
 
   private async fetchFiiMonthly(request: ProviderRequest): Promise<TableToRows> {
