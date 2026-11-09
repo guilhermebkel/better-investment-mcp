@@ -29,6 +29,10 @@ const FUND_ASSET_TYPE = "fii" as const;
 const CATEGORY_TO_KIND: ReadonlyMap<KnownCvmCategory, CvmFilingKind> = new Map<KnownCvmCategory, CvmFilingKind>([
   ["Fato Relevante", "material_fact"],
   ["Relatório de Sustentabilidade", "sustainability"],
+  // Why: integrated and ISSB sustainability reports are the same kind of document; category keeps the exact name, so the three stay distinguishable (issue #26).
+  ["Relato Integrado", "sustainability"],
+  ["Relatório de Informações Financeiras Relacionadas à Sustentabilidade - Padrão ISSB", "sustainability"],
+  // Why: "Política de Sustentabilidade" is a governance policy, not a report, so it stays "other" (not in this map).
 ]);
 
 export class CvmAdapter extends CvmBaseAdapter implements ProviderPort<"filings"> {

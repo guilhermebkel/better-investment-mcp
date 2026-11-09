@@ -488,6 +488,19 @@ describe("LoaderService.ensure()", () => {
       });
     });
 
+    describe("when the CVM answer is a page, not a document (issue #27)", () => {
+      it("names the filing, stores no chunk, and leaves the filing row as it was", async () => {
+        documentBytes = () => Promise.reject(new Error("CVM answered with a page, not a PDF document or a form zip; no document was stored"));
+
+        const [entry] = await buildLoader().ensure([PETR4_FILING]);
+
+        expect(entry).toMatchObject({ status: "failed", filingId: PDF_FILING_ID });
+        expect(entry?.error).toBe(`filing ${PDF_FILING_ID}: CVM answered with a page, not a PDF document or a form zip; no document was stored`);
+        expect(await readChunks()).toStrictEqual([]);
+        expect(await store.writer.readRows("SELECT file_hash FROM asset_filings WHERE filing_id = ?", [PDF_FILING_ID])).toStrictEqual([{ file_hash: null }]);
+      });
+    });
+
     describe("when the same filing is asked again", () => {
       it("downloads nothing before the expiry", async () => {
         const loader = buildLoader();

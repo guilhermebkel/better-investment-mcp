@@ -42,6 +42,10 @@ The CVM open data (IPE, `ipe_cia_aberta_2025.zip`) has no category named "Relat√
 
 Build (a) first: it is official, cheap, and covers the companies that file the report as a communication. For the rest, (c) gives full coverage for the owner's chosen companies without a rule per site. Do not build (b), because the maintenance cost is ten rules a year. The recommendation depends on the owner's decision on the coverage.
 
+## Chosen path
+
+The owner chose option (a): sustainability reports come from the CVM IPE open data, with partial coverage. The three categories are classified in issue #26 (exact match: `Relat√≥rio de Sustentabilidade`, `Relato Integrado`, and the ISSB report). The download evidence is in `docs/adr/0025-cvm-rad-download-reproduction.md` (issue #27).
+
 ## Consequences
 
 - No code in this change. Issue #15 stays open, with `needs-info`, until the owner chooses a path (AC3). The owner's choice then becomes new issues in the task format.

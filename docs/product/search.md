@@ -22,6 +22,7 @@ A document is loaded only when a query asks for `asset_filing_chunks` with a `fi
 - A CVM reference form (FRE) is a zip with one XML. Its items are PDFs inside the XML, read the same way (ADR 0024): each chunk's `section` is the form section and the item number, for example `FatoresRisco 4.1`, and its `page` is the page of that item's PDF. A blank slot of the form is skipped. The XML is read as cp1252, although it declares UTF-8.
 - A document is read from the link the filing names, on any http or https host; the size limit (20 MiB) and the timeout (60 seconds) still apply. The server does not check the host of a document link.
 - For CVM, only a PDF or a form zip is stored. The CVM site sometimes answers 200 with an HTML error page; that page is refused (`CvmDocumentAdapter`).
+- Some CVM documents cannot be read. The load entry names the filing (`filing <filing_id>: ...`), writes no chunk for it, and leaves the other filings of the query loaded. Downloads from `www.rad.cvm.gov.br` have been seen to be cut off before their end; the cause is not known (`docs/adr/0025-cvm-rad-download-reproduction.md`). Coverage of sustainability and other CVM documents is therefore partial.
 
 ## Chunking rules
 

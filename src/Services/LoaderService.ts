@@ -225,7 +225,8 @@ export class LoaderService implements LoaderPort {
       rowsWritten: result.rowsWritten,
       ...(result.pagesWithoutText === undefined ? {} : { pagesWithoutText: result.pagesWithoutText }),
       ...(result.indexError === undefined ? {} : { indexError: result.indexError }),
-      ...(result.errorMessage === undefined ? {} : { error: result.errorMessage }),
+      // Why: a failed document names its filing, so the agent can tell which one could not be read; the other filings of the query still load (issue #27).
+      ...(result.errorMessage === undefined ? {} : { error: `filing ${filing.filing_id}: ${result.errorMessage}` }),
     };
   }
 

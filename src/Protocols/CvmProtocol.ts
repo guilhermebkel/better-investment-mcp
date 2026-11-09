@@ -13,7 +13,11 @@ export type CvmKey = {
   asset_type: string;
 };
 
-export type KnownCvmCategory = "Fato Relevante" | "Relatório de Sustentabilidade";
+export type KnownCvmCategory
+  = "Fato Relevante"
+    | "Relatório de Sustentabilidade"
+    | "Relato Integrado"
+    | "Relatório de Informações Financeiras Relacionadas à Sustentabilidade - Padrão ISSB";
 
 export type CvmStatementCode = "DRE" | "BPA" | "BPP" | "DFC_MD";
 
