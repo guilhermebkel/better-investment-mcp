@@ -195,7 +195,7 @@ Every setting is an environment variable. The server reads them once at start an
 | `INVESTMENT_MCP_LOG_LEVEL` | `info` | `error`, `info` or `debug`. Log lines go to stderr. |
 | `INVESTMENT_MCP_CACHE_DIR` | the system temporary directory | Where the DuckDB cache file is kept. Created when missing. See [Keep the cache on disk](#keep-the-cache-on-disk). |
 | `INVESTMENT_MCP_CACHE_TTL_SECONDS` | `86400` | How long a loaded piece of data stays valid, in seconds. |
-| `INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS` | `5` | How long a query waits for a load before it answers with the rows already stored and a load id. The load keeps running in the background. |
+| `INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS` | `10` | How long a query waits for a load before it answers with the rows already stored and a load id. The load keeps running in the background. |
 | `INVESTMENT_MCP_TRANSPORT` | `stdio` | `stdio`: the client starts the server and talks over stdin and stdout. `http`: the server listens for MCP clients at `/mcp`, on the address and port below. |
 | `INVESTMENT_MCP_HTTP_HOST` | `127.0.0.1` | The address HTTP mode listens on. Use `0.0.0.0` only inside a container, behind a reverse proxy with TLS. |
 | `INVESTMENT_MCP_HTTP_PORT` | `3100` | The port HTTP mode listens on. |

@@ -43,7 +43,7 @@ All notable changes to this project are in this file. The format follows [Keep a
 - `pnpm smoke` and the CI Docker job check HTTP mode too: `/health`, 401 without the token, and the three tools.
 - The PDF inside a CVM periodic report zip (ITR) is read page by page, so its text can be searched (`search_chunks` with the document type `itr`).
 - The text of a CVM reference form (FRE) is searchable: its items are read from the PDFs inside the form's XML, one section and item per chunk (ADR 0024).
-- Loads that outlive `INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS` (5 seconds by default) continue in the background. `query_sql` answers with the rows already stored, a warning that they may be incomplete, and the load id; The client follows it by running the query again (ADR 0022). A load that was running at a restart is closed as interrupted.
+- Loads that outlive `INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS` (10 seconds by default, was 5) continue in the background. `query_sql` answers with the rows already stored, a warning that they may be incomplete, and the load id; The client follows it by running the query again (ADR 0022). A load that was running at a restart is closed as interrupted.
 - Every provider has a default: a query works with no provider variable. A default with a second vendor (yfinance, then Yahoo) falls back automatically when the first fails.
 - CVM FRE, VLMO and CGVN rows of a company (`asset_filing_items`), with their section, date, version and the whole row as JSON.
 - The CVM files that were read in memory (ITR, DFP, IPE, FCA, monthly FII files, fund filings) are now downloaded to a temporary file and streamed.

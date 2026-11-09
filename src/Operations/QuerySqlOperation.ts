@@ -113,7 +113,7 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
     }
     // Why: a row set answered while a load runs can be incomplete, so the answer says so and gives the id to follow.
     return `A load is still running in the background (id ${pending.id}) for ${LoadJobService.describe(pending)}. `
-      + "The rows below are the ones already stored, so they may be incomplete. Run the query again later to read the rows once it finishes. ";
+      + "The rows below are the ones already stored, so they may be incomplete. Run the same query again after a few seconds, and repeat until no load is still running; then answer from its complete rows. ";
   }
 
   private static describeRows(rowCount: number, returnedRows: number, loaded: LoadedEntry[]): string {

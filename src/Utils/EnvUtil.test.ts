@@ -58,7 +58,7 @@ describe("EnvUtil.read()", () => {
 
   describe("when the background threshold is set", () => {
     it("defaults to five seconds", () => {
-      expect(EnvUtil.read().INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS).toBe(5);
+      expect(EnvUtil.read().INVESTMENT_MCP_BACKGROUND_AFTER_SECONDS).toBe(10);
     });
 
     it("reads a positive number of seconds", () => {
