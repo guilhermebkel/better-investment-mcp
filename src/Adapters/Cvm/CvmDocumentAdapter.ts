@@ -1,3 +1,4 @@
+import { HttpRefusedError } from "@/Errors/HttpRefusedError.ts";
 import type { DocumentProvider } from "@/Protocols/DocumentProviderProtocol.ts";
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 import { ZipFileUtil } from "@/Utils/ZipFileUtil.ts";
@@ -6,6 +7,9 @@ const BYTES_PER_MIB = 1_048_576;
 const PDF_SIGNATURE = "%PDF";
 const READABLE_PROTOCOLS: readonly ("http:" | "https:")[] = ["https:", "http:"];
 const MAX_DOCUMENT_MIB = 100;
+const FIRST_RETRY_WAIT_MS = 2_000;
+const SECOND_RETRY_WAIT_MS = 4_000;
+const THIRD_RETRY_WAIT_MS = 8_000;
 
 export class CvmDocumentAdapter implements DocumentProvider {
   static readonly VENDOR = "cvm";
@@ -24,16 +28,37 @@ export class CvmDocumentAdapter implements DocumentProvider {
   readonly markets = CvmDocumentAdapter.MARKETS;
   readonly assetTypes = CvmDocumentAdapter.ASSET_TYPES;
 
-  private readonly http: HttpPort;
+  // Why: the CVM link answers with an HTML page, a cut transfer or a timeout for the same link at different times; a download is tried again after a wait before it counts as a failure.
+  static readonly DOCUMENT_ATTEMPTS = 4;
+  static readonly RETRY_WAITS_MS: readonly number[] = [FIRST_RETRY_WAIT_MS, SECOND_RETRY_WAIT_MS, THIRD_RETRY_WAIT_MS];
 
-  constructor(http: HttpPort) {
+  private readonly http: HttpPort;
+  private readonly pause: (ms: number) => Promise<void>;
+
+  constructor(http: HttpPort, pause: (ms: number) => Promise<void> = (ms: number) => CvmDocumentAdapter.sleep(ms)) {
     this.http = http;
+    this.pause = pause;
   }
 
   async fetchDocument(url: string): Promise<Uint8Array> {
     if (!CvmDocumentAdapter.isDocumentLink(url)) {
       throw new Error("the filing link is not an http or https address; no document was read");
     }
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        return await this.downloadOnce(url);
+      } catch (error) {
+        const isLastAttempt = attempt >= CvmDocumentAdapter.DOCUMENT_ATTEMPTS;
+        // Why: a document over the size limit is refused by the HTTP adapter for good; another try would download it again for nothing.
+        if (error instanceof HttpRefusedError || isLastAttempt) {
+          throw error;
+        }
+        await this.pause(CvmDocumentAdapter.RETRY_WAITS_MS[attempt - 1] ?? 0);
+      }
+    }
+  }
+
+  private async downloadOnce(url: string): Promise<Uint8Array> {
     // Why: the HTTP adapter checks the host and the size; a refused document leaves nothing in the store because the caller writes only after a download succeeds.
     const bytes = await this.http.getBytes(url);
     // Why: the CVM site sometimes answers 200 with an HTML error page instead of the filing; that page is not a document, so it is refused before any text is read from it. A reference form is a zip of XML and PDFs.
@@ -42,6 +67,12 @@ export class CvmDocumentAdapter implements DocumentProvider {
     }
     // Why: the HTTP adapter answers with a Node Buffer, which the PDF reader refuses; the document leaves the adapter as plain bytes.
     return new Uint8Array(bytes);
+  }
+
+  private static sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
   }
 
   static isDocumentLink(url: string): boolean {
