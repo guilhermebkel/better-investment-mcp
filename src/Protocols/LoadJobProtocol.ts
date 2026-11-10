@@ -19,3 +19,9 @@ export type LoadJob = {
   error?: string;
   done: Promise<void>;
 };
+
+export type LoadNoticeListener = (job: LoadJob) => Promise<void>;
+
+export type SubscribeOutcome = "unknown" | "full" | "registered" | "done";
+
+export type LoadJobSubscriber = { subscribe(id: string, listener: LoadNoticeListener): SubscribeOutcome };

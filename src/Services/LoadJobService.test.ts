@@ -160,3 +160,70 @@ describe("LoadJobService.describe()", () => {
     expect(LoadJobService.describe(job)).toBe("BR:PETR4 quotes, BR:VALE3 quotes");
   });
 });
+
+describe("LoadJobService.subscribe()", () => {
+  it("calls the listener once, with the finished job, when the load finishes", async () => {
+    const deferred = buildDeferredLoader();
+    const jobs = new LoadJobService(deferred.loader);
+    const job = jobs.start([PETR4]);
+    const seen: string[] = [];
+
+    expect(jobs.subscribe(job.id, (finished) => {
+      seen.push(finished.state);
+      return Promise.resolve();
+    })).toBe("registered");
+    deferred.resolve([ENTRY]);
+    await job.done;
+
+    expect(seen).toStrictEqual(["finished"]);
+  });
+
+  it("calls the listener when the load fails too, with the failed state", async () => {
+    const deferred = buildDeferredLoader();
+    const jobs = new LoadJobService(deferred.loader);
+    const job = jobs.start([PETR4]);
+    const seen: string[] = [];
+
+    jobs.subscribe(job.id, (failed) => {
+      seen.push(failed.state);
+      return Promise.resolve();
+    });
+    deferred.reject(new Error("CVM is down"));
+    await job.done;
+
+    expect(seen).toStrictEqual(["failed"]);
+  });
+
+  it("answers unknown for a loading id that no load has", () => {
+    const jobs = new LoadJobService(buildDeferredLoader().loader);
+
+    expect(jobs.subscribe("no-such-load", () => Promise.resolve())).toBe("unknown");
+  });
+
+  it("refuses a sixth listener on a load that is still running", () => {
+    const deferred = buildDeferredLoader();
+    const jobs = new LoadJobService(deferred.loader);
+    const job = jobs.start([PETR4]);
+    const outcomes = Array.from({ length: LoadJobService.MAX_LISTENERS_PER_JOB + 1 }, () => {
+      return jobs.subscribe(job.id, () => Promise.resolve());
+    });
+
+    expect(outcomes.slice(0, LoadJobService.MAX_LISTENERS_PER_JOB)).toStrictEqual(Array(LoadJobService.MAX_LISTENERS_PER_JOB).fill("registered"));
+    expect(outcomes.at(-1)).toBe("full");
+  });
+
+  it("calls the listener at once when the load had already finished", async () => {
+    const deferred = buildDeferredLoader();
+    const jobs = new LoadJobService(deferred.loader);
+    const job = jobs.start([PETR4]);
+    deferred.resolve([ENTRY]);
+    await job.done;
+    const seen: string[] = [];
+
+    expect(jobs.subscribe(job.id, (finished) => {
+      seen.push(finished.state);
+      return Promise.resolve();
+    })).toBe("done");
+    expect(seen).toStrictEqual(["finished"]);
+  });
+});

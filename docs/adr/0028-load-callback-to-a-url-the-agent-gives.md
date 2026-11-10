@@ -2,6 +2,8 @@
 
 Date: 2026-11-11.
 
+Status: accepted; implemented with this decision.
+
 A query that needs a long load answers at once with the rows stored so far and a loading id (ADR 0022). The agent repeats the query until no load runs. Nothing tells an agent that is not in a loop when a load ends, so it has no signal to come back.
 
 ## Decision

@@ -2,11 +2,11 @@
 
 How the tools of this server are designed. `pnpm lint` enforces the rules marked **(lint)**, `pnpm test` the ones marked **(test)**; the rest are checked in review. A rule marked **(planned #n)** is enforced by the issue `#n`, which adds the code it needs. Each rule is one line. A tool is read by a model that cannot ask a question, so the contract is the schema, the description, the response and the error.
 
-The server has three tools and all of them are read-only: `get_overview`, `get_guide` and `query_sql`. There are no access modes, no toolsets and no risk tiers, because nothing can change the outside world (`docs/adr/0004-no-tool-writes-to-the-outside-world.md`). Data is read with one SQL tool (`docs/adr/0003-all-data-is-read-through-one-sql-tool.md`).
+The server has four tools. Three are read-only: `get_overview`, `get_guide` and `query_sql`. `notify_load_finish` is the one exception: it sends one POST to an https address the caller gives, when a background load finishes (`docs/adr/0028-load-callback-to-a-url-the-agent-gives.md`). There are no access modes, no toolsets and no risk tiers. Data is read with one SQL tool (`docs/adr/0003-all-data-is-read-through-one-sql-tool.md`).
 
 ## Scope
 
-- **Three tools, all read-only (test).** A test fails when `src/Operations/` has a tool other than the ones named in `docs/product/architecture.md`, or one that is not read-only. A new tool needs an ADR.
+- **Four tools, three read-only (test).** A test fails when `src/Operations/` has a tool other than the ones named in `docs/product/architecture.md`, or when a read-only tool is not marked so. A new tool needs an ADR.
 - **One operation per tool (review).** A class in `src/Operations/` implements `OperationPort` and is listed once in the operation manifest.
 - **Filtering, aggregation and ranking happen in SQL, not in a tool (review).** The agent computes; the server never returns a prepared analysis, a score or a recommendation.
 - **Names are a verb and an object, and the tool name is derived (lint: `local/operation-name`).** The class `NAME` is camelCase (`querySql`); the manifest derives the tool name (`query_sql`); a test fails when two operations collapse to the same tool name.
@@ -39,7 +39,7 @@ The server has three tools and all of them are read-only: `get_overview`, `get_g
 ## Descriptions
 
 - **Order: what it does; when to use it; when not to and which neighbor to use; what it returns and what it returns when empty; limits (review).** One sentence each.
-- **A description opens with the nature of the action (test).** Every tool starts with "Read-only."
+- **A description opens with the nature of the action (test).** Every read-only tool starts with "Read-only."
 - **A description has a length limit, set at today's worst case (test).** Long specifications go to a guide topic.
 - **Rules that span tools live in the server `instructions`, once (review).** The usual order of calls, the filter rule.
 - **A description may name a neighbor tool to route or to say where a value comes from, never to prescribe the order of a flow (review).**

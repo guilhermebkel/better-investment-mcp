@@ -14,8 +14,8 @@ const EXPECTED_EVENT = "environment_valid";
 const MAX_SHOWN_CHARS = 80;
 const PROTOCOL_VERSION = "2025-11-25";
 const SERVER_NAME = "better-investment-mcp";
-const EXPECTED_TOOLS = ["get_overview", "get_guide", "query_sql"];
-const EXPECTED_INSTRUCTIONS_TEXT = "This server only reads.";
+const EXPECTED_TOOLS = ["get_overview", "get_guide", "query_sql", "notify_load_finish"];
+const EXPECTED_INSTRUCTIONS_TEXT = "The server only reads, except notify_load_finish";
 const INITIALIZE_ID = 1;
 const TOOLS_LIST_ID = 2;
 const HTTP_PORT = "3100";
@@ -94,7 +94,7 @@ export const checkHttpRun = ({ name, instructions, toolNames, unauthorizedStatus
     problems.push(`HTTP serverInfo.name is ${JSON.stringify(name)}, expected ${SERVER_NAME}`);
   }
   if (!String(instructions ?? "").includes(EXPECTED_INSTRUCTIONS_TEXT)) {
-    problems.push("HTTP instructions do not say the server only reads");
+    problems.push("HTTP instructions do not say the server only reads, except notify_load_finish");
   }
   if (JSON.stringify(toolNames) !== JSON.stringify(EXPECTED_TOOLS)) {
     problems.push(`HTTP tools/list answered ${JSON.stringify(toolNames)}, expected ${JSON.stringify(EXPECTED_TOOLS)}`);

@@ -11,6 +11,7 @@ export class GetOverviewOperation implements OperationPort<GetOverviewInput> {
 
   readonly name = GetOverviewOperation.NAME;
   readonly description = "Read-only. Describes the server and its usage notice. Call it first to see what the server does. It takes no input and returns a short text.";
+  readonly isReadOnly = true;
   readonly inputSchema = GetOverviewInputSchema;
 
   private readonly dependencies: OverviewDependencies;
@@ -23,7 +24,7 @@ export class GetOverviewOperation implements OperationPort<GetOverviewInput> {
     const loaded = await this.readLoadedLines();
     const message = [
       "Better Investment: data on Brazilian assets, read with query_sql.",
-      "Tools: get_overview, get_guide and query_sql. All three only read.",
+      "Tools: get_overview, get_guide, query_sql and notify_load_finish. The first three only read; notify_load_finish sends one notice to the https callback_url given (ADR 0028).",
       "Markets and asset types: BR stocks, FIIs, funds, indexes and currencies, and Tesouro bonds. US assets are planned.",
       "Tables:",
       ...GetOverviewOperation.TABLE_LINES.map((line) => `- ${line}`),

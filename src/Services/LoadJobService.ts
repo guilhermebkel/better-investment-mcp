@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { LoadedEntry, LoaderPort } from "@/Protocols/LoaderProtocol.ts";
-import type { LoadJob } from "@/Protocols/LoadJobProtocol.ts";
+import type { LoadJob, LoadNoticeListener, SubscribeOutcome } from "@/Protocols/LoadJobProtocol.ts";
 import type { Requirement } from "@/Protocols/SqlGuardProtocol.ts";
 import { DEFAULT_BACKGROUND_AFTER_SECONDS } from "@/Schemas/EnvSchema.ts";
 
@@ -8,10 +8,13 @@ const MS_PER_SECOND = 1000;
 
 export class LoadJobService {
   static readonly DEFAULT_BACKGROUND_AFTER_MS = DEFAULT_BACKGROUND_AFTER_SECONDS * MS_PER_SECOND;
+  // Why: a notice is sent once per callback address, and a load takes at most this many of them, so one query cannot make the server post to many addresses.
+  static readonly MAX_LISTENERS_PER_JOB = 5;
 
   private readonly loader: LoaderPort;
   private readonly clock: () => Date;
   private readonly idToJob = new Map<string, LoadJob>();
+  private readonly idToListeners = new Map<string, LoadNoticeListener[]>();
 
   constructor(loader: LoaderPort, clock: () => Date = () => new Date()) {
     this.loader = loader;
@@ -38,15 +41,43 @@ export class LoadJobService {
         job.state = "finished";
         job.entries = entries;
         job.finishedAt = this.clock().toISOString();
+        this.notifyListeners(job);
       },
       (error: unknown) => {
         job.state = "failed";
         job.error = error instanceof Error ? error.message : "unknown error";
         job.finishedAt = this.clock().toISOString();
+        this.notifyListeners(job);
       },
     );
     this.idToJob.set(job.id, job);
     return job;
+  }
+
+  subscribe(id: string, listener: LoadNoticeListener): SubscribeOutcome {
+    const job = this.idToJob.get(id);
+    if (job === undefined) {
+      return "unknown";
+    }
+    if (job.state !== "running") {
+      // Why: a load that finished before the notice was asked for still gets its notice, once, now.
+      void listener(job);
+      return "done";
+    }
+    const listeners = this.idToListeners.get(id) ?? [];
+    if (listeners.length >= LoadJobService.MAX_LISTENERS_PER_JOB) {
+      return "full";
+    }
+    this.idToListeners.set(id, [...listeners, listener]);
+    return "registered";
+  }
+
+  private notifyListeners(job: LoadJob): void {
+    const listeners = this.idToListeners.get(job.id) ?? [];
+    this.idToListeners.delete(job.id);
+    for (const listener of listeners) {
+      void listener(job);
+    }
   }
 
   get(id: string): LoadJob | undefined {

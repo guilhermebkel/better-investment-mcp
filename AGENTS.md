@@ -2,7 +2,7 @@
 
 An open-source MCP server that gives AI agents data on Brazilian assets (US stocks later): prices, dividends, fundamentals, company filings and FII reports, and macro series. The agent reads everything with one SQL tool over a local DuckDB cache that the server fills on demand. The server writes only to its own cache file; the one outbound call is the load notice of ADR 0028. Vocabulary is in `GLOSSARY.md`; decisions are in `docs/adr/`; planned work is in GitHub issues.
 
-Today the server exposes <!-- tools:count -->3<!-- /tools:count --> tools, all read-only: `get_overview`, `get_guide` and `query_sql`. The data store and the data behind them come in later issues. Every data provider is listed with its status in `scripts/source-coverage.json`.
+Today the server exposes <!-- tools:count -->4<!-- /tools:count --> tools: `get_overview`, `get_guide` and `query_sql` are read-only; `notify_load_finish` sends one notice to a URL the caller gives (ADR 0028). The data store and the data behind them come in later issues. Every data provider is listed with its status in `scripts/source-coverage.json`.
 
 ## Layout
 

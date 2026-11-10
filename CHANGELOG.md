@@ -4,6 +4,10 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ## [Unreleased]
 
+### Added
+
+- `notify_load_finish` (ADR 0028): a notice, one POST with the final status and the row counts of a background load and no data, to the https `callback_url` given, when the load finishes, for loaded and failed loads. Each load takes at most 5 notices. This is the one tool that is not read-only.
+
 ### Fixed
 
 - StatusInvest fundamentals read each rank from its `value` number, not from `value_F` (the display text, for example `5,53%`). A rank with no number, such as `-%` or `-`, is stored as null. The sample responses of the site showed the change: every indicator of BBAS3 failed on `value_F`.

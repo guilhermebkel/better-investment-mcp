@@ -1,5 +1,7 @@
 # No tool writes to the outside world, and the cache is a temporary file
 
+Amended by ADR 0028: `notify_load_finish` sends one POST to a URL the caller gives, when a background load finishes. No other tool sends anything.
+
 No tool changes anything outside the server. Data that is missing is downloaded and indexed into a DuckDB file in the system temporary directory (or `INVESTMENT_MCP_CACHE_DIR`). Each load is valid for `INVESTMENT_MCP_CACHE_TTL_SECONDS`. The file can be deleted without loss. Queries open it read-only with external access (files, network) disabled.
 
 ## Considered options
