@@ -68,6 +68,7 @@ const HASH_FIRST = "1".repeat(64);
 const HASH_SECOND = "2".repeat(64);
 const STATEMENT_SETTING = "BR:primary>fallback";
 const CVM_STATEMENTS_TABLE = "asset_metrics";
+const UNREADABLE_ITEM = "fundamental.roe 2023 was not stored: value_F is not a number";
 const Q1_2024_START = "2024-01-01";
 const Q1_2024_END = "2024-03-31";
 const Q1_2025_START = "2025-01-01";
@@ -698,12 +699,30 @@ describe("LoaderService.ensure()", () => {
         respond = () => Promise.resolve({
           source: "primary",
           tables: { [CVM_STATEMENTS_TABLE]: [buildStatementRow(Q1_2024_END, Q1_2024_END)] },
-          itemErrors: ["fundamental.roe 2023 was not stored: value_F is not a number"],
+          itemErrors: [UNREADABLE_ITEM],
         });
         const [entry] = await buildLoader().ensure([buildStatementRequirement(PERIOD_2024Q1)]);
         expect(entry?.status).toBe("loaded");
-        expect(entry?.itemErrors).toStrictEqual(["fundamental.roe 2023 was not stored: value_F is not a number"]);
+        expect(entry?.itemErrors).toStrictEqual([UNREADABLE_ITEM]);
         expect(await readStoredPeriodEnds(store)).toStrictEqual([Q1_2024_END]);
+      });
+    });
+
+    describe("when the provider stores no row and names the items it could not read", () => {
+      it("fails the load, writes nothing, and is not counted as fresh", async () => {
+        respond = () => Promise.resolve({
+          source: "primary",
+          tables: { [CVM_STATEMENTS_TABLE]: [] },
+          itemErrors: [UNREADABLE_ITEM],
+        });
+        const loader = buildLoader();
+        const [entry] = await loader.ensure([buildStatementRequirement(PERIOD_2024Q1)]);
+        expect(entry?.status).toBe("failed");
+        expect(entry?.error).toBe(`no row was stored: ${UNREADABLE_ITEM}`);
+        expect(entry?.itemErrors).toStrictEqual([UNREADABLE_ITEM]);
+        expect(await readStoredPeriodEnds(store)).toStrictEqual([]);
+        const [again] = await loader.ensure([buildStatementRequirement(PERIOD_2024Q1)]);
+        expect(again?.status).toBe("failed");
       });
     });
 

@@ -5,7 +5,7 @@ import { ZipFileUtil } from "@/Utils/ZipFileUtil.ts";
 const BYTES_PER_MIB = 1_048_576;
 const PDF_SIGNATURE = "%PDF";
 const READABLE_PROTOCOLS: readonly ("http:" | "https:")[] = ["https:", "http:"];
-const MAX_DOCUMENT_MIB = 20;
+const MAX_DOCUMENT_MIB = 100;
 
 export class CvmDocumentAdapter implements DocumentProvider {
   static readonly VENDOR = "cvm";
