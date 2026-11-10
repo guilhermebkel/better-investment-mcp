@@ -718,11 +718,24 @@ describe("LoaderService.ensure()", () => {
         const loader = buildLoader();
         const [entry] = await loader.ensure([buildStatementRequirement(PERIOD_2024Q1)]);
         expect(entry?.status).toBe("failed");
-        expect(entry?.error).toBe(`no row was stored: ${UNREADABLE_ITEM}`);
+        expect(entry?.error).toBe(`no row was stored: 1 item(s) could not be read; the first: ${UNREADABLE_ITEM}`);
         expect(entry?.itemErrors).toStrictEqual([UNREADABLE_ITEM]);
         expect(await readStoredPeriodEnds(store)).toStrictEqual([]);
         const [again] = await loader.ensure([buildStatementRequirement(PERIOD_2024Q1)]);
         expect(again?.status).toBe("failed");
+      });
+    });
+
+    describe("when the provider stores no row and names several items", () => {
+      it("counts them in the error and names the first", async () => {
+        respond = () => Promise.resolve({
+          source: "primary",
+          tables: { [CVM_STATEMENTS_TABLE]: [] },
+          itemErrors: [UNREADABLE_ITEM, "fundamental.lpa 2023 was not stored: value_F is not a number"],
+        });
+        const [entry] = await buildLoader().ensure([buildStatementRequirement(PERIOD_2024Q1)]);
+        expect(entry?.error).toBe(`no row was stored: 2 item(s) could not be read; the first: ${UNREADABLE_ITEM}`);
+        expect(entry?.itemErrors).toHaveLength(2);
       });
     });
 
