@@ -1,0 +1,4829 @@
+{
+  "success": true,
+  "data": [
+    {
+      "key": "dy",
+      "actual": 0,
+      "avg": 3.3242785714285716,
+      "avgDifference": 0,
+      "minValue": 1.4371,
+      "minValueRank": 2019,
+      "maxValue": 6.4786,
+      "maxValueRank": 2021,
+      "actual_F": "0,00%",
+      "avg_F": "3,32%",
+      "avgDifference_F": "-",
+      "minValue_F": "1,44%",
+      "minValueRank_F": "2019",
+      "maxValue_F": "6,48%",
+      "maxValueRank_F": "2021",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value_F": "-%",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value_F": "-%",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 5.5328,
+          "value_F": "5,53%",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 2.2137,
+          "value_F": "2,21%",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 2.5006,
+          "value_F": "2,50%",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 6.4786,
+          "value_F": "6,48%",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 1.9778,
+          "value_F": "1,98%",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 1.4371,
+          "value_F": "1,44%",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 3.3132,
+          "value_F": "3,31%",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 4.49,
+          "value_F": "4,49%",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 5.6444,
+          "value_F": "5,64%",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 3.9111,
+          "value_F": "3,91%",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 3.8543,
+          "value_F": "3,85%",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 1.8714,
+          "value_F": "1,87%",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 1.4917,
+          "value_F": "1,49%",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 1.8232,
+          "value_F": "1,82%",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value_F": "-%",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value_F": "-%",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "p_l",
+      "actual": -1.1955,
+      "avg": 18.92604375,
+      "avgDifference": -106.31669257342809,
+      "minValue": -2.1705,
+      "minValueRank": 2025,
+      "maxValue": 68.8343,
+      "maxValueRank": 2013,
+      "actual_F": "-1,20",
+      "avg_F": "18,93",
+      "avgDifference_F": "-106,32% abaixo da média",
+      "minValue_F": "-2,17",
+      "minValueRank_F": "2025",
+      "maxValue_F": "68,83",
+      "maxValueRank_F": "2013",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": -1.1955,
+          "value_F": "-1,20",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": -2.1705,
+          "value_F": "-2,17",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": -1.6163,
+          "value_F": "-1,62",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 33.1527,
+          "value_F": "33,15",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 27.2817,
+          "value_F": "27,28",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 6.6384,
+          "value_F": "6,64",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 35.0452,
+          "value_F": "35,05",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 11.4421,
+          "value_F": "11,44",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 8.2602,
+          "value_F": "8,26",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 12.8699,
+          "value_F": "12,87",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 14.9942,
+          "value_F": "14,99",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 17.6902,
+          "value_F": "17,69",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 40.2302,
+          "value_F": "40,23",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 68.8343,
+          "value_F": "68,83",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 27.1406,
+          "value_F": "27,14",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 4.2193,
+          "value_F": "4,22",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value_F": "-",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value_F": "-",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "p_vp",
+      "actual": 2.1396,
+      "avg": 1.93565,
+      "avgDifference": 10.536512282695735,
+      "minValue": 1.1723,
+      "minValueRank": 2015,
+      "maxValue": 3.9784,
+      "maxValueRank": 2025,
+      "actual_F": "2,14",
+      "avg_F": "1,94",
+      "avgDifference_F": "10,54% acima da média",
+      "minValue_F": "1,17",
+      "minValueRank_F": "2015",
+      "maxValue_F": "3,98",
+      "maxValueRank_F": "2025",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 2.1396,
+          "value_F": "2,14",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": 3.9784,
+          "value_F": "3,98",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 1.3969,
+          "value_F": "1,40",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 1.7314,
+          "value_F": "1,73",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 1.5535,
+          "value_F": "1,55",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 2.7575,
+          "value_F": "2,76",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 2.7521,
+          "value_F": "2,75",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 2.6296,
+          "value_F": "2,63",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 1.3746,
+          "value_F": "1,37",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 1.792,
+          "value_F": "1,79",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 1.7328,
+          "value_F": "1,73",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 1.1723,
+          "value_F": "1,17",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 1.3322,
+          "value_F": "1,33",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 1.6553,
+          "value_F": "1,66",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 1.747,
+          "value_F": "1,75",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 1.2252,
+          "value_F": "1,23",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value_F": "-",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value_F": "-",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "p_ebita",
+      "actual": 1.746,
+      "avg": 5.084783333333333,
+      "avgDifference": -65.66225371779197,
+      "minValue": 0.9421,
+      "minValueRank": 2024,
+      "maxValue": 10.2434,
+      "maxValueRank": 2013,
+      "actual_F": "1,75",
+      "avg_F": "5,08",
+      "avgDifference_F": "-65,66% abaixo da média",
+      "minValue_F": "0,94",
+      "minValueRank_F": "2024",
+      "maxValue_F": "10,24",
+      "maxValueRank_F": "2013",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 1.746,
+          "value_F": "1,75",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": 4.899,
+          "value_F": "4,90",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 0.9421,
+          "value_F": "0,94",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 1.9306,
+          "value_F": "1,93",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 2.9503,
+          "value_F": "2,95",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 3.73,
+          "value_F": "3,73",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 9.7806,
+          "value_F": "9,78",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 6.6373,
+          "value_F": "6,64",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value_F": "-",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value_F": "-",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value_F": "-",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 4.2663,
+          "value_F": "4,27",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 5.4477,
+          "value_F": "5,45",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 10.2434,
+          "value_F": "10,24",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 8.4441,
+          "value_F": "8,44",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value_F": "-",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value_F": "-",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value_F": "-",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "p_ebit",
+      "actual": 6.3698,
+      "avg": -0.09025,
+      "avgDifference": 7157.950138504155,
+      "minValue": -105.5826,
+      "minValueRank": 2025,
+      "maxValue": 15.6057,
+      "maxValueRank": 2013,
+      "actual_F": "6,37",
+      "avg_F": "-0,09",
+      "avgDifference_F": "7.157,95% acima da média",
+      "minValue_F": "-105,58",
+      "minValueRank_F": "2025",
+      "maxValue_F": "15,61",
+      "maxValueRank_F": "2013",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 6.3698,
+          "value_F": "6,37",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": -105.5826,
+          "value_F": "-105,58",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 4.3461,
+          "value_F": "4,35",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 2.7886,
+          "value_F": "2,79",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 4.1078,
+          "value_F": "4,11",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 4.685,
+          "value_F": "4,69",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 12.2893,
+          "value_F": "12,29",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 7.7091,
+          "value_F": "7,71",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 4.9576,
+          "value_F": "4,96",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 5.9052,
+          "value_F": "5,91",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 5.5613,
+          "value_F": "5,56",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 5.5663,
+          "value_F": "5,57",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 7.9274,
+          "value_F": "7,93",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 15.6057,
+          "value_F": "15,61",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 13.6846,
+          "value_F": "13,68",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 2.6348,
+          "value_F": "2,63",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value_F": "-",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value_F": "-",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "p_sr",
+      "actual": 0.2652,
+      "avg": 1.4892125,
+      "avgDifference": -82.1919302987317,
+      "minValue": 0.2652,
+      "minValueRank": 2026,
+      "maxValue": 3.707,
+      "maxValueRank": 2012,
+      "actual_F": "0,27",
+      "avg_F": "1,49",
+      "avgDifference_F": "-82,19% abaixo da média",
+      "minValue_F": "0,27",
+      "minValueRank_F": "2026",
+      "maxValue_F": "3,71",
+      "maxValueRank_F": "2012",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 0.2652,
+          "value_F": "0,27",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": 0.5221,
+          "value_F": "0,52",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 0.3466,
+          "value_F": "0,35",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 0.9193,
+          "value_F": "0,92",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 0.8159,
+          "value_F": "0,82",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 1.632,
+          "value_F": "1,63",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 2.2099,
+          "value_F": "2,21",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 2.0465,
+          "value_F": "2,05",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 1.3252,
+          "value_F": "1,33",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 2.2068,
+          "value_F": "2,21",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 2.0599,
+          "value_F": "2,06",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 1.2291,
+          "value_F": "1,23",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 1.442,
+          "value_F": "1,44",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 2.6298,
+          "value_F": "2,63",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 3.707,
+          "value_F": "3,71",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 0.4701,
+          "value_F": "0,47",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value_F": "-",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value_F": "-",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "p_ativo",
+      "actual": 0.0839,
+      "avg": 0.4301125,
+      "avgDifference": -80.49347554418902,
+      "minValue": 0.0839,
+      "minValueRank": 2026,
+      "maxValue": 0.8444,
+      "maxValueRank": 2019,
+      "actual_F": "0,08",
+      "avg_F": "0,43",
+      "avgDifference_F": "-80,49% abaixo da média",
+      "minValue_F": "0,08",
+      "minValueRank_F": "2026",
+      "maxValue_F": "0,84",
+      "maxValueRank_F": "2019",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 0.0839,
+          "value_F": "0,08",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": 0.1562,
+          "value_F": "0,16",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 0.1078,
+          "value_F": "0,11",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 0.2594,
+          "value_F": "0,26",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 0.2386,
+          "value_F": "0,24",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 0.4155,
+          "value_F": "0,42",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 0.8348,
+          "value_F": "0,83",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 0.8444,
+          "value_F": "0,84",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 0.4741,
+          "value_F": "0,47",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 0.5931,
+          "value_F": "0,59",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 0.5691,
+          "value_F": "0,57",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 0.3388,
+          "value_F": "0,34",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 0.4335,
+          "value_F": "0,43",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 0.5636,
+          "value_F": "0,56",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 0.4877,
+          "value_F": "0,49",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 0.4813,
+          "value_F": "0,48",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value_F": "-",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value_F": "-",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "p_capitlgiro",
+      "actual": 0.8409,
+      "avg": 5.37376875,
+      "avgDifference": -84.35176429949651,
+      "minValue": 0.8409,
+      "minValueRank": 2026,
+      "maxValue": 17.7236,
+      "maxValueRank": 2013,
+      "actual_F": "0,84",
+      "avg_F": "5,37",
+      "avgDifference_F": "-84,35% abaixo da média",
+      "minValue_F": "0,84",
+      "minValueRank_F": "2026",
+      "maxValue_F": "17,72",
+      "maxValueRank_F": "2013",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 0.8409,
+          "value_F": "0,84",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": 0.8599,
+          "value_F": "0,86",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 1.1842,
+          "value_F": "1,18",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 2.9139,
+          "value_F": "2,91",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 3.2807,
+          "value_F": "3,28",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 2.8354,
+          "value_F": "2,84",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 5.9454,
+          "value_F": "5,95",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 5.3672,
+          "value_F": "5,37",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 3.7962,
+          "value_F": "3,80",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 6.0703,
+          "value_F": "6,07",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 5.0422,
+          "value_F": "5,04",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 5.636,
+          "value_F": "5,64",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 13.6103,
+          "value_F": "13,61",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 17.7236,
+          "value_F": "17,72",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 6.51,
+          "value_F": "6,51",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 4.3641,
+          "value_F": "4,36",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value_F": "-",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value_F": "-",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "p_ativocirculante",
+      "actual": -0.1117,
+      "avg": -0.57230625,
+      "avgDifference": 80.48247769441623,
+      "minValue": -1.2891,
+      "minValueRank": 2019,
+      "maxValue": -0.1117,
+      "maxValueRank": 2026,
+      "actual_F": "-0,11",
+      "avg_F": "-0,57",
+      "avgDifference_F": "80,48% acima da média",
+      "minValue_F": "-1,29",
+      "minValueRank_F": "2019",
+      "maxValue_F": "-0,11",
+      "maxValueRank_F": "2026",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": -0.1117,
+          "value_F": "-0,11",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": -0.2221,
+          "value_F": "-0,22",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": -0.1378,
+          "value_F": "-0,14",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": -0.3261,
+          "value_F": "-0,33",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": -0.2946,
+          "value_F": "-0,29",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": -0.5762,
+          "value_F": "-0,58",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": -1.2273,
+          "value_F": "-1,23",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": -1.2891,
+          "value_F": "-1,29",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": -0.6438,
+          "value_F": "-0,64",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": -0.8154,
+          "value_F": "-0,82",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": -0.7399,
+          "value_F": "-0,74",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": -0.4084,
+          "value_F": "-0,41",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": -0.4958,
+          "value_F": "-0,50",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": -0.6434,
+          "value_F": "-0,64",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": -0.6117,
+          "value_F": "-0,61",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": -0.6136,
+          "value_F": "-0,61",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value_F": "-",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value_F": "-",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "ev_ebitda",
+      "actual": 9.5531,
+      "avg": 9.179708333333334,
+      "avgDifference": 4.067576584223355,
+      "minValue": 4.4095,
+      "minValueRank": 2024,
+      "maxValue": 16.0425,
+      "maxValueRank": 2013,
+      "actual_F": "9,55",
+      "avg_F": "9,18",
+      "avgDifference_F": "4,07% acima da média",
+      "minValue_F": "4,41",
+      "minValueRank_F": "2024",
+      "maxValue_F": "16,04",
+      "maxValueRank_F": "2013",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 9.5531,
+          "value_F": "9,55",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": 14.9736,
+          "value_F": "14,97",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 4.4095,
+          "value_F": "4,41",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 4.4594,
+          "value_F": "4,46",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 6.9244,
+          "value_F": "6,92",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 6.7354,
+          "value_F": "6,74",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 13.3494,
+          "value_F": "13,35",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 8.3924,
+          "value_F": "8,39",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value_F": "-",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value_F": "-",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value_F": "-",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 7.0211,
+          "value_F": "7,02",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 8.1639,
+          "value_F": "8,16",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 16.0425,
+          "value_F": "16,04",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 10.1318,
+          "value_F": "10,13",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value_F": "-",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value_F": "-",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value_F": "-",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "ev_ebit",
+      "actual": 34.8514,
+      "avg": -7.9572625,
+      "avgDifference": 537.9822834800285,
+      "minValue": -322.7115,
+      "minValueRank": 2025,
+      "maxValue": 34.8514,
+      "maxValueRank": 2026,
+      "actual_F": "34,85",
+      "avg_F": "-7,96",
+      "avgDifference_F": "537,98% acima da média",
+      "minValue_F": "-322,71",
+      "minValueRank_F": "2025",
+      "maxValue_F": "34,85",
+      "maxValueRank_F": "2026",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 34.8514,
+          "value_F": "34,85",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": -322.7115,
+          "value_F": "-322,71",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 20.3427,
+          "value_F": "20,34",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 6.4411,
+          "value_F": "6,44",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 9.641,
+          "value_F": "9,64",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 8.46,
+          "value_F": "8,46",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 16.7734,
+          "value_F": "16,77",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 9.7476,
+          "value_F": "9,75",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 7.5947,
+          "value_F": "7,59",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 8.1812,
+          "value_F": "8,18",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 7.404,
+          "value_F": "7,40",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 9.1605,
+          "value_F": "9,16",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 11.8798,
+          "value_F": "11,88",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 24.4407,
+          "value_F": "24,44",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 16.4196,
+          "value_F": "16,42",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 4.0576,
+          "value_F": "4,06",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value_F": "-",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value_F": "-",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "lpa",
+      "actual": -2.2417,
+      "avg": 1.46576875,
+      "avgDifference": -252.93681216767652,
+      "minValue": -5.0487,
+      "minValueRank": 2024,
+      "maxValue": 6.3992,
+      "maxValueRank": 2011,
+      "actual_F": "-2,24",
+      "avg_F": "1,47",
+      "avgDifference_F": "-252,94% abaixo da média",
+      "minValue_F": "-5,05",
+      "minValueRank_F": "2024",
+      "maxValue_F": "6,40",
+      "maxValueRank_F": "2011",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": -2.2417,
+          "value_F": "-2,24",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": -2.451,
+          "value_F": "-2,45",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": -5.0487,
+          "value_F": "-5,05",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 0.584,
+          "value_F": "0,58",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 0.6275,
+          "value_F": "0,63",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 3.2673,
+          "value_F": "3,27",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 2.1609,
+          "value_F": "2,16",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 6.0802,
+          "value_F": "6,08",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 4.0508,
+          "value_F": "4,05",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 3.2246,
+          "value_F": "3,22",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 2.5443,
+          "value_F": "2,54",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 1.4245,
+          "value_F": "1,42",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 0.7171,
+          "value_F": "0,72",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 0.575,
+          "value_F": "0,58",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 1.5383,
+          "value_F": "1,54",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 6.3992,
+          "value_F": "6,40",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value_F": "-",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value_F": "-",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "vpa",
+      "actual": 1.2526,
+      "avg": 17.18678125,
+      "avgDifference": -92.71184067697376,
+      "minValue": 1.2526,
+      "minValueRank": 2026,
+      "maxValue": 27.5175,
+      "maxValueRank": 2020,
+      "actual_F": "1,25",
+      "avg_F": "17,19",
+      "avgDifference_F": "-92,71% abaixo da média",
+      "minValue_F": "1,25",
+      "minValueRank_F": "2026",
+      "maxValue_F": "27,52",
+      "maxValueRank_F": "2020",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 1.2526,
+          "value_F": "1,25",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": 1.3372,
+          "value_F": "1,34",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 5.8416,
+          "value_F": "5,84",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 11.1817,
+          "value_F": "11,18",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 11.0205,
+          "value_F": "11,02",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 7.8657,
+          "value_F": "7,87",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 27.5175,
+          "value_F": "27,52",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 26.4568,
+          "value_F": "26,46",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 24.3408,
+          "value_F": "24,34",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 23.159,
+          "value_F": "23,16",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 22.0169,
+          "value_F": "22,02",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 21.4969,
+          "value_F": "21,50",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 21.6551,
+          "value_F": "21,66",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 23.9109,
+          "value_F": "23,91",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 23.8979,
+          "value_F": "23,90",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 22.0374,
+          "value_F": "22,04",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value_F": "-",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value_F": "-",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "peg_Ratio",
+      "actual": 0.04930167,
+      "avg": 0.07831378666666666,
+      "avgDifference": -37.04598883738478,
+      "minValue": -1.09922886,
+      "minValueRank": 2013,
+      "maxValue": 1.62768366,
+      "maxValueRank": 2014,
+      "actual_F": "0,05",
+      "avg_F": "0,08",
+      "avgDifference_F": "-37,05% abaixo da média",
+      "minValue_F": "-1,10",
+      "minValueRank_F": "2013",
+      "maxValue_F": "1,63",
+      "maxValueRank_F": "2014",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 0.04930167,
+          "value_F": "0,05",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": -0.68563749,
+          "value_F": "-0,69",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value_F": "-",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value_F": "-",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value_F": "-",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value_F": "-",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value_F": "-",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value_F": "-",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 0.32240114,
+          "value_F": "0,32",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 0.47752158,
+          "value_F": "0,48",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 0.19074169,
+          "value_F": "0,19",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 0.17933604,
+          "value_F": "0,18",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 1.62768366,
+          "value_F": "1,63",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": -1.09922886,
+          "value_F": "-1,10",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": -0.35729535,
+          "value_F": "-0,36",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value_F": "-",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value_F": "-",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value_F": "-",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "dividaliquida_patrimonioliquido",
+      "actual": 9.57,
+      "avg": 2.145,
+      "avgDifference": 346.15384615384613,
+      "minValue": 0.37,
+      "minValueRank": 2012,
+      "maxValue": 9.57,
+      "maxValueRank": 2026,
+      "actual_F": "9,57",
+      "avg_F": "2,15",
+      "avgDifference_F": "346,15% acima da média",
+      "minValue_F": "0,37",
+      "minValueRank_F": "2012",
+      "maxValue_F": "9,57",
+      "maxValueRank_F": "2026",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 9.57,
+          "value_F": "9,57",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": 8.18,
+          "value_F": "8,18",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 5.14,
+          "value_F": "5,14",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 2.27,
+          "value_F": "2,27",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 2.09,
+          "value_F": "2,09",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 2.22,
+          "value_F": "2,22",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 1,
+          "value_F": "1,00",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 0.7,
+          "value_F": "0,70",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 0.73,
+          "value_F": "0,73",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 0.69,
+          "value_F": "0,69",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 0.57,
+          "value_F": "0,57",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 0.75,
+          "value_F": "0,75",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 0.66,
+          "value_F": "0,66",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 0.94,
+          "value_F": "0,94",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 0.37,
+          "value_F": "0,37",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 0.92,
+          "value_F": "0,92",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value": 0.82,
+          "value_F": "0,82",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value": 0.99,
+          "value_F": "0,99",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "dividaliquida_ebitda",
+      "actual": 7.81,
+      "avg": 3.7964285714285713,
+      "avgDifference": 105.71966133584196,
+      "minValue": 1.69,
+      "minValueRank": 2012,
+      "maxValue": 10.07,
+      "maxValueRank": 2025,
+      "actual_F": "7,81",
+      "avg_F": "3,80",
+      "avgDifference_F": "105,72% acima da média",
+      "minValue_F": "1,69",
+      "minValueRank_F": "2012",
+      "maxValue_F": "10,07",
+      "maxValueRank_F": "2025",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 7.81,
+          "value_F": "7,81",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": 10.07,
+          "value_F": "10,07",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 3.47,
+          "value_F": "3,47",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 2.53,
+          "value_F": "2,53",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 3.97,
+          "value_F": "3,97",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 3.01,
+          "value_F": "3,01",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 3.57,
+          "value_F": "3,57",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 1.76,
+          "value_F": "1,76",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value_F": "-",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value_F": "-",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value_F": "-",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 2.75,
+          "value_F": "2,75",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 2.72,
+          "value_F": "2,72",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 5.8,
+          "value_F": "5,80",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 1.69,
+          "value_F": "1,69",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value_F": "-",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value": 1.82,
+          "value_F": "1,82",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value": 2.18,
+          "value_F": "2,18",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "dividaliquida_ebit",
+      "actual": 28.48,
+      "avg": -6.594444444444444,
+      "avgDifference": 531.8786857624262,
+      "minValue": -217.13,
+      "minValueRank": 2025,
+      "maxValue": 28.48,
+      "maxValueRank": 2026,
+      "actual_F": "28,48",
+      "avg_F": "-6,59",
+      "avgDifference_F": "531,88% acima da média",
+      "minValue_F": "-217,13",
+      "minValueRank_F": "2025",
+      "maxValue_F": "28,48",
+      "maxValueRank_F": "2026",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 28.48,
+          "value_F": "28,48",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": -217.13,
+          "value_F": "-217,13",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 16,
+          "value_F": "16,00",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 3.65,
+          "value_F": "3,65",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 5.53,
+          "value_F": "5,53",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 3.77,
+          "value_F": "3,77",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 4.48,
+          "value_F": "4,48",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 2.04,
+          "value_F": "2,04",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 2.64,
+          "value_F": "2,64",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 2.28,
+          "value_F": "2,28",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 1.84,
+          "value_F": "1,84",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 3.59,
+          "value_F": "3,59",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 3.95,
+          "value_F": "3,95",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 8.84,
+          "value_F": "8,84",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 2.74,
+          "value_F": "2,74",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 1.42,
+          "value_F": "1,42",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value": 3.63,
+          "value_F": "3,63",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value": 3.55,
+          "value_F": "3,55",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "patrimonio_ativo",
+      "actual": 0.04,
+      "avg": 0.2544444444444444,
+      "avgDifference": -84.27947598253274,
+      "minValue": 0.04,
+      "minValueRank": 2026,
+      "maxValue": 0.42,
+      "maxValueRank": 2012,
+      "actual_F": "0,04",
+      "avg_F": "0,25",
+      "avgDifference_F": "-84,28% abaixo da média",
+      "minValue_F": "0,04",
+      "minValueRank_F": "2026",
+      "maxValue_F": "0,42",
+      "maxValueRank_F": "2012",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 0.04,
+          "value_F": "0,04",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": 0.04,
+          "value_F": "0,04",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 0.08,
+          "value_F": "0,08",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 0.15,
+          "value_F": "0,15",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 0.15,
+          "value_F": "0,15",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 0.15,
+          "value_F": "0,15",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 0.3,
+          "value_F": "0,30",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 0.32,
+          "value_F": "0,32",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 0.34,
+          "value_F": "0,34",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 0.33,
+          "value_F": "0,33",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 0.33,
+          "value_F": "0,33",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 0.29,
+          "value_F": "0,29",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 0.33,
+          "value_F": "0,33",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 0.29,
+          "value_F": "0,29",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 0.42,
+          "value_F": "0,42",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 0.34,
+          "value_F": "0,34",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value": 0.37,
+          "value_F": "0,37",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value": 0.31,
+          "value_F": "0,31",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "passivo_ativo",
+      "actual": 0.75,
+      "avg": 0.6483333333333333,
+      "avgDifference": 15.681233933161954,
+      "minValue": 0.54,
+      "minValueRank": 2014,
+      "maxValue": 0.77,
+      "maxValueRank": 2025,
+      "actual_F": "0,75",
+      "avg_F": "0,65",
+      "avgDifference_F": "15,68% acima da média",
+      "minValue_F": "0,54",
+      "minValueRank_F": "2014",
+      "maxValue_F": "0,77",
+      "maxValueRank_F": "2025",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 0.75,
+          "value_F": "0,75",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": 0.77,
+          "value_F": "0,77",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 0.72,
+          "value_F": "0,72",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 0.64,
+          "value_F": "0,64",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 0.64,
+          "value_F": "0,64",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 0.7,
+          "value_F": "0,70",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 0.68,
+          "value_F": "0,68",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 0.66,
+          "value_F": "0,66",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 0.62,
+          "value_F": "0,62",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 0.64,
+          "value_F": "0,64",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 0.6,
+          "value_F": "0,60",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 0.59,
+          "value_F": "0,59",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 0.54,
+          "value_F": "0,54",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 0.6,
+          "value_F": "0,60",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 0.57,
+          "value_F": "0,57",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 0.64,
+          "value_F": "0,64",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value": 0.62,
+          "value_F": "0,62",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value": 0.69,
+          "value_F": "0,69",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "liquidezcorrente",
+      "actual": 1.67,
+      "avg": 2.1,
+      "avgDifference": -20.476190476190474,
+      "minValue": 1.15,
+      "minValueRank": 2009,
+      "maxValue": 7.77,
+      "maxValueRank": 2012,
+      "actual_F": "1,67",
+      "avg_F": "2,10",
+      "avgDifference_F": "-20,48% abaixo da média",
+      "minValue_F": "1,15",
+      "minValueRank_F": "2009",
+      "maxValue_F": "7,77",
+      "maxValueRank_F": "2012",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 1.67,
+          "value_F": "1,67",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": 2.58,
+          "value_F": "2,58",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 1.72,
+          "value_F": "1,72",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 1.77,
+          "value_F": "1,77",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 1.62,
+          "value_F": "1,62",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 2.11,
+          "value_F": "2,11",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 1.78,
+          "value_F": "1,78",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 1.84,
+          "value_F": "1,84",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 1.9,
+          "value_F": "1,90",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 1.56,
+          "value_F": "1,56",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 1.96,
+          "value_F": "1,96",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 1.54,
+          "value_F": "1,54",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 1.34,
+          "value_F": "1,34",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 2.49,
+          "value_F": "2,49",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 7.77,
+          "value_F": "7,77",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 1.41,
+          "value_F": "1,41",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value": 1.59,
+          "value_F": "1,59",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value": 1.15,
+          "value_F": "1,15",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "margembruta",
+      "actual": 34.46,
+      "avg": 26.820555555555554,
+      "avgDifference": 28.483542887917643,
+      "minValue": 10.7,
+      "minValueRank": 2011,
+      "maxValue": 39.18,
+      "maxValueRank": 2016,
+      "actual_F": "34,46%",
+      "avg_F": "26,82%",
+      "avgDifference_F": "28,48% acima da média",
+      "minValue_F": "10,70%",
+      "minValueRank_F": "2011",
+      "maxValue_F": "39,18%",
+      "maxValueRank_F": "2016",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 34.46,
+          "value_F": "34,46%",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": 32.6,
+          "value_F": "32,60%",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 31.2,
+          "value_F": "31,20%",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 27.66,
+          "value_F": "27,66%",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 22.29,
+          "value_F": "22,29%",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 23.22,
+          "value_F": "23,22%",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 27.34,
+          "value_F": "27,34%",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 29.29,
+          "value_F": "29,29%",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 25.29,
+          "value_F": "25,29%",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 34.22,
+          "value_F": "34,22%",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 39.18,
+          "value_F": "39,18%",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 29.27,
+          "value_F": "29,27%",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 28.77,
+          "value_F": "28,77%",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 27.71,
+          "value_F": "27,71%",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 29.98,
+          "value_F": "29,98%",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 10.7,
+          "value_F": "10,70%",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value": 16.13,
+          "value_F": "16,13%",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value": 13.46,
+          "value_F": "13,46%",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "margemebitda",
+      "actual": 15.19,
+      "avg": 27.53857142857143,
+      "avgDifference": -44.84100223063755,
+      "minValue": 10.66,
+      "minValueRank": 2025,
+      "maxValue": 47.61,
+      "maxValueRank": 2023,
+      "actual_F": "15,19%",
+      "avg_F": "27,54%",
+      "avgDifference_F": "-44,84% abaixo da média",
+      "minValue_F": "10,66%",
+      "minValueRank_F": "2025",
+      "maxValue_F": "47,61%",
+      "maxValueRank_F": "2023",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 15.19,
+          "value_F": "15,19%",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": 10.66,
+          "value_F": "10,66%",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 36.79,
+          "value_F": "36,79%",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 47.61,
+          "value_F": "47,61%",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 27.66,
+          "value_F": "27,66%",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 43.75,
+          "value_F": "43,75%",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 22.6,
+          "value_F": "22,60%",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 30.83,
+          "value_F": "30,83%",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value_F": "-%",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value_F": "-%",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value_F": "-%",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 28.81,
+          "value_F": "28,81%",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 26.47,
+          "value_F": "26,47%",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 25.67,
+          "value_F": "25,67%",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 43.9,
+          "value_F": "43,90%",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value_F": "-%",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value": 14.79,
+          "value_F": "14,79%",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value": 10.81,
+          "value_F": "10,81%",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "margemebit",
+      "actual": 4.16,
+      "avg": 20.058888888888887,
+      "avgDifference": -79.26106464299562,
+      "minValue": -0.49,
+      "minValueRank": 2025,
+      "maxValue": 37.37,
+      "maxValueRank": 2017,
+      "actual_F": "4,16%",
+      "avg_F": "20,06%",
+      "avgDifference_F": "-79,26% abaixo da média",
+      "minValue_F": "-0,49%",
+      "minValueRank_F": "2025",
+      "maxValue_F": "37,37%",
+      "maxValueRank_F": "2017",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 4.16,
+          "value_F": "4,16%",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": -0.49,
+          "value_F": "-0,49%",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 7.97,
+          "value_F": "7,97%",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 32.96,
+          "value_F": "32,96%",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 19.86,
+          "value_F": "19,86%",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 34.83,
+          "value_F": "34,83%",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 17.98,
+          "value_F": "17,98%",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 26.55,
+          "value_F": "26,55%",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 26.73,
+          "value_F": "26,73%",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 37.37,
+          "value_F": "37,37%",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 37.04,
+          "value_F": "37,04%",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 22.08,
+          "value_F": "22,08%",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 18.19,
+          "value_F": "18,19%",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 16.85,
+          "value_F": "16,85%",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 27.09,
+          "value_F": "27,09%",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 17.84,
+          "value_F": "17,84%",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value": 7.41,
+          "value_F": "7,41%",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value": 6.64,
+          "value_F": "6,64%",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "margemliquida",
+      "actual": -22.18,
+      "avg": 4.668888888888889,
+      "avgDifference": -575.0594954783436,
+      "minValue": -24.05,
+      "minValueRank": 2025,
+      "maxValue": 24.58,
+      "maxValueRank": 2021,
+      "actual_F": "-22,18%",
+      "avg_F": "4,67%",
+      "avgDifference_F": "-575,06% abaixo da média",
+      "minValue_F": "-24,05%",
+      "minValueRank_F": "2025",
+      "maxValue_F": "24,58%",
+      "maxValueRank_F": "2021",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": -22.18,
+          "value_F": "-22,18%",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": -24.05,
+          "value_F": "-24,05%",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": -21.44,
+          "value_F": "-21,44%",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 2.77,
+          "value_F": "2,77%",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 2.99,
+          "value_F": "2,99%",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 24.58,
+          "value_F": "24,58%",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 6.31,
+          "value_F": "6,31%",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 17.89,
+          "value_F": "17,89%",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 16.04,
+          "value_F": "16,04%",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 17.15,
+          "value_F": "17,15%",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 13.74,
+          "value_F": "13,74%",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 6.95,
+          "value_F": "6,95%",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 3.58,
+          "value_F": "3,58%",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 3.82,
+          "value_F": "3,82%",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 13.66,
+          "value_F": "13,66%",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 11.14,
+          "value_F": "11,14%",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value": 4.27,
+          "value_F": "4,27%",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value": 6.82,
+          "value_F": "6,82%",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "roe",
+      "actual": -178.97,
+      "avg": -12.350555555555555,
+      "avgDifference": -1349.0846115784266,
+      "minValue": -183.29,
+      "minValueRank": 2025,
+      "maxValue": 41.54,
+      "maxValueRank": 2021,
+      "actual_F": "-178,97%",
+      "avg_F": "-12,35%",
+      "avgDifference_F": "-1.349,08% abaixo da média",
+      "minValue_F": "-183,29%",
+      "minValueRank_F": "2025",
+      "maxValue_F": "41,54%",
+      "maxValueRank_F": "2021",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": -178.97,
+          "value_F": "-178,97%",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": -183.29,
+          "value_F": "-183,29%",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": -86.43,
+          "value_F": "-86,43%",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 5.22,
+          "value_F": "5,22%",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 5.69,
+          "value_F": "5,69%",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 41.54,
+          "value_F": "41,54%",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 7.85,
+          "value_F": "7,85%",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 22.98,
+          "value_F": "22,98%",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 16.64,
+          "value_F": "16,64%",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 13.92,
+          "value_F": "13,92%",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 11.56,
+          "value_F": "11,56%",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 6.56,
+          "value_F": "6,56%",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 3.31,
+          "value_F": "3,31%",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 2.4,
+          "value_F": "2,40%",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 6.82,
+          "value_F": "6,82%",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 40.35,
+          "value_F": "40,35%",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value": 13.04,
+          "value_F": "13,04%",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value": 28.5,
+          "value_F": "28,50%",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "roa",
+      "actual": -7.02,
+      "avg": 2.4988888888888887,
+      "avgDifference": -380.9248554913295,
+      "minValue": -7.2,
+      "minValueRank": 2025,
+      "maxValue": 13.9,
+      "maxValueRank": 2011,
+      "actual_F": "-7,02%",
+      "avg_F": "2,50%",
+      "avgDifference_F": "-380,92% abaixo da média",
+      "minValue_F": "-7,20%",
+      "minValueRank_F": "2025",
+      "maxValue_F": "13,90%",
+      "maxValueRank_F": "2011",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": -7.02,
+          "value_F": "-7,02%",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": -7.2,
+          "value_F": "-7,20%",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": -6.67,
+          "value_F": "-6,67%",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 0.78,
+          "value_F": "0,78%",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 0.87,
+          "value_F": "0,87%",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 6.26,
+          "value_F": "6,26%",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 2.38,
+          "value_F": "2,38%",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 7.38,
+          "value_F": "7,38%",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 5.74,
+          "value_F": "5,74%",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 4.61,
+          "value_F": "4,61%",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 3.8,
+          "value_F": "3,80%",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 1.91,
+          "value_F": "1,91%",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 1.08,
+          "value_F": "1,08%",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 0.69,
+          "value_F": "0,69%",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 2.83,
+          "value_F": "2,83%",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 13.9,
+          "value_F": "13,90%",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value": 4.84,
+          "value_F": "4,84%",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value": 8.8,
+          "value_F": "8,80%",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "roic",
+      "actual": -1.17,
+      "avg": 7.829444444444444,
+      "avgDifference": -114.94358901582346,
+      "minValue": -3.83,
+      "minValueRank": 2024,
+      "maxValue": 21.87,
+      "maxValueRank": 2011,
+      "actual_F": "-1,17%",
+      "avg_F": "7,83%",
+      "avgDifference_F": "-114,94% abaixo da média",
+      "minValue_F": "-3,83%",
+      "minValueRank_F": "2024",
+      "maxValue_F": "21,87%",
+      "maxValueRank_F": "2011",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": -1.17,
+          "value_F": "-1,17%",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": -2.95,
+          "value_F": "-2,95%",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": -3.83,
+          "value_F": "-3,83%",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 10.84,
+          "value_F": "10,84%",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 7.35,
+          "value_F": "7,35%",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 10.57,
+          "value_F": "10,57%",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 8.04,
+          "value_F": "8,04%",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 11.73,
+          "value_F": "11,73%",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 10.71,
+          "value_F": "10,71%",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 12.06,
+          "value_F": "12,06%",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 13.71,
+          "value_F": "13,71%",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 7.89,
+          "value_F": "7,89%",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 7.39,
+          "value_F": "7,39%",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 3.94,
+          "value_F": "3,94%",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 7.63,
+          "value_F": "7,63%",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 21.87,
+          "value_F": "21,87%",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value": 7.75,
+          "value_F": "7,75%",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value": 7.4,
+          "value_F": "7,40%",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "giro_ativos",
+      "actual": 0.32,
+      "avg": 0.4488888888888889,
+      "avgDifference": -28.712871287128714,
+      "minValue": 0.18,
+      "minValueRank": 2013,
+      "maxValue": 1.29,
+      "maxValueRank": 2009,
+      "actual_F": "0,32",
+      "avg_F": "0,45",
+      "avgDifference_F": "-28,71% abaixo da média",
+      "minValue_F": "0,18",
+      "minValueRank_F": "2013",
+      "maxValue_F": "1,29",
+      "maxValueRank_F": "2009",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 0.32,
+          "value_F": "0,32",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": 0.3,
+          "value_F": "0,30",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 0.31,
+          "value_F": "0,31",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 0.28,
+          "value_F": "0,28",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 0.29,
+          "value_F": "0,29",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 0.25,
+          "value_F": "0,25",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 0.38,
+          "value_F": "0,38",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 0.41,
+          "value_F": "0,41",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 0.36,
+          "value_F": "0,36",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 0.27,
+          "value_F": "0,27",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": 0.28,
+          "value_F": "0,28",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": 0.27,
+          "value_F": "0,27",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": 0.3,
+          "value_F": "0,30",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value": 0.18,
+          "value_F": "0,18",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value": 0.21,
+          "value_F": "0,21",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value": 1.25,
+          "value_F": "1,25",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value": 1.13,
+          "value_F": "1,13",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value": 1.29,
+          "value_F": "1,29",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "receitas_cagr5",
+      "actual": 24.51,
+      "avg": 12.936153846153847,
+      "avgDifference": 89.46898971279063,
+      "minValue": -20.26,
+      "minValueRank": 2016,
+      "maxValue": 38.66,
+      "maxValueRank": 2022,
+      "actual_F": "24,51%",
+      "avg_F": "12,94%",
+      "avgDifference_F": "89,47% acima da média",
+      "minValue_F": "-20,26%",
+      "minValueRank_F": "2016",
+      "maxValue_F": "38,66%",
+      "maxValueRank_F": "2022",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value": 24.51,
+          "value_F": "24,51%",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value": 24.51,
+          "value_F": "24,51%",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value": 26.51,
+          "value_F": "26,51%",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": 30.82,
+          "value_F": "30,82%",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": 38.66,
+          "value_F": "38,66%",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 26.99,
+          "value_F": "26,99%",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 10.1,
+          "value_F": "10,10%",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 10.73,
+          "value_F": "10,73%",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 10.94,
+          "value_F": "10,94%",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 10.84,
+          "value_F": "10,84%",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": -20.26,
+          "value_F": "-20,26%",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": -14.3,
+          "value_F": "-14,30%",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": -11.88,
+          "value_F": "-11,88%",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value_F": "-%",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value_F": "-%",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value_F": "-%",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value_F": "-%",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value_F": "-%",
+          "rankN": 2009000
+        }
+      ]
+    },
+    {
+      "key": "lucros_cagr5",
+      "actual": 0,
+      "avg": 11.215,
+      "avgDifference": 0,
+      "minValue": -22.51,
+      "minValueRank": 2014,
+      "maxValue": 52.71,
+      "maxValueRank": 2019,
+      "actual_F": "0,00%",
+      "avg_F": "11,22%",
+      "avgDifference_F": "-",
+      "minValue_F": "-22,51%",
+      "minValueRank_F": "2014",
+      "maxValue_F": "52,71%",
+      "maxValueRank_F": "2019",
+      "ranks": [
+        {
+          "timeType": 1,
+          "rank": 2026,
+          "rank_F": "ATUAL",
+          "value_F": "-%",
+          "rankN": 2026001
+        },
+        {
+          "timeType": 0,
+          "rank": 2025,
+          "rank_F": "2025",
+          "value_F": "-%",
+          "rankN": 2025000
+        },
+        {
+          "timeType": 0,
+          "rank": 2024,
+          "rank_F": "2024",
+          "value_F": "-%",
+          "rankN": 2024000
+        },
+        {
+          "timeType": 0,
+          "rank": 2023,
+          "rank_F": "2023",
+          "value": -7.91,
+          "value_F": "-7,91%",
+          "rankN": 2023000
+        },
+        {
+          "timeType": 0,
+          "rank": 2022,
+          "rank_F": "2022",
+          "value": -2.21,
+          "value_F": "-2,21%",
+          "rankN": 2022000
+        },
+        {
+          "timeType": 0,
+          "rank": 2021,
+          "rank_F": "2021",
+          "value": 42.66,
+          "value_F": "42,66%",
+          "rankN": 2021000
+        },
+        {
+          "timeType": 0,
+          "rank": 2020,
+          "rank_F": "2020",
+          "value": 7.99,
+          "value_F": "7,99%",
+          "rankN": 2020000
+        },
+        {
+          "timeType": 0,
+          "rank": 2019,
+          "rank_F": "2019",
+          "value": 52.71,
+          "value_F": "52,71%",
+          "rankN": 2019000
+        },
+        {
+          "timeType": 0,
+          "rank": 2018,
+          "rank_F": "2018",
+          "value": 47.82,
+          "value_F": "47,82%",
+          "rankN": 2018000
+        },
+        {
+          "timeType": 0,
+          "rank": 2017,
+          "rank_F": "2017",
+          "value": 15.99,
+          "value_F": "15,99%",
+          "rankN": 2017000
+        },
+        {
+          "timeType": 0,
+          "rank": 2016,
+          "rank_F": "2016",
+          "value": -16.84,
+          "value_F": "-16,84%",
+          "rankN": 2016000
+        },
+        {
+          "timeType": 0,
+          "rank": 2015,
+          "rank_F": "2015",
+          "value": -5.55,
+          "value_F": "-5,55%",
+          "rankN": 2015000
+        },
+        {
+          "timeType": 0,
+          "rank": 2014,
+          "rank_F": "2014",
+          "value": -22.51,
+          "value_F": "-22,51%",
+          "rankN": 2014000
+        },
+        {
+          "timeType": 0,
+          "rank": 2013,
+          "rank_F": "2013",
+          "value_F": "-%",
+          "rankN": 2013000
+        },
+        {
+          "timeType": 0,
+          "rank": 2012,
+          "rank_F": "2012",
+          "value_F": "-%",
+          "rankN": 2012000
+        },
+        {
+          "timeType": 0,
+          "rank": 2011,
+          "rank_F": "2011",
+          "value_F": "-%",
+          "rankN": 2011000
+        },
+        {
+          "timeType": 0,
+          "rank": 2010,
+          "rank_F": "2010",
+          "value_F": "-%",
+          "rankN": 2010000
+        },
+        {
+          "timeType": 0,
+          "rank": 2009,
+          "rank_F": "2009",
+          "value_F": "-%",
+          "rankN": 2009000
+        }
+      ]
+    }
+  ]
+}

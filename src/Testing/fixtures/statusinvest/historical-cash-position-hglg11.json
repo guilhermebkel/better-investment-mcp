@@ -1,0 +1,573 @@
+{
+  "listMonth": [
+    {
+      "year": 2021,
+      "month": 11,
+      "totalnecessidadeliquidez": 448901452.65,
+      "disponibilidades": 5794999.76,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 443106452.89
+    },
+    {
+      "year": 2021,
+      "month": 12,
+      "totalnecessidadeliquidez": 328605867.3,
+      "disponibilidades": 21773.65,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 328584093.65
+    },
+    {
+      "year": 2022,
+      "month": 1,
+      "totalnecessidadeliquidez": 253252981.22,
+      "disponibilidades": 703184.53,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 252549796.69
+    },
+    {
+      "year": 2022,
+      "month": 2,
+      "totalnecessidadeliquidez": 229847963.26,
+      "disponibilidades": 2244320.36,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 227603642.9
+    },
+    {
+      "year": 2022,
+      "month": 3,
+      "totalnecessidadeliquidez": 220872026.61,
+      "disponibilidades": 924145.2,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 219947881.41
+    },
+    {
+      "year": 2022,
+      "month": 4,
+      "totalnecessidadeliquidez": 206988190.18,
+      "disponibilidades": 823407.7,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 206164782.48
+    },
+    {
+      "year": 2022,
+      "month": 5,
+      "totalnecessidadeliquidez": 554191137.03,
+      "disponibilidades": 2073597.17,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 552117539.86
+    },
+    {
+      "year": 2022,
+      "month": 6,
+      "totalnecessidadeliquidez": 457312654.65,
+      "disponibilidades": 1582444.96,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 455730209.69
+    },
+    {
+      "year": 2022,
+      "month": 7,
+      "totalnecessidadeliquidez": 338357534.2,
+      "disponibilidades": 940505.65,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 337417028.55
+    },
+    {
+      "year": 2022,
+      "month": 8,
+      "totalnecessidadeliquidez": 310963955.49,
+      "disponibilidades": 823400.84,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 310140554.65
+    },
+    {
+      "year": 2022,
+      "month": 9,
+      "totalnecessidadeliquidez": 410030918.69,
+      "disponibilidades": 1567848.7,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 408463069.99
+    },
+    {
+      "year": 2022,
+      "month": 10,
+      "totalnecessidadeliquidez": 237076939.87,
+      "disponibilidades": 963984.03,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 236112955.84
+    },
+    {
+      "year": 2022,
+      "month": 11,
+      "totalnecessidadeliquidez": 170176508.89,
+      "disponibilidades": 883067.99,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 169293440.9
+    },
+    {
+      "year": 2022,
+      "month": 12,
+      "totalnecessidadeliquidez": 194103575.71,
+      "disponibilidades": 880638.58,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 193222937.13
+    },
+    {
+      "year": 2023,
+      "month": 1,
+      "totalnecessidadeliquidez": 123878088.16,
+      "disponibilidades": 1303902.5,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 122574185.66
+    },
+    {
+      "year": 2023,
+      "month": 2,
+      "totalnecessidadeliquidez": 121455013.7,
+      "disponibilidades": 929207.48,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 120525806.22
+    },
+    {
+      "year": 2023,
+      "month": 3,
+      "totalnecessidadeliquidez": 132747508.09,
+      "disponibilidades": 880638.48,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 131866869.61
+    },
+    {
+      "year": 2023,
+      "month": 4,
+      "totalnecessidadeliquidez": 127914585.39,
+      "disponibilidades": 880633.68,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 127033951.71
+    },
+    {
+      "year": 2023,
+      "month": 5,
+      "totalnecessidadeliquidez": 122775172.08,
+      "disponibilidades": 1007917.46,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 121767254.62
+    },
+    {
+      "year": 2023,
+      "month": 6,
+      "totalnecessidadeliquidez": 1287212623.18,
+      "disponibilidades": 1005143.18,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 1286207480
+    },
+    {
+      "year": 2023,
+      "month": 7,
+      "totalnecessidadeliquidez": 1122926242.5,
+      "disponibilidades": 1188404.45,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 1121737838.05
+    },
+    {
+      "year": 2023,
+      "month": 8,
+      "totalnecessidadeliquidez": 220115386.39,
+      "disponibilidades": 2670771.31,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 217444615.08
+    },
+    {
+      "year": 2023,
+      "month": 9,
+      "totalnecessidadeliquidez": 238824219.84,
+      "disponibilidades": 1436065.87,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 237388153.97
+    },
+    {
+      "year": 2023,
+      "month": 10,
+      "totalnecessidadeliquidez": 196196414.31,
+      "disponibilidades": 1125151.44,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 195071262.87
+    },
+    {
+      "year": 2023,
+      "month": 11,
+      "totalnecessidadeliquidez": 172628443.64,
+      "disponibilidades": 961195.14,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 171667248.5
+    },
+    {
+      "year": 2023,
+      "month": 12,
+      "totalnecessidadeliquidez": 164879709.28,
+      "disponibilidades": 2541534.15,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 162338175.13
+    },
+    {
+      "year": 2024,
+      "month": 1,
+      "totalnecessidadeliquidez": 136241341.06,
+      "disponibilidades": 983818.86,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 135257522.2
+    },
+    {
+      "year": 2024,
+      "month": 2,
+      "totalnecessidadeliquidez": 89748517.54,
+      "disponibilidades": 1112941.48,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 88635576.06
+    },
+    {
+      "year": 2024,
+      "month": 3,
+      "totalnecessidadeliquidez": 141161708.41,
+      "disponibilidades": 44997.55,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 141116710.86
+    },
+    {
+      "year": 2024,
+      "month": 4,
+      "totalnecessidadeliquidez": 80945057,
+      "disponibilidades": 1140872.8,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 79804184.2
+    },
+    {
+      "year": 2024,
+      "month": 5,
+      "totalnecessidadeliquidez": 176609129.78,
+      "disponibilidades": 39906870.58,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 136702259.2
+    },
+    {
+      "year": 2024,
+      "month": 6,
+      "totalnecessidadeliquidez": 168427715.34,
+      "disponibilidades": 946912.37,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 167480802.97
+    },
+    {
+      "year": 2024,
+      "month": 7,
+      "totalnecessidadeliquidez": 124036093.42,
+      "disponibilidades": 5000,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 124031093.42
+    },
+    {
+      "year": 2024,
+      "month": 8,
+      "totalnecessidadeliquidez": 53606387,
+      "disponibilidades": 5000,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 53601387
+    },
+    {
+      "year": 2024,
+      "month": 9,
+      "totalnecessidadeliquidez": 65586097.16,
+      "disponibilidades": 5000,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 65581097.16
+    },
+    {
+      "year": 2024,
+      "month": 10,
+      "totalnecessidadeliquidez": 95729181.51,
+      "disponibilidades": 5000,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 95724181.51
+    },
+    {
+      "year": 2024,
+      "month": 11,
+      "totalnecessidadeliquidez": 104510409.76,
+      "disponibilidades": 5000,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 104505409.76
+    },
+    {
+      "year": 2024,
+      "month": 12,
+      "totalnecessidadeliquidez": 102492727.22,
+      "disponibilidades": 1159795.1,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 101332932.12
+    },
+    {
+      "year": 2025,
+      "month": 1,
+      "totalnecessidadeliquidez": 68075252.69,
+      "disponibilidades": 5000,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 68070252.69
+    },
+    {
+      "year": 2025,
+      "month": 2,
+      "totalnecessidadeliquidez": 61282733.95,
+      "disponibilidades": 5000,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 61277733.95
+    },
+    {
+      "year": 2025,
+      "month": 3,
+      "totalnecessidadeliquidez": 48861619.02,
+      "disponibilidades": 5000.17,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 48856618.85
+    },
+    {
+      "year": 2025,
+      "month": 4,
+      "totalnecessidadeliquidez": 17043776.47,
+      "disponibilidades": 5000.35,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 17038776.12
+    },
+    {
+      "year": 2025,
+      "month": 5,
+      "totalnecessidadeliquidez": 53576711.79,
+      "disponibilidades": 5000.01,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 53571711.78
+    },
+    {
+      "year": 2025,
+      "month": 6,
+      "totalnecessidadeliquidez": 50314941.36,
+      "disponibilidades": 5000.22,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 50309941.14
+    },
+    {
+      "year": 2025,
+      "month": 7,
+      "totalnecessidadeliquidez": 55030228.33,
+      "disponibilidades": 5000.89,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 55025227.44
+    },
+    {
+      "year": 2025,
+      "month": 8,
+      "totalnecessidadeliquidez": 57590992.7,
+      "disponibilidades": 5000.28,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 57585992.42
+    },
+    {
+      "year": 2025,
+      "month": 9,
+      "totalnecessidadeliquidez": 45690395.5,
+      "disponibilidades": 5000.57,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 45685394.93
+    },
+    {
+      "year": 2025,
+      "month": 10,
+      "totalnecessidadeliquidez": 44280341.38,
+      "disponibilidades": 5000.87,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 44275340.51
+    },
+    {
+      "year": 2025,
+      "month": 11,
+      "totalnecessidadeliquidez": 65472366,
+      "disponibilidades": 5000.21,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 65467365.79
+    },
+    {
+      "year": 2025,
+      "month": 12,
+      "totalnecessidadeliquidez": 83281279.9,
+      "disponibilidades": 5000.46,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 83276279.44
+    },
+    {
+      "year": 2026,
+      "month": 1,
+      "totalnecessidadeliquidez": 56926238.42,
+      "disponibilidades": 5000.37,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 56921238.05
+    },
+    {
+      "year": 2026,
+      "month": 2,
+      "totalnecessidadeliquidez": 58299409.57,
+      "disponibilidades": 0,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 58299409.57
+    },
+    {
+      "year": 2026,
+      "month": 3,
+      "totalnecessidadeliquidez": 39534321.7,
+      "disponibilidades": 0,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 39534321.7
+    },
+    {
+      "year": 2026,
+      "month": 4,
+      "totalnecessidadeliquidez": 88557901.2,
+      "disponibilidades": 0.94,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 88557900.26
+    },
+    {
+      "year": 2026,
+      "month": 5,
+      "totalnecessidadeliquidez": 48396863.44,
+      "disponibilidades": 100.42,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 48396763.02
+    },
+    {
+      "year": 2026,
+      "month": 6,
+      "totalnecessidadeliquidez": 65663599.86,
+      "disponibilidades": 500.35,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 65663099.51
+    },
+    {
+      "year": 2026,
+      "month": 7,
+      "totalnecessidadeliquidez": 110988144.96,
+      "disponibilidades": 184015.13,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 110804129.83
+    }
+  ],
+  "listYear": [
+    {
+      "year": 2021,
+      "month": 0,
+      "totalnecessidadeliquidez": 328605867.3,
+      "disponibilidades": 21773.65,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 328584093.65
+    },
+    {
+      "year": 2022,
+      "month": 0,
+      "totalnecessidadeliquidez": 194103575.71,
+      "disponibilidades": 880638.58,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 193222937.13
+    },
+    {
+      "year": 2023,
+      "month": 0,
+      "totalnecessidadeliquidez": 164879709.28,
+      "disponibilidades": 2541534.15,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 162338175.13
+    },
+    {
+      "year": 2024,
+      "month": 0,
+      "totalnecessidadeliquidez": 102492727.22,
+      "disponibilidades": 1159795.1,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 101332932.12
+    },
+    {
+      "year": 2025,
+      "month": 0,
+      "totalnecessidadeliquidez": 83281279.9,
+      "disponibilidades": 5000.46,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 83276279.44
+    },
+    {
+      "year": 2026,
+      "month": 0,
+      "totalnecessidadeliquidez": 110988144.96,
+      "disponibilidades": 184015.13,
+      "titulospublicos": 0,
+      "titulosprivados": 0,
+      "fundosrendafixa": 110804129.83
+    }
+  ]
+}
