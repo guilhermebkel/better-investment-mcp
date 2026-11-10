@@ -9,7 +9,7 @@ A document is loaded only when a query asks for `asset_filing_chunks` with a `fi
 1. The filing list of the asset is loaded first (`filings`, from CVM IPE; see `data-map.md`).
 2. The filings that match the `filing_id` or the `document_type` are picked.
 3. A filing that was downloaded within its expiry (`INVESTMENT_MCP_CACHE_TTL_SECONDS`) is not downloaded again; it is reported `fresh`.
-4. Otherwise the document is downloaded from `www.rad.cvm.gov.br` with a size limit of 20 MiB and a timeout of 60 seconds. A download that is too large, times out, or is not a PDF stores nothing and reports the error.
+4. Otherwise the document is downloaded from `www.rad.cvm.gov.br` with a size limit of 100 MiB and a timeout of 60 seconds. A download that is too large, times out, or is not a PDF stores nothing and reports the error.
 5. The SHA-256 of the bytes is compared with `filings.file_hash`. If it is the same, the stored chunks are kept. If not, the chunks of the filing are replaced, and the hash is written, in one transaction.
 6. The full-text index is rebuilt once after the chunks change.
 
@@ -22,7 +22,7 @@ A document is loaded only when a query asks for `asset_filing_chunks` with a `fi
 - The format is read from the bytes, not from the content type. CVM sends PDFs with `text/html`.
 - A zip that holds PDF entries (the periodic report, ITR) is read as its PDFs, page by page; with one PDF the chunks have no section, with several each section is the file name.
 - A CVM reference form (FRE) is a zip with one XML. Its items are PDFs inside the XML, read the same way (ADR 0024): each chunk's `section` is the form section and the item number, for example `FatoresRisco 4.1`, and its `page` is the page of that item's PDF. A blank slot of the form is skipped. The XML is read as cp1252, although it declares UTF-8.
-- A document is read from the link the filing names, on any http or https host; the size limit (20 MiB) and the timeout (60 seconds) still apply. The server does not check the host of a document link.
+- A document is read from the link the filing names, on any http or https host; the size limit (100 MiB) and the timeout (60 seconds) still apply. The server does not check the host of a document link.
 - For CVM, only a PDF or a form zip is stored. The CVM site sometimes answers 200 with an HTML error page; that page is refused (`CvmDocumentAdapter`).
 - Some CVM documents cannot be read. The load entry names the filing (`filing <filing_id>: ...`), writes no chunk for it, and leaves the other filings of the query loaded. Downloads from `www.rad.cvm.gov.br` have been seen to be cut off before their end; the cause is not known (`docs/adr/0025-cvm-rad-download-reproduction.md`). Coverage of sustainability and other CVM documents is therefore partial.
 

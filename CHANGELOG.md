@@ -4,7 +4,15 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ## [Unreleased]
 
+### Fixed
+
+- A load in which the provider stores no row and names the items it could not read now fails: the entry says `no row was stored` with the items, nothing is written (the rows stored before are kept), and the run is not counted as fresh. Before, fundamentals with every indicator refused showed `fresh` with 0 rows for a day.
+- `search_chunks` before any document is loaded says how to load one (a query on `asset_filing_chunks` with the `asset_id` and `document_type`), then search again.
+
 ### Changed
+
+- The document size limit is 100 MiB (was 20 MiB) for the CVM and FNET documents.
+
 
 - A load no longer stops for one bad item. A row outside the requested period is skipped and the rows inside it are stored; a StatusInvest value that is not a number skips only that indicator and year. The load entry names each skipped item in `itemErrors`, and the status stays `loaded`.
 - The document download reads the link a filing names on any http or https host, with the size limit and the timeout. Before, only the CVM and FNET hosts were read. The server now fetches whatever address the filing data contains.

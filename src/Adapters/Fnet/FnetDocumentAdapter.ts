@@ -3,7 +3,7 @@ import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 
 const BYTES_PER_MIB = 1_048_576;
 const PDF_SIGNATURE = "%PDF";
-const MAX_DOCUMENT_MIB = 20;
+const MAX_DOCUMENT_MIB = 100;
 const READABLE_PROTOCOLS: readonly ("http:" | "https:")[] = ["https:", "http:"];
 
 export class FnetDocumentAdapter implements DocumentProvider {

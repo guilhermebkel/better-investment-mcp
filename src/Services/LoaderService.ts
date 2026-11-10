@@ -78,7 +78,7 @@ export class LoaderService implements LoaderPort {
     }
     const counted = await this.store.writer.readRows("SELECT CAST(COUNT(*) AS INTEGER) AS total FROM asset_filing_chunks");
     if (Number(counted[0]?.total ?? 0) === 0) {
-      return "no document is loaded to search yet; a query that loads a document (asset_filing_chunks) stores its text";
+      return "no document is loaded to search yet. Load one first with a query on asset_filing_chunks that names its asset_id and document_type (for example LIMIT 1), then search again.";
     }
     return this.enqueue(() => this.buildIndexOrReport());
   }
@@ -162,6 +162,10 @@ export class LoaderService implements LoaderPort {
     };
   }
 
+  private static readRowCount(result: ProviderResult): number {
+    return Object.values(result.tables).reduce((total, rows) => total + rows.length, 0);
+  }
+
   private resolveWindow(requirement: Requirement): PeriodWindow | undefined {
     if (PeriodService.TABLE_TO_PERIOD_COLUMN[requirement.table] === undefined) {
       return undefined;
@@ -197,6 +201,19 @@ export class LoaderService implements LoaderPort {
         source: fetched.vendor,
         isFallback: fetched.isFallback,
         errorMessage: fetched.errorMessage,
+      };
+    }
+    const providerItemErrors = fetched.result.itemErrors ?? [];
+    if (providerItemErrors.length > 0 && LoaderService.readRowCount(fetched.result) === 0) {
+      // Why: a provider that stores nothing and names the items it could not read fails the load. Nothing is written, so the rows stored before are kept, and the run is not counted as fresh, so the next query tries again.
+      const errorMessage = `no row was stored: ${providerItemErrors.join("; ")}`;
+      await this.store.cache.finishRun(runId, { rowsRead: 0, errorMessage });
+      return {
+        rowsWritten: 0,
+        source: fetched.vendor,
+        isFallback: fetched.isFallback,
+        itemErrors: providerItemErrors,
+        errorMessage,
       };
     }
     try {
