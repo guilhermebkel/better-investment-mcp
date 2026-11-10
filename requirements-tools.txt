@@ -1,4 +1,4 @@
 # Python tools the server runs (yfinance quotes, OCRmyPDF and PyMuPDF for PDF text). `pnpm ensure-deps` installs them into .venv; the Dockerfile installs the same pins.
 yfinance==1.8.0
 ocrmypdf==17.14.0
-pymupdf==2.1
+pymupdf==1.28.2
