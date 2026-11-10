@@ -12,7 +12,7 @@ A release publishes the npm package, the Docker image and a GitHub release. The 
 
 1. Merge what the release should ship into `main`.
 2. In Actions, run **Release** on `main` and choose `patch`, `minor` or `major` (`none` releases the version in `package.json` as is, for the first release).
-3. The workflow bumps `package.json`, sets the version and the date on the landing page (`scripts/site-version.mjs`), runs `pnpm check`, commits `package.json` and `site/` as `release: vX.Y.Z [skip ci]`, tags the commit and pushes. Then it publishes the npm package with provenance, creates the GitHub release with generated notes, and starts `pages.yml` so the landing page shows the new version. The `image` job pushes `ghcr.io/guilhermebkel/better-investment-mcp` for `linux/amd64` and `linux/arm64`.
+3. The workflow bumps `package.json`, sets the version and the date on the landing page (`scripts/site-version.mjs`), runs `pnpm check`, commits `package.json` and `site/` as `release: vX.Y.Z [skip ci]`, tags the commit and pushes. Then it publishes the npm package with provenance, creates the GitHub release with generated notes, and starts `pages.yml` so the landing page shows the new version. The `image` job pushes `ghcr.io/guilhermebkel/better-investment-mcp` for `linux/amd64` only. An arm64 image is not built: PyMuPDF has no musllinux arm64 wheel, so the arm64 build would compile it under emulation, and a failure would come after npm is published.
 4. The workflow publishes nothing when `pnpm check` fails. If a step fails after the tag, run it again with `none`: it resumes and skips what is already done.
 
 ## The landing page
