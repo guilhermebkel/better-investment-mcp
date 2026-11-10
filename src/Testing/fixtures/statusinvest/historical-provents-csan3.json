@@ -1,0 +1,411 @@
+{
+  "earningsThisYear": "0,0000",
+  "earningsLastYear": "0,0000",
+  "rendiment": "0,00",
+  "rendimentIsUp": true,
+  "provisionedThisYear": "0,0000",
+  "rendimentWithProvisioned": "0,00",
+  "rendimentWithProvisionedIsUp": true,
+  "helpers": {
+    "earningsThisYearHelper": "Esse indicador foi calculado com base nos dividendos recebidos entre 01/01/2026 e 10/11/2026",
+    "earningsLastYearHelper": "Esse indicador foi calculado com base nos dividendos recebidos entre 01/01/2025 e 10/11/2025",
+    "earningsProvisionedHelper": "Esse indicador foi calculado com base nos dividendos declarados, mas que possuem a data de pagamento superior a 10/11/2026, ou ainda não possuem uma data de pagamento definida.",
+    "earningsMainTextHelper": "O último provento pago do CSAN3 foi um dividendo de R$0,4515 por papel no dia 28/06/24."
+  },
+  "assetEarningsModels": [
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "05/06/2024",
+      "pd": "28/06/2024",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.45147654,
+      "sv": "0,45147654",
+      "sov": "-",
+      "adj": false
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "18/05/2023",
+      "pd": "31/05/2023",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.42857979,
+      "sv": "0,42857979",
+      "sov": "-",
+      "adj": false
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "05/05/2022",
+      "pd": "20/05/2022",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.42811085,
+      "sv": "0,42811085",
+      "sov": "-",
+      "adj": false
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "14/12/2021",
+      "pd": "28/12/2021",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.37461935,
+      "sv": "0,37461935",
+      "sov": "-",
+      "adj": false
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "05/05/2021",
+      "pd": "20/05/2021",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.2576481975,
+      "ov": 1.03059279,
+      "sv": "0,25764820",
+      "sov": "1,03059279",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "03/06/2020",
+      "pd": "15/06/2020",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.3744381625,
+      "ov": 1.49775265,
+      "sv": "0,37443816",
+      "sov": "1,49775265",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "02/05/2019",
+      "pd": "23/05/2019",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.24995,
+      "ov": 0.9998,
+      "sv": "0,24995000",
+      "sov": "0,99980000",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "02/05/2018",
+      "pd": "16/05/2018",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.27715,
+      "ov": 1.1086,
+      "sv": "0,27715000",
+      "sov": "1,10860000",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "01/05/2017",
+      "pd": "11/05/2017",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.232914602,
+      "ov": 0.931658408,
+      "sv": "0,23291460",
+      "sov": "0,93165841",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "28/04/2017",
+      "pd": "11/05/2017",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.232925,
+      "ov": 0.9317,
+      "sv": "0,23292500",
+      "sov": "0,93170000",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "12/12/2016",
+      "pd": "23/12/2016",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.18415,
+      "ov": 0.7366,
+      "sv": "0,18415000",
+      "sov": "0,73660000",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "13/05/2016",
+      "pd": "20/05/2016",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.1231961575,
+      "ov": 0.49278463,
+      "sv": "0,12319616",
+      "sov": "0,49278463",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "13/05/2016",
+      "pd": "20/05/2016",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.055438271,
+      "ov": 0.221753084,
+      "sv": "0,05543827",
+      "sov": "0,22175308",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "18/02/2016",
+      "pd": "29/02/2016",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.17555,
+      "ov": 0.7022,
+      "sv": "0,17555000",
+      "sov": "0,70220000",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "11/09/2015",
+      "pd": "18/09/2015",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.0924,
+      "ov": 0.3696,
+      "sv": "0,09240000",
+      "sov": "0,36960000",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "01/05/2015",
+      "pd": "27/05/2015",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.0769975985,
+      "ov": 0.307990394,
+      "sv": "0,07699760",
+      "sov": "0,30799039",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "30/04/2015",
+      "pd": "27/05/2015",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.077,
+      "ov": 0.308,
+      "sv": "0,07700000",
+      "sov": "0,30800000",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "14/10/2014",
+      "pd": "31/10/2014",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.0924,
+      "ov": 0.3696,
+      "sv": "0,09240000",
+      "sov": "0,36960000",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "01/05/2014",
+      "pd": "20/05/2014",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.09281286525,
+      "ov": 0.371251461,
+      "sv": "0,09281287",
+      "sov": "0,37125146",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "30/04/2014",
+      "pd": "20/05/2014",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.092775,
+      "ov": 0.3711,
+      "sv": "0,09277500",
+      "sov": "0,37110000",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "31/07/2013",
+      "pd": "13/08/2013",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.18517132525,
+      "ov": 0.740685301,
+      "sv": "0,18517133",
+      "sov": "0,74068530",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "31/07/2012",
+      "pd": "28/08/2012",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.1556955135,
+      "ov": 0.622782054,
+      "sv": "0,15569551",
+      "sov": "0,62278205",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "29/07/2011",
+      "pd": "31/08/2011",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.12306789125,
+      "ov": 0.492271565,
+      "sv": "0,12306789",
+      "sov": "0,49227157",
+      "adj": true
+    },
+    {
+      "y": 0,
+      "m": 0,
+      "d": 0,
+      "ed": "30/07/2010",
+      "pd": "30/08/2010",
+      "et": "Dividendo",
+      "etd": "Dividendo",
+      "v": 0.12285,
+      "ov": 0.4914,
+      "sv": "0,12285000",
+      "sov": "0,49140000",
+      "adj": true
+    }
+  ],
+  "assetEarningsYearlyModels": [
+    {
+      "rank": 2010,
+      "value": 0.12285
+    },
+    {
+      "rank": 2011,
+      "value": 0.12306789
+    },
+    {
+      "rank": 2012,
+      "value": 0.15569551
+    },
+    {
+      "rank": 2013,
+      "value": 0.18517133
+    },
+    {
+      "rank": 2014,
+      "value": 0.27798787
+    },
+    {
+      "rank": 2015,
+      "value": 0.2463976
+    },
+    {
+      "rank": 2016,
+      "value": 0.53833443
+    },
+    {
+      "rank": 2017,
+      "value": 0.4658396
+    },
+    {
+      "rank": 2018,
+      "value": 0.27715
+    },
+    {
+      "rank": 2019,
+      "value": 0.24995
+    },
+    {
+      "rank": 2020,
+      "value": 0.37443816
+    },
+    {
+      "rank": 2021,
+      "value": 0.63226755
+    },
+    {
+      "rank": 2022,
+      "value": 0.42811085
+    },
+    {
+      "rank": 2023,
+      "value": 0.42857979
+    },
+    {
+      "rank": 2024,
+      "value": 0.45147654
+    }
+  ]
+}

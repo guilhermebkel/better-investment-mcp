@@ -1,0 +1,636 @@
+{
+  "listMonth": [
+    {
+      "year": 2021,
+      "month": 11,
+      "rendimentosdistribuir": 23444970.3,
+      "taxaadministracao": 1618763.87,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 179348616.11,
+      "outrasdespesas": 119792497.66,
+      "totaldespesas": 324204847.94
+    },
+    {
+      "year": 2021,
+      "month": 12,
+      "rendimentosdistribuir": 37298688.75,
+      "taxaadministracao": 1919897.04,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 174821129.4,
+      "outrasdespesas": 119537274.04,
+      "totaldespesas": 333576989.23
+    },
+    {
+      "year": 2022,
+      "month": 1,
+      "rendimentosdistribuir": 23444970.3,
+      "taxaadministracao": 1814223.09,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 169288379.61,
+      "outrasdespesas": 134362425.86,
+      "totaldespesas": 328909998.86
+    },
+    {
+      "year": 2022,
+      "month": 2,
+      "rendimentosdistribuir": 23444970.3,
+      "taxaadministracao": 1614541.79,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 169417651.34,
+      "outrasdespesas": 279212069.36,
+      "totaldespesas": 314043830.15
+    },
+    {
+      "year": 2022,
+      "month": 3,
+      "rendimentosdistribuir": 23444970.3,
+      "taxaadministracao": 1812096.82,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 7048624.33,
+      "outrasdespesas": 178203045.43,
+      "totaldespesas": 210508736.88
+    },
+    {
+      "year": 2022,
+      "month": 4,
+      "rendimentosdistribuir": 23444970.3,
+      "taxaadministracao": 1583480.01,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 7048624.33,
+      "outrasdespesas": 178062759.22,
+      "totaldespesas": 210139833.86
+    },
+    {
+      "year": 2022,
+      "month": 5,
+      "rendimentosdistribuir": 24653342.21,
+      "taxaadministracao": 1850983.24,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 7048624.33,
+      "outrasdespesas": 173911960.93,
+      "totaldespesas": 207464910.71
+    },
+    {
+      "year": 2022,
+      "month": 6,
+      "rendimentosdistribuir": 77407243.5,
+      "taxaadministracao": 1904408.35,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 7048624.33,
+      "outrasdespesas": 168305398.08,
+      "totaldespesas": 254665674.26
+    },
+    {
+      "year": 2022,
+      "month": 7,
+      "rendimentosdistribuir": 25802342.5,
+      "taxaadministracao": 1925390.9,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 7048624.33,
+      "outrasdespesas": 163063138.39,
+      "totaldespesas": 197839496.12
+    },
+    {
+      "year": 2022,
+      "month": 8,
+      "rendimentosdistribuir": 25802342.5,
+      "taxaadministracao": 2177354.69,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 7048624.33,
+      "outrasdespesas": 162488031.21,
+      "totaldespesas": 197516352.73
+    },
+    {
+      "year": 2022,
+      "month": 9,
+      "rendimentosdistribuir": 25802342.5,
+      "taxaadministracao": 1996498.13,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 84781041.24,
+      "outrasdespesas": 294551306.31,
+      "totaldespesas": 407131188.18
+    },
+    {
+      "year": 2022,
+      "month": 10,
+      "rendimentosdistribuir": 25802342.5,
+      "taxaadministracao": 1862521.43,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 154510693.87,
+      "outrasdespesas": 287554225.47,
+      "totaldespesas": 469729783.27
+    },
+    {
+      "year": 2022,
+      "month": 11,
+      "rendimentosdistribuir": 25802342.5,
+      "taxaadministracao": 1838416.89,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 154510693.87,
+      "outrasdespesas": 285540728,
+      "totaldespesas": 467692181.26
+    },
+    {
+      "year": 2022,
+      "month": 12,
+      "rendimentosdistribuir": 51604685,
+      "taxaadministracao": 1994414.99,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 156844242.87,
+      "outrasdespesas": 292743281.24,
+      "totaldespesas": 503186624.1
+    },
+    {
+      "year": 2023,
+      "month": 1,
+      "rendimentosdistribuir": 25802342.5,
+      "taxaadministracao": 1989181.87,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 156919954.59,
+      "outrasdespesas": 291842673.25,
+      "totaldespesas": 476554152.21
+    },
+    {
+      "year": 2023,
+      "month": 2,
+      "rendimentosdistribuir": 25802342.5,
+      "taxaadministracao": 1616773.66,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 154079774.59,
+      "outrasdespesas": 290169502.86,
+      "totaldespesas": 471668393.61
+    },
+    {
+      "year": 2023,
+      "month": 3,
+      "rendimentosdistribuir": 25802342.5,
+      "taxaadministracao": 2053358.22,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 152897050.09,
+      "outrasdespesas": 289779891.77,
+      "totaldespesas": 470532642.58
+    },
+    {
+      "year": 2023,
+      "month": 4,
+      "rendimentosdistribuir": 25802342.5,
+      "taxaadministracao": 1616991.49,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 152897050.09,
+      "outrasdespesas": 288520966.71,
+      "totaldespesas": 468837350.79
+    },
+    {
+      "year": 2023,
+      "month": 5,
+      "rendimentosdistribuir": 25802342.5,
+      "taxaadministracao": 1987835.91,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 152897050.09,
+      "outrasdespesas": 287444289.65,
+      "totaldespesas": 468131518.15
+    },
+    {
+      "year": 2023,
+      "month": 6,
+      "rendimentosdistribuir": 40756159.08,
+      "taxaadministracao": 1908284.29,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 188834512.04,
+      "outrasdespesas": 1456043744.77,
+      "totaldespesas": 1687542700.18
+    },
+    {
+      "year": 2023,
+      "month": 7,
+      "rendimentosdistribuir": 34460233.5,
+      "taxaadministracao": 2051525.25,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 967749358.68,
+      "outrasdespesas": 317809988.09,
+      "totaldespesas": 1322071105.52
+    },
+    {
+      "year": 2023,
+      "month": 8,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2997850.86,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 179845138.51,
+      "outrasdespesas": 663001779.99,
+      "totaldespesas": 883011101.86
+    },
+    {
+      "year": 2023,
+      "month": 9,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2593783.63,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 135405816.23,
+      "outrasdespesas": 668985759.93,
+      "totaldespesas": 844151692.29
+    },
+    {
+      "year": 2023,
+      "month": 10,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2683119.63,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 102177589.07,
+      "outrasdespesas": 686350403.56,
+      "totaldespesas": 828377444.76
+    },
+    {
+      "year": 2023,
+      "month": 11,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2570365.63,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 103941884.57,
+      "outrasdespesas": 683050027.74,
+      "totaldespesas": 826728610.44
+    },
+    {
+      "year": 2023,
+      "month": 12,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2581998.22,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 97104691.21,
+      "outrasdespesas": 679591842.14,
+      "totaldespesas": 816444864.07
+    },
+    {
+      "year": 2024,
+      "month": 1,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2885322.14,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 92767171,
+      "outrasdespesas": 679448780.26,
+      "totaldespesas": 812267605.9
+    },
+    {
+      "year": 2024,
+      "month": 2,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2532547.68,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 89107997.32,
+      "outrasdespesas": 914006164.07,
+      "totaldespesas": 1042813041.57
+    },
+    {
+      "year": 2024,
+      "month": 3,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2708918.85,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 46753006.51,
+      "outrasdespesas": 911039925.48,
+      "totaldespesas": 997668183.34
+    },
+    {
+      "year": 2024,
+      "month": 4,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2942439.25,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 11792433.35,
+      "outrasdespesas": 906181493.25,
+      "totaldespesas": 958082698.35
+    },
+    {
+      "year": 2024,
+      "month": 5,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2759149.68,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 54568711.69,
+      "outrasdespesas": 886169210.37,
+      "totaldespesas": 980663404.24
+    },
+    {
+      "year": 2024,
+      "month": 6,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2569078.49,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 54473521.87,
+      "outrasdespesas": 875328805.99,
+      "totaldespesas": 969537738.85
+    },
+    {
+      "year": 2024,
+      "month": 7,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 1042475.49,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 54503942.61,
+      "outrasdespesas": 860903432.28,
+      "totaldespesas": 953616182.88
+    },
+    {
+      "year": 2024,
+      "month": 8,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2848710.89,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 50956287.06,
+      "outrasdespesas": 1021875619.84,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2024,
+      "month": 9,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2697929.82,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 208993562.66,
+      "outrasdespesas": 998855964.01,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2024,
+      "month": 10,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2893986.23,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 204393327,
+      "outrasdespesas": 976403414.31,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2024,
+      "month": 11,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2346056.37,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 204758734.86,
+      "outrasdespesas": 941348488.9,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2024,
+      "month": 12,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2541766.87,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 204947955.55,
+      "outrasdespesas": 904375109.22,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2025,
+      "month": 1,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2663418.21,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 205422921.51,
+      "outrasdespesas": 876801537.58,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2025,
+      "month": 2,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2411016.99,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 205889498.31,
+      "outrasdespesas": 857593803.77,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2025,
+      "month": 3,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2308375.18,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 206350490.39,
+      "outrasdespesas": 858276682.77,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2025,
+      "month": 4,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2498108.47,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 130880047.31,
+      "outrasdespesas": 820968648.63,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2025,
+      "month": 5,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2695283.13,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 106762820.83,
+      "outrasdespesas": 812293836.85,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2025,
+      "month": 6,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2527053.18,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 107033494.49,
+      "outrasdespesas": 800640774.14,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2025,
+      "month": 7,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2873657.39,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 107351706.95,
+      "outrasdespesas": 797614734.88,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2025,
+      "month": 8,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2572264.18,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 107645792.84,
+      "outrasdespesas": 795106117.43,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2025,
+      "month": 9,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2796283.84,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 30119826.68,
+      "outrasdespesas": 798176992.04,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2025,
+      "month": 10,
+      "rendimentosdistribuir": 37166332.5,
+      "taxaadministracao": 2954095.95,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 31632552.19,
+      "outrasdespesas": 803652064.12,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2025,
+      "month": 11,
+      "rendimentosdistribuir": 40600112.01,
+      "taxaadministracao": 2577947.74,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 5434980.55,
+      "outrasdespesas": 1236746133.57,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2025,
+      "month": 12,
+      "rendimentosdistribuir": 46644989.6,
+      "taxaadministracao": 3510291.56,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 4252256.05,
+      "outrasdespesas": 1232386863.82,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2026,
+      "month": 1,
+      "rendimentosdistribuir": 46644989.6,
+      "taxaadministracao": 3329382.07,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 4252256.05,
+      "outrasdespesas": 1273881201.47,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2026,
+      "month": 2,
+      "rendimentosdistribuir": 46644989.6,
+      "taxaadministracao": 2856965.23,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 4252256.05,
+      "outrasdespesas": 1258911933.21,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2026,
+      "month": 3,
+      "rendimentosdistribuir": 46644989.6,
+      "taxaadministracao": 3485975.94,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 4252256.05,
+      "outrasdespesas": 1258089666.81,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2026,
+      "month": 4,
+      "rendimentosdistribuir": 46644989.6,
+      "taxaadministracao": 3205183.83,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 4252256.05,
+      "outrasdespesas": 1241012865.58,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2026,
+      "month": 5,
+      "rendimentosdistribuir": 50161919.5,
+      "taxaadministracao": 3363457.3,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 4252256.05,
+      "outrasdespesas": 1240691775.24,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2026,
+      "month": 6,
+      "rendimentosdistribuir": 50161884.3,
+      "taxaadministracao": 3463233.15,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 4252256.05,
+      "outrasdespesas": 1223581359.31,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2026,
+      "month": 7,
+      "rendimentosdistribuir": 53354004.21,
+      "taxaadministracao": 3709938.26,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 4252256.05,
+      "outrasdespesas": 1224567916.23,
+      "totaldespesas": 0
+    }
+  ],
+  "listYear": [
+    {
+      "year": 2021,
+      "month": 0,
+      "rendimentosdistribuir": 265318534.83,
+      "taxaadministracao": 19634374.24,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 841634390.13,
+      "outrasdespesas": 879069949.8,
+      "totaldespesas": 2005657249
+    },
+    {
+      "year": 2022,
+      "month": 0,
+      "rendimentosdistribuir": 376456864.41,
+      "taxaadministracao": 22374330.33,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 931644448.78,
+      "outrasdespesas": 2597998369.5,
+      "totaldespesas": 3768828610.38
+    },
+    {
+      "year": 2023,
+      "month": 0,
+      "rendimentosdistribuir": 390059767.58,
+      "taxaadministracao": 26651068.66,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 2544749869.76,
+      "outrasdespesas": 6602590870.46,
+      "totaldespesas": 9564051576.46
+    },
+    {
+      "year": 2024,
+      "month": 0,
+      "rendimentosdistribuir": 445995990,
+      "taxaadministracao": 30768381.76,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 1278016651.48,
+      "outrasdespesas": 10875936407.98,
+      "totaldespesas": 6714648855.13
+    },
+    {
+      "year": 2025,
+      "month": 0,
+      "rendimentosdistribuir": 458908426.61,
+      "taxaadministracao": 32387795.82,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 1248776388.1,
+      "outrasdespesas": 10690258189.6,
+      "totaldespesas": 0
+    },
+    {
+      "year": 2026,
+      "month": 0,
+      "rendimentosdistribuir": 340257766.41,
+      "taxaadministracao": 23414135.78,
+      "taxaperformance": 0,
+      "aquisicoesimoveis": 29765792.35,
+      "outrasdespesas": 8720736717.85,
+      "totaldespesas": 0
+    }
+  ]
+}

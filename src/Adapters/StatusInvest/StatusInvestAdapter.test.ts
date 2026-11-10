@@ -7,6 +7,9 @@ import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
 
 // Why: these fixtures are written from the field list of issue #8, not recorded from the site, because the site refused the requests from the test environment.
 const FIXTURES = join(import.meta.dirname, "..", "..", "Testing", "fixtures", "statusinvest");
+const indicatorRoute = "/acao/indicatorhistorical";
+const FUNDAMENTAL_P_L = "fundamental.p_l";
+const FUNDAMENTAL_DY = "fundamental.dy";
 const NOT_USED = "not used";
 const provents = "/fii/companytickerprovents";
 const receitas = "/fii/getreceitas";
@@ -64,7 +67,7 @@ const buildHttpFailing = (error: Error): HttpPort => ({
 describe("StatusInvestAdapter.fetchTables()", () => {
   it("fills one metric row per year and indicator, and keeps a missing value null (AC2, AC6)", async () => {
     const indicators = readFixture("indicatorhistorical-petr4.json");
-    const { http } = buildHttpAnswering({ "/acao/indicatorhistorical": () => Promise.resolve(indicators) });
+    const { http } = buildHttpAnswering({ [indicatorRoute]: () => Promise.resolve(indicators) });
     const result = await new StatusInvestAdapter("fundamentals", http, NO_PAUSE).fetchTables(STOCK);
 
     expect(result.source).toBe("statusinvest");
@@ -96,6 +99,20 @@ describe("StatusInvestAdapter.fetchTables()", () => {
     ]);
   });
 
+  it("reads the real sample of the site for CSAN3 without an item error", async () => {
+    // Why: the sample is the response of the site (recorded in the n8n workflow of the owner), not written by hand.
+    const { http } = buildHttpAnswering({ [indicatorRoute]: () => Promise.resolve(readFixture("indicatorhistorical-csan3.json")) });
+    const result = await new StatusInvestAdapter("fundamentals", http, NO_PAUSE).fetchTables(STOCK);
+
+    expect(result.itemErrors).toBeUndefined();
+    const rows = result.tables.asset_metrics ?? [];
+    expect(rows.length).toBeGreaterThan(0);
+    const pl2026 = rows.find((row) => row.metric === FUNDAMENTAL_P_L && row.reference_time_start === "2026-01-01");
+    expect(pl2026?.value).toBe(-1.1955);
+    const dy2025 = rows.find((row) => row.metric === FUNDAMENTAL_DY && row.reference_time_start === "2025-01-01");
+    expect(dy2025?.value).toBeNull();
+  });
+
   it("reads the number of each rank from value, and a rank without a number is null", async () => {
     // Why: the ranks are the shape the site sends (the sample of the P/L indicator, 2026 ATUAL and 2009, and the dividend yield with no number).
     const indicators = JSON.stringify({
@@ -110,14 +127,14 @@ describe("StatusInvestAdapter.fetchTables()", () => {
         { key: "dy", ranks: [{ timeType: 0, rank: 2025, rank_F: "2025", value_F: "-%", rankN: 2025000 }] },
       ],
     });
-    const { http } = buildHttpAnswering({ "/acao/indicatorhistorical": () => Promise.resolve(indicators) });
+    const { http } = buildHttpAnswering({ [indicatorRoute]: () => Promise.resolve(indicators) });
     const result = await new StatusInvestAdapter("fundamentals", http, NO_PAUSE).fetchTables(STOCK);
 
     expect(result.itemErrors).toBeUndefined();
     expect(result.tables.asset_metrics?.map((row) => [row.metric, row.reference_time_start, row.value])).toStrictEqual([
-      ["fundamental.p_l", "2026-01-01", -1.1955],
-      ["fundamental.p_l", "2009-01-01", null],
-      ["fundamental.dy", "2025-01-01", null],
+      [FUNDAMENTAL_P_L, "2026-01-01", -1.1955],
+      [FUNDAMENTAL_P_L, "2009-01-01", null],
+      [FUNDAMENTAL_DY, "2025-01-01", null],
     ]);
   });
 
@@ -128,7 +145,7 @@ describe("StatusInvestAdapter.fetchTables()", () => {
         { key: "net_income", ranks: [{ rank: 2024, value: 100 }] },
       ],
     });
-    const { http } = buildHttpAnswering({ "/acao/indicatorhistorical": () => Promise.resolve(indicators) });
+    const { http } = buildHttpAnswering({ [indicatorRoute]: () => Promise.resolve(indicators) });
     const result = await new StatusInvestAdapter("fundamentals", http, NO_PAUSE).fetchTables(STOCK);
 
     expect(result.itemErrors).toStrictEqual([
@@ -155,7 +172,7 @@ describe("StatusInvestAdapter.fetchTables()", () => {
   });
 
   it("names the failure when the response lacks the shape the adapter reads (AC4)", async () => {
-    const { http } = buildHttpAnswering({ "/acao/indicatorhistorical": () => Promise.resolve("{\"data\":[{\"ranks\":[]}]}") });
+    const { http } = buildHttpAnswering({ [indicatorRoute]: () => Promise.resolve("{\"data\":[{\"ranks\":[]}]}") });
     await expect(new StatusInvestAdapter("fundamentals", http, NO_PAUSE).fetchTables(STOCK))
       .rejects.toThrow("the response format changed");
   });

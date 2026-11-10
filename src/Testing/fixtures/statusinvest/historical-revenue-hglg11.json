@@ -1,0 +1,510 @@
+{
+  "listMonth": [
+    {
+      "year": 2021,
+      "month": 11,
+      "receitalaluguel": 21802433.31,
+      "receitavendaimovel": 36378519,
+      "receitaoutras": 28386592.67,
+      "receitatotal": 86567544.98
+    },
+    {
+      "year": 2021,
+      "month": 12,
+      "receitalaluguel": 24165970.9,
+      "receitavendaimovel": 36378519,
+      "receitaoutras": 27376647.52,
+      "receitatotal": 87921137.42
+    },
+    {
+      "year": 2022,
+      "month": 1,
+      "receitalaluguel": 18548278.3,
+      "receitavendaimovel": 36378519,
+      "receitaoutras": 26560711.48,
+      "receitatotal": 81487508.78
+    },
+    {
+      "year": 2022,
+      "month": 2,
+      "receitalaluguel": 23840541.79,
+      "receitavendaimovel": 36378519,
+      "receitaoutras": 25758270.54,
+      "receitatotal": 85977331.33
+    },
+    {
+      "year": 2022,
+      "month": 3,
+      "receitalaluguel": 24860075.27,
+      "receitavendaimovel": 163592692.99,
+      "receitaoutras": 25167558.67,
+      "receitatotal": 213620326.93
+    },
+    {
+      "year": 2022,
+      "month": 4,
+      "receitalaluguel": 16877285.88,
+      "receitavendaimovel": 165364294.69,
+      "receitaoutras": 25252394.58,
+      "receitatotal": 207493975.15
+    },
+    {
+      "year": 2022,
+      "month": 5,
+      "receitalaluguel": 20500729.08,
+      "receitavendaimovel": 166448599.44,
+      "receitaoutras": 22205346.27,
+      "receitatotal": 209154674.79
+    },
+    {
+      "year": 2022,
+      "month": 6,
+      "receitalaluguel": 26246784.09,
+      "receitavendaimovel": 162404284.35,
+      "receitaoutras": 19694511.7,
+      "receitatotal": 208345580.14
+    },
+    {
+      "year": 2022,
+      "month": 7,
+      "receitalaluguel": 16874909.76,
+      "receitavendaimovel": 161623555.43,
+      "receitaoutras": 19254024.76,
+      "receitatotal": 197752489.95
+    },
+    {
+      "year": 2022,
+      "month": 8,
+      "receitalaluguel": 21656723.17,
+      "receitavendaimovel": 165342323.07,
+      "receitaoutras": 20608401.47,
+      "receitatotal": 207607447.71
+    },
+    {
+      "year": 2022,
+      "month": 9,
+      "receitalaluguel": 25076783.09,
+      "receitavendaimovel": 80740660.25,
+      "receitaoutras": 19050483.95,
+      "receitatotal": 124867927.29
+    },
+    {
+      "year": 2022,
+      "month": 10,
+      "receitalaluguel": 20607523.08,
+      "receitavendaimovel": 81127884.66,
+      "receitaoutras": 18414790.04,
+      "receitatotal": 120150197.78
+    },
+    {
+      "year": 2022,
+      "month": 11,
+      "receitalaluguel": 23787110.58,
+      "receitavendaimovel": 128558487.59,
+      "receitaoutras": 19443923.81,
+      "receitatotal": 171789521.98
+    },
+    {
+      "year": 2022,
+      "month": 12,
+      "receitalaluguel": 28061162.64,
+      "receitavendaimovel": 129018481.34,
+      "receitaoutras": 18497238.28,
+      "receitatotal": 175576882.26
+    },
+    {
+      "year": 2023,
+      "month": 1,
+      "receitalaluguel": 20356425.61,
+      "receitavendaimovel": 77540061.03,
+      "receitaoutras": 18554896.17,
+      "receitatotal": 116451382.81
+    },
+    {
+      "year": 2023,
+      "month": 2,
+      "receitalaluguel": 25164382.18,
+      "receitavendaimovel": 78132538.06,
+      "receitaoutras": 20583425.45,
+      "receitatotal": 123880345.69
+    },
+    {
+      "year": 2023,
+      "month": 3,
+      "receitalaluguel": 28423683.24,
+      "receitavendaimovel": 40000000,
+      "receitaoutras": 22999962.89,
+      "receitatotal": 91423646.13
+    },
+    {
+      "year": 2023,
+      "month": 4,
+      "receitalaluguel": 23102962.18,
+      "receitavendaimovel": 40000000,
+      "receitaoutras": 21815015.34,
+      "receitatotal": 84917977.52
+    },
+    {
+      "year": 2023,
+      "month": 5,
+      "receitalaluguel": 22253104.06,
+      "receitavendaimovel": 40000000,
+      "receitaoutras": 20748514.12,
+      "receitatotal": 83001618.18
+    },
+    {
+      "year": 2023,
+      "month": 6,
+      "receitalaluguel": 25776407.76,
+      "receitavendaimovel": 40342499.43,
+      "receitaoutras": 16731135.82,
+      "receitatotal": 82850043.01
+    },
+    {
+      "year": 2023,
+      "month": 7,
+      "receitalaluguel": 18376062.29,
+      "receitavendaimovel": 64838601.55,
+      "receitaoutras": 47923207.91,
+      "receitatotal": 131137871.75
+    },
+    {
+      "year": 2023,
+      "month": 8,
+      "receitalaluguel": 31682939.55,
+      "receitavendaimovel": 64012314.06,
+      "receitaoutras": 88637540.55,
+      "receitatotal": 184332794.16
+    },
+    {
+      "year": 2023,
+      "month": 9,
+      "receitalaluguel": 38167616.21,
+      "receitavendaimovel": 48377921.49,
+      "receitaoutras": 19501289.25,
+      "receitatotal": 106046826.95
+    },
+    {
+      "year": 2023,
+      "month": 10,
+      "receitalaluguel": 30498060.77,
+      "receitavendaimovel": 47343123.62,
+      "receitaoutras": 38054538.09,
+      "receitatotal": 115895722.48
+    },
+    {
+      "year": 2023,
+      "month": 11,
+      "receitalaluguel": 34094981.4,
+      "receitavendaimovel": 46296941.58,
+      "receitaoutras": 34899135.67,
+      "receitatotal": 115291058.65
+    },
+    {
+      "year": 2023,
+      "month": 12,
+      "receitalaluguel": 37894793.29,
+      "receitavendaimovel": 15249240.06,
+      "receitaoutras": 34324780.48,
+      "receitatotal": 87468813.83
+    },
+    {
+      "year": 2024,
+      "month": 1,
+      "receitalaluguel": 31977070.33,
+      "receitavendaimovel": 15423282.08,
+      "receitaoutras": 49423482.65,
+      "receitatotal": 96823835.06
+    },
+    {
+      "year": 2024,
+      "month": 2,
+      "receitalaluguel": 35466162.02,
+      "receitavendaimovel": 15569918.92,
+      "receitaoutras": 285760348.61,
+      "receitatotal": 336796429.55
+    },
+    {
+      "year": 2024,
+      "month": 3,
+      "receitalaluguel": 39030682.46,
+      "receitavendaimovel": 15724092.8,
+      "receitaoutras": 277231240.97,
+      "receitatotal": 331986016.23
+    },
+    {
+      "year": 2024,
+      "month": 4,
+      "receitalaluguel": 33154274.03,
+      "receitavendaimovel": 15891071.36,
+      "receitaoutras": 265812983.5,
+      "receitatotal": 314858328.89
+    },
+    {
+      "year": 2024,
+      "month": 5,
+      "receitalaluguel": 38210209.67,
+      "receitavendaimovel": 55908532.74,
+      "receitaoutras": 256964785.78,
+      "receitatotal": 351083528.19
+    },
+    {
+      "year": 2024,
+      "month": 6,
+      "receitalaluguel": 41983379.35,
+      "receitavendaimovel": 56374710.42,
+      "receitaoutras": 241304132.79,
+      "receitatotal": 339662222.56
+    },
+    {
+      "year": 2024,
+      "month": 7,
+      "receitalaluguel": 35477132.58,
+      "receitavendaimovel": 48726586.13,
+      "receitaoutras": 225920684.73,
+      "receitatotal": 310124403.44
+    },
+    {
+      "year": 2024,
+      "month": 8,
+      "receitalaluguel": 42257610.58,
+      "receitavendaimovel": 49163587.66,
+      "receitaoutras": 388353700.53,
+      "receitatotal": 479774898.77
+    },
+    {
+      "year": 2024,
+      "month": 9,
+      "receitalaluguel": 43864405.06,
+      "receitavendaimovel": 41230516.94,
+      "receitaoutras": 356976836.76,
+      "receitatotal": 442071758.76
+    },
+    {
+      "year": 2024,
+      "month": 10,
+      "receitalaluguel": 36995162.16,
+      "receitavendaimovel": 41613118.64,
+      "receitaoutras": 338237504.66,
+      "receitatotal": 416845785.46
+    },
+    {
+      "year": 2024,
+      "month": 11,
+      "receitalaluguel": 43520647.12,
+      "receitavendaimovel": 41943106.68,
+      "receitaoutras": 298348070.37,
+      "receitatotal": 383811824.17
+    },
+    {
+      "year": 2024,
+      "month": 12,
+      "receitalaluguel": 45244699.49,
+      "receitavendaimovel": 42333777.8,
+      "receitaoutras": 263059112.02,
+      "receitatotal": 350637589.31
+    },
+    {
+      "year": 2025,
+      "month": 1,
+      "receitalaluguel": 36001545.55,
+      "receitavendaimovel": 42762704.22,
+      "receitaoutras": 234726551.42,
+      "receitatotal": 313490801.19
+    },
+    {
+      "year": 2025,
+      "month": 2,
+      "receitalaluguel": 39656601.77,
+      "receitavendaimovel": 43184054.66,
+      "receitaoutras": 216118942.61,
+      "receitatotal": 298959599.04
+    },
+    {
+      "year": 2025,
+      "month": 3,
+      "receitalaluguel": 43237047.7,
+      "receitavendaimovel": 43600361.72,
+      "receitaoutras": 215429508.6,
+      "receitatotal": 302266918.02
+    },
+    {
+      "year": 2025,
+      "month": 4,
+      "receitalaluguel": 41300782.55,
+      "receitavendaimovel": 44060729.04,
+      "receitaoutras": 177569857.53,
+      "receitatotal": 262931369.12
+    },
+    {
+      "year": 2025,
+      "month": 5,
+      "receitalaluguel": 40616635.61,
+      "receitavendaimovel": 22281241,
+      "receitaoutras": 170314710.8,
+      "receitatotal": 233212587.41
+    },
+    {
+      "year": 2025,
+      "month": 6,
+      "receitalaluguel": 46130492.54,
+      "receitavendaimovel": 22525677.63,
+      "receitaoutras": 165045528.74,
+      "receitatotal": 233701698.91
+    },
+    {
+      "year": 2025,
+      "month": 7,
+      "receitalaluguel": 40481783.27,
+      "receitavendaimovel": 22813045.03,
+      "receitaoutras": 162135872.06,
+      "receitatotal": 225430700.36
+    },
+    {
+      "year": 2025,
+      "month": 8,
+      "receitalaluguel": 33440236.95,
+      "receitavendaimovel": 23078624.49,
+      "receitaoutras": 162638425.81,
+      "receitatotal": 219157287.25
+    },
+    {
+      "year": 2025,
+      "month": 9,
+      "receitalaluguel": 40045480.4,
+      "receitavendaimovel": 35138821.69,
+      "receitaoutras": 164994907.54,
+      "receitatotal": 240179209.63
+    },
+    {
+      "year": 2025,
+      "month": 10,
+      "receitalaluguel": 36144561.99,
+      "receitavendaimovel": 35386834.94,
+      "receitaoutras": 169796725.08,
+      "receitatotal": 241328122.01
+    },
+    {
+      "year": 2025,
+      "month": 11,
+      "receitalaluguel": 40532525.28,
+      "receitavendaimovel": 11784944.28,
+      "receitaoutras": 157461468.24,
+      "receitatotal": 209778937.8
+    },
+    {
+      "year": 2025,
+      "month": 12,
+      "receitalaluguel": 44588363.66,
+      "receitavendaimovel": 11745424.98,
+      "receitaoutras": 158049820.7,
+      "receitatotal": 214383609.34
+    },
+    {
+      "year": 2026,
+      "month": 1,
+      "receitalaluguel": 54460961.08,
+      "receitavendaimovel": 11666430.96,
+      "receitaoutras": 205638786.27,
+      "receitatotal": 271766178.31
+    },
+    {
+      "year": 2026,
+      "month": 2,
+      "receitalaluguel": 53452709.02,
+      "receitavendaimovel": 11654883.61,
+      "receitaoutras": 186877736.84,
+      "receitatotal": 251985329.47
+    },
+    {
+      "year": 2026,
+      "month": 3,
+      "receitalaluguel": 67593054.21,
+      "receitavendaimovel": 11693343.38,
+      "receitaoutras": 217219988.13,
+      "receitatotal": 296506385.72
+    },
+    {
+      "year": 2026,
+      "month": 4,
+      "receitalaluguel": 52640454.31,
+      "receitavendaimovel": 11725050.73,
+      "receitaoutras": 249629317.69,
+      "receitatotal": 313994822.73
+    },
+    {
+      "year": 2026,
+      "month": 5,
+      "receitalaluguel": 56312297,
+      "receitavendaimovel": 11778075.35,
+      "receitaoutras": 290027037.66,
+      "receitatotal": 358117410.01
+    },
+    {
+      "year": 2026,
+      "month": 6,
+      "receitalaluguel": 57866171.91,
+      "receitavendaimovel": 11806884.75,
+      "receitaoutras": 324496381.97,
+      "receitatotal": 394169438.63
+    },
+    {
+      "year": 2026,
+      "month": 7,
+      "receitalaluguel": 66422434.09,
+      "receitavendaimovel": 29935255.55,
+      "receitaoutras": 374234447.34,
+      "receitatotal": 470592136.98
+    }
+  ],
+  "listYear": [
+    {
+      "year": 2021,
+      "month": 0,
+      "receitalaluguel": 239648770.51,
+      "receitavendaimovel": 415317715.63,
+      "receitaoutras": 1143178297.97,
+      "receitatotal": 1798144784.11
+    },
+    {
+      "year": 2022,
+      "month": 0,
+      "receitalaluguel": 266937906.73,
+      "receitavendaimovel": 1476978301.81,
+      "receitaoutras": 259907655.55,
+      "receitatotal": 2003823864.09
+    },
+    {
+      "year": 2023,
+      "month": 0,
+      "receitalaluguel": 335791418.54,
+      "receitavendaimovel": 602133240.88,
+      "receitaoutras": 384773441.74,
+      "receitatotal": 1322698101.16
+    },
+    {
+      "year": 2024,
+      "month": 0,
+      "receitalaluguel": 467181434.85,
+      "receitavendaimovel": 439902302.17,
+      "receitaoutras": 3247392883.37,
+      "receitatotal": 4154476620.39
+    },
+    {
+      "year": 2025,
+      "month": 0,
+      "receitalaluguel": 482176057.27,
+      "receitavendaimovel": 358362463.68,
+      "receitaoutras": 2154282319.13,
+      "receitatotal": 2994820840.08
+    },
+    {
+      "year": 2026,
+      "month": 0,
+      "receitalaluguel": 408748081.62,
+      "receitavendaimovel": 100259924.33,
+      "receitaoutras": 1848123695.9,
+      "receitatotal": 2357131701.85
+    }
+  ]
+}
