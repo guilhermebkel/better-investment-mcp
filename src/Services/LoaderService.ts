@@ -162,6 +162,10 @@ export class LoaderService implements LoaderPort {
     };
   }
 
+  private static buildNoRowError(itemErrors: readonly string[]): string {
+    return `no row was stored: ${itemErrors.length} item(s) could not be read; the first: ${itemErrors[0]}`;
+  }
+
   private static readRowCount(result: ProviderResult): number {
     return Object.values(result.tables).reduce((total, rows) => total + rows.length, 0);
   }
@@ -206,7 +210,7 @@ export class LoaderService implements LoaderPort {
     const providerItemErrors = fetched.result.itemErrors ?? [];
     if (providerItemErrors.length > 0 && LoaderService.readRowCount(fetched.result) === 0) {
       // Why: a provider that stores nothing and names the items it could not read fails the load. Nothing is written, so the rows stored before are kept, and the run is not counted as fresh, so the next query tries again.
-      const errorMessage = `no row was stored: ${providerItemErrors.join("; ")}`;
+      const errorMessage = LoaderService.buildNoRowError(providerItemErrors);
       await this.store.cache.finishRun(runId, { rowsRead: 0, errorMessage });
       return {
         rowsWritten: 0,
