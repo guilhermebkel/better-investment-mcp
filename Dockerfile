@@ -10,7 +10,7 @@ RUN pnpm install --frozen-lockfile && pnpm build && pnpm pack --pack-destination
 # The venv is copied as it is, so both stages must use the same base image tag (same Alpine packages and python3).
 FROM node:22-alpine AS pydeps
 COPY requirements-tools.txt /tmp/requirements-tools.txt
-# Why: pymupdf has no musllinux wheel, so pip builds it from source; that needs a C compiler and the Python headers. Only this stage has them, so the final image does not.
+# Why: pymupdf 1.28.2 has a musllinux wheel for amd64 only; on arm64 pip builds it from source, which needs a C compiler and the Python headers. Only this stage has them, so the final image does not.
 RUN apk add --no-cache python3 py3-pip build-base python3-dev \
   && python3 -m venv /opt/yf \
   && /opt/yf/bin/pip install --no-cache-dir -r /tmp/requirements-tools.txt
