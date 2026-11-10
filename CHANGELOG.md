@@ -6,6 +6,7 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Fixed
 
+- StatusInvest fundamentals read each rank from its `value` number, not from `value_F` (the display text, for example `5,53%`). A rank with no number, such as `-%` or `-`, is stored as null. The sample responses of the site showed the change: every indicator of BBAS3 failed on `value_F`.
 - A load in which the provider stores no row and names the items it could not read now fails: the entry says `no row was stored` with the items, nothing is written (the rows stored before are kept), and the run is not counted as fresh. Before, fundamentals with every indicator refused showed `fresh` with 0 rows for a day.
 - `search_chunks` before any document is loaded says how to load one (a query on `asset_filing_chunks` with the `asset_id` and `document_type`), then search again.
 

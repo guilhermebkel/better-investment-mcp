@@ -96,18 +96,43 @@ describe("StatusInvestAdapter.fetchTables()", () => {
     ]);
   });
 
+  it("reads the number of each rank from value, and a rank without a number is null", async () => {
+    // Why: the ranks are the shape the site sends (the sample of the P/L indicator, 2026 ATUAL and 2009, and the dividend yield with no number).
+    const indicators = JSON.stringify({
+      data: [
+        {
+          key: "p_l",
+          ranks: [
+            { timeType: 1, rank: 2026, rank_F: "ATUAL", value: -1.1955, value_F: "-1,20", rankN: 2026001 },
+            { timeType: 0, rank: 2009, rank_F: "2009", value_F: "-", rankN: 2009000 },
+          ],
+        },
+        { key: "dy", ranks: [{ timeType: 0, rank: 2025, rank_F: "2025", value_F: "-%", rankN: 2025000 }] },
+      ],
+    });
+    const { http } = buildHttpAnswering({ "/acao/indicatorhistorical": () => Promise.resolve(indicators) });
+    const result = await new StatusInvestAdapter("fundamentals", http, NO_PAUSE).fetchTables(STOCK);
+
+    expect(result.itemErrors).toBeUndefined();
+    expect(result.tables.asset_metrics?.map((row) => [row.metric, row.reference_time_start, row.value])).toStrictEqual([
+      ["fundamental.p_l", "2026-01-01", -1.1955],
+      ["fundamental.p_l", "2009-01-01", null],
+      ["fundamental.dy", "2025-01-01", null],
+    ]);
+  });
+
   it("skips a value that is not a number, names it, and stores the other indicators and years", async () => {
     const indicators = JSON.stringify({
       data: [
-        { key: "net_revenue", ranks: [{ rank: 2024, value_F: "300,5" }, { rank: 2023, value_F: null }] },
-        { key: "net_income", ranks: [{ rank: 2024, value_F: 100 }] },
+        { key: "net_revenue", ranks: [{ rank: 2024, value: "300,5" }, { rank: 2023, value: null }] },
+        { key: "net_income", ranks: [{ rank: 2024, value: 100 }] },
       ],
     });
     const { http } = buildHttpAnswering({ "/acao/indicatorhistorical": () => Promise.resolve(indicators) });
     const result = await new StatusInvestAdapter("fundamentals", http, NO_PAUSE).fetchTables(STOCK);
 
     expect(result.itemErrors).toStrictEqual([
-      "fundamental.net_revenue 2024 was not stored: the response format changed: the field value_F is not a number; no row was written",
+      "fundamental.net_revenue 2024 was not stored: the response format changed: the field value is not a number; no row was written",
     ]);
     expect(result.tables.asset_metrics).toStrictEqual([
       {

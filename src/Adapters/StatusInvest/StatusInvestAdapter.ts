@@ -126,7 +126,7 @@ export class StatusInvestAdapter<Category extends FundCategory> implements Provi
             metric: `fundamental.${indicator.key}`,
             reference_time_start: `${referenceYear}-01-01`,
             reference_time_end: `${referenceYear}-12-31`,
-            value: StatusInvestAdapter.readNumber(Reflect.get(rank, "value_F"), "value_F"),
+            value: StatusInvestAdapter.readRankValue(rank),
             unit: "as_published",
           });
         } catch (error) {
@@ -301,6 +301,18 @@ export class StatusInvestAdapter<Category extends FundCategory> implements Provi
     }
     if (typeof value !== "number") {
       throw new Error(`the response format changed: the field ${field} is not a number; no row was written`);
+    }
+    return value;
+  }
+
+  private static readRankValue(rank: unknown): number | null {
+    // Why: the site sends the number of a rank in "value" and the display text in "value_F" ("5,53%", "-%"). A rank with no "value" has no number, so it is null; the display text is never parsed.
+    const value: unknown = typeof rank === "object" && rank !== null ? Reflect.get(rank, "value") : undefined;
+    if (value === undefined || value === null) {
+      return null;
+    }
+    if (typeof value !== "number") {
+      throw new Error("the response format changed: the field value is not a number; no row was written");
     }
     return value;
   }
