@@ -18,7 +18,7 @@
 
 `better-investment-mcp` loads the data a question needs into a local DuckDB cache, then lets the agent answer with one `SELECT`. The cache is filled on demand, so the first query for an asset takes longer and later ones are fast. Every answer says what was loaded and what failed, and the server never gives an opinion on what to buy or sell.
 
-> **Work in progress.** The server runs and its three tools answer, but the data behind them arrives issue by issue. The list below shows what exists today.
+> **Work in progress.** The server runs and its tools answer, but the data behind them arrives issue by issue. The list below shows what exists today.
 
 > **Usage notice.** The output describes and locates information. It is not investment advice, a recommendation or an analysis of what to buy or sell.
 
@@ -176,11 +176,12 @@ Two things to know. The container writes to the folder as your user, which the `
 
 ## Tools
 
-The server exposes <!-- tools:count -->3<!-- /tools:count --> tools. All of them are read-only.
+The server exposes <!-- tools:count -->4<!-- /tools:count --> tools. Three of them are read-only; `notify_load_finish` sends one notice to an https address you give when a background load finishes (ADR 0028).
 
 <!-- tools:list -->
 - `get_overview`: the server's usage notice.
 - `get_guide`: the guide for one topic of `query_sql`. The guide texts come later.
+- `notify_load_finish`: sends one POST, with the final status and the row counts of a background load and no data, to the https `callback_url` you give, when that load finishes. Not read-only (ADR 0028).
 - `query_sql`: one `SELECT` over the data tables. Every asset table needs a filter on `asset_id` (`market:asset_type:code`, for example `BR:stock:PETR4`), and `asset_metrics` also needs `metric`; a query without them is refused with the filter to add. The tables are in `docs/product/data-map.md`, the rules in `docs/product/sql-guard.md`.
 <!-- /tools:list -->
 

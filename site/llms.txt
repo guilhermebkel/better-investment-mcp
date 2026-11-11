@@ -2,7 +2,7 @@
 
 > An open-source MCP server that gives AI agents (such as Claude, Cursor and Codex) data on Brazilian assets: prices, dividends, fundamentals, filings, FII reports and macro series. The agent reads everything with one read-only SQL tool over a local DuckDB cache that the server fills on demand.
 
-Nothing in the server writes to the outside world. It exposes three tools: get_overview, get_guide and query_sql. The output describes and locates information; it is not investment advice. Unofficial: not affiliated with B3, CVM, Yahoo or any other data vendor. Work in progress: the data behind the tools arrives issue by issue.
+The server writes only to its own cache file. It exposes four tools: get_overview, get_guide and query_sql (read-only), and notify_load_finish, which sends one POST to an https address the caller gives when a background load finishes (ADR 0028). The output describes and locates information; it is not investment advice. Unofficial: not affiliated with B3, CVM, Yahoo or any other data vendor. Work in progress: the data behind the tools arrives issue by issue.
 
 ## Docs
 

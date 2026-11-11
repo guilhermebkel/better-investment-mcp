@@ -9,7 +9,7 @@ import { HttpRunner } from "@/Setup/HttpRunner.ts";
 import { HttpFixture } from "@/Testing/HttpFixture.ts";
 
 const WRONG_TOKEN = "wrong-token-123456789";
-const TOOL_NAMES = ["get_guide", "get_overview", "query_sql"];
+const TOOL_NAMES = ["get_guide", "get_overview", "notify_load_finish", "query_sql"];
 
 const handles: HttpServerHandle[] = [];
 const cacheDirs: string[] = [];

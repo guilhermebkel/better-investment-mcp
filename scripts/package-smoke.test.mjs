@@ -3,7 +3,7 @@ import { checkHttpRun, checkRun, parseCommand } from "./package-smoke.mjs";
 
 const GOOD_STDERR = "{\"level\":\"info\",\"event\":\"environment_valid\"}\n";
 const SERVER_NAME = "better-investment-mcp";
-const GOOD_INSTRUCTIONS = "This server only reads.";
+const GOOD_INSTRUCTIONS = "The server only reads, except notify_load_finish";
 const GOOD_INITIALIZE = JSON.stringify({
   jsonrpc: "2.0",
   id: 1,
@@ -12,13 +12,13 @@ const GOOD_INITIALIZE = JSON.stringify({
 const GOOD_TOOLS_LIST = JSON.stringify({
   jsonrpc: "2.0",
   id: 2,
-  result: { tools: [{ name: "get_overview" }, { name: "get_guide" }, { name: "query_sql" }] },
+  result: { tools: [{ name: "get_overview" }, { name: "get_guide" }, { name: "query_sql" }, { name: "notify_load_finish" }] },
 });
 const GOOD_STDOUT = `${GOOD_INITIALIZE}\n${GOOD_TOOLS_LIST}\n`;
 const GOOD_HTTP = {
   name: SERVER_NAME,
-  instructions: `${GOOD_INSTRUCTIONS} It never changes anything outside itself.`,
-  toolNames: ["get_overview", "get_guide", "query_sql"],
+  instructions: GOOD_INSTRUCTIONS,
+  toolNames: ["get_overview", "get_guide", "query_sql", "notify_load_finish"],
   unauthorizedStatus: 401,
 };
 
@@ -59,13 +59,13 @@ describe("checkRun()", () => {
     const extraTool = GOOD_TOOLS_LIST.replace("query_sql", "query_sql\"},{\"name\":\"delete_all");
 
     expect(checkRun({ code: 0, stdout: `${GOOD_INITIALIZE}\n${extraTool}\n`, stderr: GOOD_STDERR })).toStrictEqual([
-      "tools/list answered [\"get_overview\",\"get_guide\",\"query_sql\",\"delete_all\"], expected [\"get_overview\",\"get_guide\",\"query_sql\"]",
+      "tools/list answered [\"get_overview\",\"get_guide\",\"query_sql\",\"delete_all\",\"notify_load_finish\"], expected [\"get_overview\",\"get_guide\",\"query_sql\",\"notify_load_finish\"]",
     ]);
   });
 });
 
 describe("checkHttpRun()", () => {
-  it("passes when the name, the instructions, the three tools and the 401 without a token are right", () => {
+  it("passes when the name, the instructions, the four tools and the 401 without a token are right", () => {
     expect(checkHttpRun(GOOD_HTTP)).toStrictEqual([]);
   });
 
@@ -75,15 +75,15 @@ describe("checkHttpRun()", () => {
     ]);
   });
 
-  it("fails when the instructions do not say the server only reads", () => {
+  it("fails when the instructions do not say the server only reads, except notify_load_finish", () => {
     expect(checkHttpRun({ ...GOOD_HTTP, instructions: "A server." })).toStrictEqual([
-      "HTTP instructions do not say the server only reads",
+      "HTTP instructions do not say the server only reads, except notify_load_finish",
     ]);
   });
 
   it("fails when tools/list over HTTP has a different set of tools", () => {
     expect(checkHttpRun({ ...GOOD_HTTP, toolNames: ["get_overview"] })).toStrictEqual([
-      "HTTP tools/list answered [\"get_overview\"], expected [\"get_overview\",\"get_guide\",\"query_sql\"]",
+      "HTTP tools/list answered [\"get_overview\"], expected [\"get_overview\",\"get_guide\",\"query_sql\",\"notify_load_finish\"]",
     ]);
   });
 });

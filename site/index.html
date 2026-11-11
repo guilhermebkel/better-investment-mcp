@@ -101,7 +101,7 @@
      "name": "Is it ready for daily use?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "It is a work in progress. The server runs and its three tools answer, but the data behind them arrives issue by issue. The sources list and the repository show what exists today."
+      "text": "It is a work in progress. The server runs and its tools answer, but the data behind them arrives issue by issue. The sources list and the repository show what exists today."
      }
     },
     {
@@ -688,8 +688,8 @@ footer { padding-block: 48px 56px; color: var(--text-3); font-size: var(--fs-sm)
 <section class="sec" id="tools">
   <div class="container toolsgrid">
     <div data-reveal>
-      <h2>Three tools. <span>All of them only read.</span></h2>
-      <p class="lede">Nothing in the server can change anything outside its own cache file. That rule lives in code with a test, not in a prompt.</p>
+      <h2>Four tools. <span>Three only read.</span></h2>
+      <p class="lede">Nothing in the server changes anything outside its own cache file, except one notice: `notify_load_finish` sends a POST to an https address you give when a background load finishes (ADR 0028). That rule lives in code with a test, not in a prompt.</p>
     </div>
     <div class="tools" data-reveal data-delay="80">
       <div class="tool"><code>get_overview</code><p>The server's usage notice, the tables, and what is loaded now. Call it first.</p></div>
@@ -791,7 +791,7 @@ footer { padding-block: 48px 56px; color: var(--text-3); font-size: var(--fs-sm)
       </details>
       <details>
         <summary>Is it ready for daily use?</summary>
-        <div>It is a work in progress. The server runs and its three tools answer, but the data behind them arrives issue by issue. The sources list and the repository show what exists today.</div>
+        <div>It is a work in progress. The server runs and its tools answer, but the data behind them arrives issue by issue. The sources list and the repository show what exists today.</div>
       </details>
       <details>
         <summary>Why does a query say a source is blocked?</summary>

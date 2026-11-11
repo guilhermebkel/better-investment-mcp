@@ -8,7 +8,7 @@ export class McpServerSurface {
   static readonly NAME = "better-investment-mcp";
   static readonly INSTRUCTIONS = [
     "Better Investment gives data on Brazilian assets: prices, dividends, fundamentals, filings, FII reports and macro series.",
-    "This server only reads. It never changes anything outside itself.",
+    "The server only reads, except notify_load_finish: it sends one notice, a POST with the final status of a load, to an https address the caller gives (ADR 0028).",
     "Start with get_overview to see what the server does, and get_guide to learn how to write a query.",
     "All data comes from query_sql, which runs one read-only SELECT.",
     "A query can answer while a load is still running, with the rows stored so far. Then run the same query again after a few seconds, and repeat until no load is still running; answer from the complete rows only then.",
@@ -28,7 +28,7 @@ export class McpServerSurface {
           description: operation.description,
           inputSchema: operation.inputSchema,
           outputSchema: OperationOutputSchema,
-          annotations: { readOnlyHint: true },
+          annotations: { readOnlyHint: operation.isReadOnly },
         },
         async (input) => McpServerSurface.buildCallResult(await operation.execute(input)),
       );

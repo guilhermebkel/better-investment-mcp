@@ -8,7 +8,7 @@ An MCP server that gives an AI agent data on Brazilian assets (US stocks later):
 
 ## Tools
 
-Three tools, all read-only (`docs/adr/0003-all-data-is-read-through-one-sql-tool.md`):
+Three tools are read-only (`docs/adr/0003-all-data-is-read-through-one-sql-tool.md`), and one sends a notice (`docs/adr/0028-load-callback-to-a-url-the-agent-gives.md`):
 
 - `get_overview`: what the server has, the tables, the filter rule, what is loaded now, and the usage notice.
 - `get_guide`: one topic at a time (`sql`, `search`, `sources`, `limits`) with examples that run.

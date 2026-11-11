@@ -29,6 +29,7 @@ describe("McpServerSurface.build()", () => {
         openReader: () => store.openReader(),
       },
       overview: { cacheTtlSeconds: 60, readLoaded: () => Promise.resolve([]) },
+      notifyLoadFinish: { jobs: { subscribe: () => "unknown" }, callback: { post: () => Promise.resolve() } },
     };
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
     await McpServerSurface.build(dependencies).connect(serverTransport);
@@ -44,11 +45,11 @@ describe("McpServerSurface.build()", () => {
   });
 
   describe("when a client lists the tools", () => {
-    it("gets exactly get_overview, get_guide and query_sql, all read-only", async () => {
+    it("gets get_overview, get_guide, query_sql and notify_load_finish; only notify_load_finish is not read-only", async () => {
       const { tools } = await client.listTools();
 
-      expect(tools.map((tool) => tool.name)).toStrictEqual(["get_overview", "get_guide", "query_sql"]);
-      expect(tools.map((tool) => tool.annotations?.readOnlyHint)).toStrictEqual([true, true, true]);
+      expect(tools.map((tool) => tool.name)).toStrictEqual(["get_overview", "get_guide", "query_sql", "notify_load_finish"]);
+      expect(tools.map((tool) => tool.annotations?.readOnlyHint)).toStrictEqual([true, true, true, false]);
     });
 
     it("gets a strict input schema for query_sql that refuses extra fields", async () => {
@@ -59,8 +60,8 @@ describe("McpServerSurface.build()", () => {
   });
 
   describe("when a client reads the server instructions", () => {
-    it("states that the server only reads", () => {
-      expect(client.getInstructions()).toContain("This server only reads.");
+    it("states that the server only reads, except one notice (ADR 0028)", () => {
+      expect(client.getInstructions()).toContain("The server only reads, except notify_load_finish");
     });
 
     it("says to start with get_overview", () => {

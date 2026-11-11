@@ -30,6 +30,7 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
 
   readonly name = QuerySqlOperation.NAME;
   readonly description = QuerySqlOperation.DESCRIPTION;
+  readonly isReadOnly = true;
   readonly inputSchema = QuerySqlInputSchema;
 
   private readonly dependencies: QuerySqlDependencies;

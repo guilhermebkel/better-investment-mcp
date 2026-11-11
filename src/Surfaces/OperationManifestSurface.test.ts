@@ -9,22 +9,30 @@ const UNUSED_DEPENDENCIES: OperationDependencies = {
     openReader: () => Promise.reject(new Error("not used by the manifest test")),
   },
   overview: { cacheTtlSeconds: 60, readLoaded: () => Promise.resolve([]) },
+  notifyLoadFinish: { jobs: { subscribe: () => "unknown" }, callback: { post: () => Promise.resolve() } },
 };
 
 describe("OperationManifestSurface.listOperations()", () => {
-  it("lists exactly the three read-only tools of the architecture", () => {
+  it("lists the four tools: three read-only ones and notify_load_finish (ADR 0028)", () => {
     const toolNames = OperationManifestSurface.listOperations(UNUSED_DEPENDENCIES).map((operation) => {
       return OperationManifestSurface.formatToolName(operation.name);
     });
 
-    expect(toolNames).toStrictEqual(["get_overview", "get_guide", "query_sql"]);
+    expect(toolNames).toStrictEqual(["get_overview", "get_guide", "query_sql", "notify_load_finish"]);
   });
 
-  it("starts every description with Read-only.", () => {
-    const operations = OperationManifestSurface.listOperations(UNUSED_DEPENDENCIES);
-    const descriptions = operations.map((operation) => operation.description);
+  it("starts the description of every read-only tool with Read-only.", () => {
+    const readOnly = OperationManifestSurface.listOperations(UNUSED_DEPENDENCIES)
+      .filter((operation) => operation.isReadOnly);
 
-    expect(descriptions.map((description) => description.startsWith("Read-only."))).toStrictEqual([true, true, true]);
+    expect(readOnly.map((operation) => operation.description.startsWith("Read-only."))).toStrictEqual([true, true, true]);
+  });
+
+  it("marks notify_load_finish as not read-only, and says what it sends", () => {
+    const notify = OperationManifestSurface.listOperations(UNUSED_DEPENDENCIES).find((operation) => operation.name === "notifyLoadFinish");
+
+    expect(notify?.isReadOnly).toBe(false);
+    expect(notify?.description).toContain("POST");
   });
 });
 

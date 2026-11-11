@@ -1,4 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { CallbackAdapter } from "@/Adapters/Callback/CallbackAdapter.ts";
 import type { Env } from "@/Protocols/EnvProtocol.ts";
 import { DEFAULT_BACKGROUND_AFTER_SECONDS } from "@/Schemas/EnvSchema.ts";
 import { LoadJobService } from "@/Services/LoadJobService.ts";
@@ -28,6 +29,10 @@ export class McpRuntimeSurface {
         openReader: () => store.openReader(),
         backgroundAfterMs: backgroundAfterSeconds * MS_PER_SECOND,
         ensureSearchIndex: () => loader.ensureSearchIndex(),
+      },
+      notifyLoadFinish: {
+        jobs,
+        callback: new CallbackAdapter(),
       },
       overview: {
         cacheTtlSeconds: env.INVESTMENT_MCP_CACHE_TTL_SECONDS,

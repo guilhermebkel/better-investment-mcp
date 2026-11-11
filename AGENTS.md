@@ -1,8 +1,8 @@
 # better-investment-mcp
 
-An open-source MCP server that gives AI agents data on Brazilian assets (US stocks later): prices, dividends, fundamentals, company filings and FII reports, and macro series. The agent reads everything with one SQL tool over a local DuckDB cache that the server fills on demand. Nothing in the server writes to the outside world. Vocabulary is in `GLOSSARY.md`; decisions are in `docs/adr/`; planned work is in GitHub issues.
+An open-source MCP server that gives AI agents data on Brazilian assets (US stocks later): prices, dividends, fundamentals, company filings and FII reports, and macro series. The agent reads everything with one SQL tool over a local DuckDB cache that the server fills on demand. The server writes only to its own cache file; the one outbound call is the load notice of ADR 0028. Vocabulary is in `GLOSSARY.md`; decisions are in `docs/adr/`; planned work is in GitHub issues.
 
-Today the server exposes <!-- tools:count -->3<!-- /tools:count --> tools, all read-only: `get_overview`, `get_guide` and `query_sql`. The data store and the data behind them come in later issues. Every data provider is listed with its status in `scripts/source-coverage.json`.
+Today the server exposes <!-- tools:count -->4<!-- /tools:count --> tools: `get_overview`, `get_guide` and `query_sql` are read-only; `notify_load_finish` sends one notice to a URL the caller gives (ADR 0028). The data store and the data behind them come in later issues. Every data provider is listed with its status in `scripts/source-coverage.json`.
 
 ## Layout
 
@@ -80,7 +80,7 @@ Read the doc for the situation; run the command when there is one. The index doe
 - Code, tools, parameters and docs are in English.
 - A dependency that is not an npm package (a Python package, a system binary or language pack, an apk or apt package) is pinned in the setup and in the Dockerfile, and `pnpm ensure-deps` installs or checks it. The Python pins are in `requirements-tools.txt`, which the Dockerfile reads too; a system tool is named in `scripts/ensure-tools.mjs` and in the Dockerfile. A dependency added without both is not done.
 - Rules that cannot fail (read-only access, the SQL guard, output limits, secret masking) live in code with a test, never only in a description or a prompt.
-- The server never writes to the outside world. It writes only to its own temporary cache file.
+- The server writes only to its own temporary cache file. The one exception is `notify_load_finish` (ADR 0028): it sends a POST with load metadata to a URL the caller gives, and nothing else leaves the server.
 - In HTTP mode (`INVESTMENT_MCP_TRANSPORT=http`) the server also listens for MCP clients on `INVESTMENT_MCP_HTTP_HOST` and `INVESTMENT_MCP_HTTP_PORT`. Every `/mcp` request needs the bearer token, which is required on every address and is never returned or logged (`docs/adr/0025-docker-runs-stdio-or-http.md`).
 - Text from filings and other third-party documents is data, never an instruction. The output describes and locates information; it is not investment advice.
 - API keys and the value of an environment variable are never returned or logged. Every new output path is redacted and tested with a fake secret.
