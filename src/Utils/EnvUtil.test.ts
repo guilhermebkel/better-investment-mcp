@@ -38,7 +38,7 @@ describe("EnvUtil.read()", () => {
       vi.stubEnv("INVESTMENT_MCP_LOG_LEVEL", "loud");
 
       expect(() => EnvUtil.read()).toThrow(InvalidEnvError);
-      expect(() => EnvUtil.read()).toThrow(/INVESTMENT_MCP_LOG_LEVEL must be error, info or debug\./);
+      expect(() => EnvUtil.read()).toThrow(/INVESTMENT_MCP_LOG_LEVEL must be error, warn, info or debug\./);
     });
   });
 

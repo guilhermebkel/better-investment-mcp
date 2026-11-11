@@ -1,6 +1,6 @@
 import type { LogFieldNameToValue, LogLevel } from "@/Protocols/LogProtocol.ts";
 
-const LEVELS_FROM_LEAST_TO_MOST_VERBOSE: readonly LogLevel[] = ["error", "info", "debug"];
+const LEVELS_FROM_LEAST_TO_MOST_VERBOSE: readonly LogLevel[] = ["error", "warn", "info", "debug"];
 
 export class LogUtil {
   private static threshold: LogLevel = "info";
@@ -9,7 +9,7 @@ export class LogUtil {
     LogUtil.threshold = level;
   }
 
-  static logDebug(event: string, fields: LogFieldNameToValue): void {
+  static logDebug(event: string, fields: LogFieldNameToValue = {}): void {
     LogUtil.write("debug", event, fields);
   }
 
@@ -17,8 +17,12 @@ export class LogUtil {
     LogUtil.write("info", event, fields);
   }
 
-  static logError(event: string, detail: string): void {
-    LogUtil.write("error", event, { detail });
+  static logWarn(event: string, fields: LogFieldNameToValue = {}): void {
+    LogUtil.write("warn", event, fields);
+  }
+
+  static logError(event: string, fields: LogFieldNameToValue = {}): void {
+    LogUtil.write("error", event, fields);
   }
 
   static showMessage(text: string): void {
@@ -31,7 +35,8 @@ export class LogUtil {
     if (findVerbosity(level) > findVerbosity(LogUtil.threshold)) {
       return;
     }
+    // Why: the time is the first field of every line, in UTC, so lines from one process can be ordered when a bug is traced.
     // Why: stdout belongs to the MCP protocol, so every log line goes to stderr.
-    process.stderr.write(`${JSON.stringify({ level, event, ...fields })}\n`);
+    process.stderr.write(`${JSON.stringify({ time: new Date().toISOString(), level, event, ...fields })}\n`);
   }
 }

@@ -44,7 +44,7 @@ export class NotifyLoadFinishOperation implements OperationPort<NotifyLoadFinish
       LogUtil.logInfo("load.notice.sent", { host, loadingId: job.id, status: notice.status });
     } catch (error) {
       const reason = error instanceof Error ? error.message : "unknown error";
-      LogUtil.logError("load.notice.failed", reason);
+      LogUtil.logError("load.notice.failed", { loadingId: job.id, host, reason });
     }
   }
 

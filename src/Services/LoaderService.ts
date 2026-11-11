@@ -32,6 +32,7 @@ import type { ProviderRegistryService } from "@/Services/ProviderRegistryService
 import { SqlGuardService } from "@/Services/SqlGuardService.ts";
 import type { StoreService } from "@/Services/StoreService.ts";
 import { ConcurrencyUtil } from "@/Utils/ConcurrencyUtil.ts";
+import { LogUtil } from "@/Utils/LogUtil.ts";
 
 const ASSET_TABLE = "asset";
 const DISCLOSURE_DOCUMENT_TYPES = ["fre", "vlmo", "cgvn"] as const;
@@ -144,10 +145,14 @@ export class LoaderService implements LoaderPort {
     const assetId = LoaderService.buildAssetId(requirement);
     const failures = await cache.countRecentFailures(category, assetId, this.readFailureWindowStart());
     if (failures >= LoaderService.MAX_FAILED_ATTEMPTS) {
+      // Why: a load refused by the failure limit is a repeated failure the reader has to see, not a silent answer.
+      LogUtil.logWarn("load.refused", { category, assetId, failures });
       return { ...base, status: "failed", error: LoaderService.buildRetryError(failures) };
     }
     const windowKey = window === undefined ? "" : `:${window.from}:${window.to}`;
+    const startedAt = Date.now();
     const result = await cache.runOnce(`${category}:${LoaderService.buildAssetId(requirement)}${windowKey}`, () => this.load(requirement, window));
+    LoaderService.logLoadOutcome(category, assetId, result, Date.now() - startedAt);
     const error = result.errorMessage === undefined ? {} : { error: result.errorMessage };
     const period = await this.readPeriod(requirement);
     return {
@@ -168,6 +173,19 @@ export class LoaderService implements LoaderPort {
 
   private static readRowCount(result: ProviderResult): number {
     return Object.values(result.tables).reduce((total, rows) => total + rows.length, 0);
+  }
+
+  private static logLoadOutcome(category: string, assetId: string, result: CacheLoadResult, durationMs: number): void {
+    // Why: one line per load (its result and its duration), and one line for the items it skipped, never one per item.
+    if (result.errorMessage === undefined) {
+      LogUtil.logInfo("load.finished", { category, assetId, durationMs, rowsWritten: result.rowsWritten, source: result.source });
+    } else {
+      LogUtil.logError("load.failed", { category, assetId, durationMs, error: result.errorMessage, source: result.source });
+    }
+    const skipped = result.itemErrors?.length ?? 0;
+    if (skipped > 0) {
+      LogUtil.logWarn("load.items.skipped", { category, assetId, skipped });
+    }
   }
 
   private resolveWindow(requirement: Requirement): PeriodWindow | undefined {

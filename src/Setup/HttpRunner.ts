@@ -45,7 +45,7 @@ export class HttpRunner {
     const context: HttpContext = { auth: new HttpAuthService(env.INVESTMENT_MCP_HTTP_TOKEN), sessions };
     const httpServer = createServer((request, response) => {
       HttpRunner.handleRequest(request, response, context).catch((error: unknown) => {
-        LogUtil.logError("http_request_failed", error instanceof Error ? error.name : "unknown");
+        LogUtil.logError("http_request_failed", { detail: error instanceof Error ? error.name : "unknown" });
         if (!response.headersSent) {
           HttpRunner.reply(response, HTTP_INTERNAL_ERROR, "Internal Server Error");
         }
