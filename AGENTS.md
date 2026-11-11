@@ -59,6 +59,7 @@ Read the doc for the situation; run the command when there is one. The index doe
 | Domain terms or an ADR for the area | `docs/agents/domain.md`, `GLOSSARY.md`, `docs/adr/` | — |
 | Writing or changing code | `docs/code-standards.md` | — |
 | Writing or changing tests | `docs/test-standards.md` | — |
+| Writing or changing a log line, a log level or what a log may hold | `docs/log-standards.md`, `docs/code-standards.md` ("Boundaries and security") | `pnpm test` |
 | Iterating on changed source | `docs/test-standards.md`, `docs/code-standards.md` ("Before committing") | `pnpm test:changed` |
 | Before committing | `docs/code-standards.md` ("Before committing"), `.github/PULL_REQUEST_TEMPLATE.md` | `pnpm check:changed` |
 | Full verification (CI gate) | `.github/PULL_REQUEST_TEMPLATE.md` | `pnpm check` |

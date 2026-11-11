@@ -74,7 +74,7 @@ How code in this repository is written. `pnpm lint` enforces the rules marked **
 - **One responsibility per function, and the name says it.** `readX` doesn't write; `findX` doesn't create.
 - **No duplicated logic.** Search before adding a helper; reuse or extract to `src/Utils/`.
 - **Unmapped values stay visible.** A value with no mapping (an unknown field of a vendor response, an unknown filing category) is never dropped or guessed: it is returned as unmapped and the result built on it is marked partial, with the reason.
-- **No `console` (lint).** Logging goes through `LogUtil`, which writes to stderr and never logs a secret.
+- **No `console` (lint).** Logging goes through `LogUtil`, which writes to stderr and never logs a secret. Levels, format and what a log may hold are in `docs/log-standards.md`.
 - **Floating promises (lint).** Every promise is awaited or returned.
 
 ## When lint rules collide
