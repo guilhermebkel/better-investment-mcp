@@ -1,6 +1,7 @@
 import { HttpRefusedError } from "@/Errors/HttpRefusedError.ts";
 import type { DocumentProvider } from "@/Protocols/DocumentProviderProtocol.ts";
 import type { HttpPort } from "@/Protocols/HttpProtocol.ts";
+import { LogUtil } from "@/Utils/LogUtil.ts";
 import { ZipFileUtil } from "@/Utils/ZipFileUtil.ts";
 
 const BYTES_PER_MIB = 1_048_576;
@@ -53,6 +54,8 @@ export class CvmDocumentAdapter implements DocumentProvider {
         if (error instanceof HttpRefusedError || isLastAttempt) {
           throw error;
         }
+        // Why: a failed attempt that is tried again is a warning; the last failure is reported by the loader as an error.
+        LogUtil.logWarn("cvm.document.retry", { attempt, attempts: CvmDocumentAdapter.DOCUMENT_ATTEMPTS, reason: CvmDocumentAdapter.classifyFailure(error) });
         await this.pause(CvmDocumentAdapter.RETRY_WAITS_MS[attempt - 1] ?? 0);
       }
     }
@@ -67,6 +70,21 @@ export class CvmDocumentAdapter implements DocumentProvider {
     }
     // Why: the HTTP adapter answers with a Node Buffer, which the PDF reader refuses; the document leaves the adapter as plain bytes.
     return new Uint8Array(bytes);
+  }
+
+  private static classifyFailure(error: unknown): string {
+    // Why: the kind of failure is named without the message, which can hold the link; the kinds are the ones this site shows.
+    const message = error instanceof Error ? error.message : "";
+    if (message.includes("web page")) {
+      return "web_page";
+    }
+    if (message.includes("outstanding read data") || message.includes("terminated")) {
+      return "cut_transfer";
+    }
+    if (message.includes("timed out") || message.includes("aborted")) {
+      return "timeout";
+    }
+    return error instanceof Error ? error.name : "unknown";
   }
 
   private static sleep(ms: number): Promise<void> {

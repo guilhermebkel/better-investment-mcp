@@ -17,7 +17,7 @@ describe("StartupRunner.run()", () => {
 
     await StartupRunner.run(["init"]);
 
-    expect(stderr).toHaveBeenNthCalledWith(1, "{\"level\":\"info\",\"event\":\"environment_valid\"}\n");
+    expect(stderr).toHaveBeenNthCalledWith(1, expect.stringMatching(/^\{"time":"[^"]+","level":"info","event":"environment_valid"\}\n$/u));
     expect(stderr).toHaveBeenCalledTimes(2);
     expect(stdout).not.toHaveBeenCalled();
   });

@@ -6,7 +6,7 @@ const DEFAULT_CACHE_TTL_SECONDS = 86_400;
 const OptionalTextSchema = z.string().optional().transform((text) => (text === undefined || text === "" ? undefined : text));
 
 const LogLevelSchema = OptionalTextSchema.pipe(
-  z.enum(["error", "info", "debug"], { error: "INVESTMENT_MCP_LOG_LEVEL must be error, info or debug." }).optional(),
+  z.enum(["error", "warn", "info", "debug"], { error: "INVESTMENT_MCP_LOG_LEVEL must be error, warn, info or debug." }).optional(),
 ).transform((level) => level ?? "info");
 
 // Why: the background threshold is the time a query waits for a load before it answers with the rows already stored.
