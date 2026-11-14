@@ -37,6 +37,7 @@ const PETR4_FILING: Requirement = {
   filingType: "material_fact",
 };
 const PDF_FILING_ID = "f-material-fact";
+const MATERIAL_FACT_PDF = "material-fact-sample.pdf";
 const buildFilingRow = (
   filingId: string,
   filingType: string,
@@ -376,7 +377,7 @@ describe("LoaderService.ensure()", () => {
       fileRows = [buildFilingRow(PDF_FILING_ID, "material_fact", PDF_URL)];
       rebuildCalls = 0;
       const requested: string[] = [];
-      const pdfPath = join(DOCUMENT_FIXTURES, "material-fact-sample.pdf");
+      const pdfPath = join(DOCUMENT_FIXTURES, MATERIAL_FACT_PDF);
       documentBytes = () => Promise.resolve(new Uint8Array(readFileSync(pdfPath)));
       documents = {
         requested,
@@ -402,16 +403,26 @@ describe("LoaderService.ensure()", () => {
           return Promise.resolve({ source: "cvm", tables: { asset_filings: fileRows } });
         },
       });
+      // Why: a filing id is looked for in the filings and then in the disclosures (issue #42, S1), so both lists have a provider here.
+      const disclosuresProvider = new FakeProvider({
+        category: "disclosures",
+        vendor: "cvm",
+        markets: ["BR"],
+        assetTypes: ["stock"],
+        respond: (): Promise<ProviderResult> => Promise.resolve({ source: "cvm", tables: { asset_filings: [] } }),
+      });
       const registry = new ProviderRegistryService(
         {
           INVESTMENT_MCP_LOG_LEVEL: "error",
           INVESTMENT_MCP_CACHE_TTL_SECONDS: TTL_SECONDS,
           INVESTMENT_MCP_FILINGS_PROVIDER: "BR:cvm",
+          INVESTMENT_MCP_DISCLOSURES_PROVIDER: "BR:cvm",
           INVESTMENT_MCP_DOCUMENTS_PROVIDER: "BR:cvm",
         },
         {
           ...ProviderRegistryService.buildEmptyCatalog(),
           filings: { cvm: filingsProvider },
+          disclosures: { cvm: disclosuresProvider },
           documents: { cvm: documents },
         },
       );
@@ -531,7 +542,7 @@ describe("LoaderService.ensure()", () => {
       it("replaces the chunks when the document has changed", async () => {
         const loader = buildLoader();
         await loader.ensure([PETR4_FILING]);
-        const changed = await Promise.resolve(new Uint8Array(readFileSync(join(DOCUMENT_FIXTURES, "material-fact-sample.pdf"))));
+        const changed = await Promise.resolve(new Uint8Array(readFileSync(join(DOCUMENT_FIXTURES, MATERIAL_FACT_PDF))));
         documentBytes = () => Promise.resolve(new Uint8Array([...changed, 10]));
         nowMs += (TTL_SECONDS + 1) * 1_000;
 
@@ -839,6 +850,122 @@ describe("LoaderService.ensure()", () => {
       expect(seen).toStrictEqual([{ market: BRAZIL, ticker: TICKER, assetType: STOCK, period: REQUEST_PERIOD }]);
       store.close();
       rmSync(directory, { recursive: true, force: true });
+    });
+  });
+
+  describe("when a query asks for a disclosure type (FRE, VLMO, CGVN)", () => {
+    const FRE_ID = "f-fre-2025";
+    const FRE_URL = "https://www.rad.cvm.gov.br/ENET/doc-fre-2025";
+    const FRE_CHUNKS: Requirement = { ...PETR4_FILING, filingType: "fre" };
+    let disclosureRows: Record<string, string | null>[];
+    let filingsCalls: ProviderRequest[];
+    let disclosureCalls: ProviderRequest[];
+    let documentsRequested: string[];
+
+    const buildFreRow = (): Record<string, string | null> => ({
+      asset_id: PETR4_ASSET_ID,
+      filing_id: FRE_ID,
+      document_type: "fre",
+      category: "Formulário de Referência",
+      reference_time_start: "2025-12-31",
+      reference_time_end: "2025-12-31",
+      published_at: "2026-03-30T00:00:00-03:00",
+      url: FRE_URL,
+      file_hash: null,
+      subject: "Formulário de Referência",
+    });
+
+    beforeEach(() => {
+      // Why: the reference form is listed by the disclosures category, so its fake lists it there and the filings category stays empty (issue #42, S1).
+      disclosureRows = [buildFreRow()];
+      filingsCalls = [];
+      disclosureCalls = [];
+      documentsRequested = [];
+    });
+
+    const buildFreLoader = (): LoaderService => {
+      const pdf = new Uint8Array(readFileSync(join(DOCUMENT_FIXTURES, MATERIAL_FACT_PDF)));
+      const documents: DocumentProvider = {
+        category: "documents",
+        vendor: "cvm",
+        markets: ["BR"],
+        assetTypes: ["stock"],
+        fetchDocument: (url: string) => {
+          documentsRequested.push(url);
+          return Promise.resolve(pdf);
+        },
+      };
+      const filings = new FakeProvider({
+        category: "filings",
+        vendor: "cvm",
+        markets: ["BR"],
+        assetTypes: ["stock"],
+        respond: (request): Promise<ProviderResult> => {
+          filingsCalls.push(request);
+          return Promise.resolve({ source: "cvm", tables: { asset_filings: [] } });
+        },
+      });
+      const disclosures = new FakeProvider({
+        category: "disclosures",
+        vendor: "cvm",
+        markets: ["BR"],
+        assetTypes: ["stock"],
+        respond: (request): Promise<ProviderResult> => {
+          disclosureCalls.push(request);
+          return Promise.resolve({ source: "cvm", tables: { asset_filings: disclosureRows } });
+        },
+      });
+      const registry = new ProviderRegistryService(
+        {
+          INVESTMENT_MCP_LOG_LEVEL: "error",
+          INVESTMENT_MCP_CACHE_TTL_SECONDS: TTL_SECONDS,
+          INVESTMENT_MCP_FILINGS_PROVIDER: "BR:cvm",
+          INVESTMENT_MCP_DISCLOSURES_PROVIDER: "BR:cvm",
+          INVESTMENT_MCP_DOCUMENTS_PROVIDER: "BR:cvm",
+        },
+        {
+          ...ProviderRegistryService.buildEmptyCatalog(),
+          filings: { cvm: filings },
+          disclosures: { cvm: disclosures },
+          documents: { cvm: documents },
+        },
+      );
+      return new LoaderService(store, registry, () => Promise.resolve());
+    };
+
+    it("lists the FRE filings through the disclosures category, not the filings one, and loads the document (AC1)", async () => {
+      const [entry] = await buildFreLoader().ensure([FRE_CHUNKS]);
+
+      expect(entry).toMatchObject({ category: "documents", status: "loaded" });
+      expect(filingsCalls).toStrictEqual([]);
+      expect(disclosureCalls).toHaveLength(1);
+      expect(documentsRequested).toStrictEqual([FRE_URL]);
+    });
+
+    it("reads the FRE rows of asset_filings from the disclosures list, on a store with no load yet (AC2)", async () => {
+      const entries = await buildFreLoader().ensure([{ table: "asset_filings", category: "disclosures", market: "BR", ticker: "PETR4", assetType: "stock" }]);
+
+      expect(entries.map((entry) => entry.status)).toStrictEqual(["loaded"]);
+      expect(disclosureCalls).toHaveLength(1);
+      const rows = await store.writer.readRows("SELECT filing_id FROM asset_filings WHERE document_type = 'fre'");
+      expect(rows).toStrictEqual([{ filing_id: FRE_ID }]);
+    });
+
+    it("fails naming the asset and the type when the company has no disclosure of that type, and writes no chunk (AC4)", async () => {
+      disclosureRows = [];
+      const [entry] = await buildFreLoader().ensure([FRE_CHUNKS]);
+
+      expect(entry).toMatchObject({ status: "failed", error: "no filing of BR:PETR4 matches filing type fre" });
+      expect(documentsRequested).toStrictEqual([]);
+      expect(await store.writer.readRows("SELECT count(*) AS n FROM asset_filing_chunks")).toStrictEqual([{ n: 0n }]);
+    });
+
+    it("fails naming the filing id, and downloads nothing, when neither list has it (AC5)", async () => {
+      const [entry] = await buildFreLoader().ensure([{ ...FRE_CHUNKS, filingType: undefined, filingId: "f-missing" }]);
+
+      expect(entry).toMatchObject({ status: "failed", error: "no filing of BR:PETR4 matches filing id f-missing" });
+      expect(disclosureCalls).toHaveLength(1);
+      expect(documentsRequested).toStrictEqual([]);
     });
   });
 });

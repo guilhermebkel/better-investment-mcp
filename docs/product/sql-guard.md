@@ -11,7 +11,7 @@
 - A period filter on `reference_time_start` (`ex_time` for `asset_dividends`): a comparison with a date literal (`=`, `<`, `<=`, `>`, `>=`), or `BETWEEN`. The period sets the years the loader loads.
 - An `OR` when every branch filters the same column.
 - The catalog tables without filters: `asset_coverage`, `load_runs` and `load_files`, and the `schema_version` table.
-- `search_chunks(query, asset_id, document_type, section, mode)`: the full-text search. Its query is a literal string; `section` is NULL when no section is wanted; `mode` is `'text'`, the only mode for now (ADR 0023).
+- `search_chunks(query, asset_id, document_type, section, mode)`: the full-text search; its rows include `seq`, so `(filing_id, seq)` names the chunk in `asset_filing_chunks` (issue #42). Its query is a literal string; `section` is NULL when no section is wanted; `mode` is `'text'`, the only mode for now (ADR 0023).
 
 ## What is refused
 

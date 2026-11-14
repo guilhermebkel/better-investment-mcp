@@ -33,7 +33,8 @@ import {
 } from "@/Schemas/SqlGuardSchema.ts";
 import { PeriodService } from "@/Services/PeriodService.ts";
 import { AssetIdUtil } from "@/Utils/AssetIdUtil.ts";
-import type { AssetReading, CategoryReading, MetricGroup, SearchMode } from "@/Protocols/SqlGuardProtocol.ts";
+import { DisclosureTypeUtil } from "@/Utils/DisclosureTypeUtil.ts";
+import type { AssetReading, CategoryReader, CategoryReading, MetricGroup, SearchMode } from "@/Protocols/SqlGuardProtocol.ts";
 import type { AssetIdParts } from "@/Protocols/AssetIdProtocol.ts";
 
 const SELECT_TYPES: readonly ("SELECT_NODE" | "SET_OPERATION_NODE")[] = ["SELECT_NODE", "SET_OPERATION_NODE"];
@@ -61,6 +62,12 @@ export class SqlGuardService implements SqlGuardPort {
     asset_filing_items: "disclosures",
     asset_proceedings: "proceedings",
     asset_filing_chunks: "documents",
+  };
+
+  // Why: a table whose category depends on its filters or its metrics has a reader of its own; the other tables have one fixed category.
+  static readonly TABLE_TO_CATEGORY_READER: Partial<Record<DataTable, CategoryReader>> = {
+    asset_filings: (readValues) => SqlGuardService.readFilingCategories(readValues),
+    asset_metrics: (readValues) => SqlGuardService.readMetricCategories(readValues),
   };
 
   // Why: asset_metrics holds the numbers of several categories; the first word of the metric name says which category fills it.
@@ -351,11 +358,29 @@ export class SqlGuardService implements SqlGuardPort {
     table: DataTable,
     readValues: (column: string) => string[] | undefined,
   ): CategoryReading {
-    // Why: a metric names the category that fills it; a metric with an unknown first word is refused with the words it may use.
-    if (table !== "asset_metrics") {
-      const category = SqlGuardService.TABLE_TO_CATEGORY[table];
-      return { categories: category === undefined ? [] : [category], problems: [] };
+    const reader = SqlGuardService.TABLE_TO_CATEGORY_READER[table];
+    if (reader !== undefined) {
+      return reader(readValues);
     }
+    const category = SqlGuardService.TABLE_TO_CATEGORY[table];
+    return { categories: category === undefined ? [] : [category], problems: [] };
+  }
+
+  private static readFilingCategories(readValues: (column: string) => string[] | undefined): CategoryReading {
+    // Why: a filing type is listed by the category that lists it (issue #42, S1): a disclosure type (FRE, VLMO, CGVN) by the disclosures, any other by the filings; a query naming both kinds loads both.
+    const types = readValues("document_type") ?? [];
+    const categories: CacheCategory[] = [];
+    if (types.length === 0 || types.some((type) => !DisclosureTypeUtil.isDisclosure(type))) {
+      categories.push("filings");
+    }
+    if (types.some((type) => DisclosureTypeUtil.isDisclosure(type))) {
+      categories.push("disclosures");
+    }
+    return { categories, problems: [] };
+  }
+
+  private static readMetricCategories(readValues: (column: string) => string[] | undefined): CategoryReading {
+    // Why: a metric names the category that fills it; a metric with an unknown first word is refused with the words it may use.
     const groups = (readValues("metric") ?? []).map((metric) => metric.split(".")[0] ?? "");
     const unknown = groups.filter((group) => !Object.hasOwn(SqlGuardService.METRIC_GROUP_TO_CATEGORY, group));
     if (unknown.length > 0) {

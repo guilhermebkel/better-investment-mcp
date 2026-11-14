@@ -17,6 +17,19 @@ Each answer says what was loaded, with its period and the error if any.
 - Macro series and PTAX exchange rates: BCB open data. Market expectations (Focus): BCB open data.
 - Treasury bonds: Tesouro Transparente, one bond per asset_id (family and maturity, for example SELIC_2029-03-01).
 
+## Where an analysis theme is in the filings
+
+The item titles follow the FRE form, and the labels are the company's file names, so search by item number (\`split_part(section, ' ', 2)\`).
+
+- Business, products, segments, markets and competition: FRE items 1.2 to 1.5; competition risks in 4.1.
+- History: FRE 1.1. Regulation: FRE 1.6 and 1.8.
+- ESG: FRE 1.9, and document_type 'sustainability' (the integrated and ISSB reports).
+- Risks: FRE 4 and 5. Control and governance: FRE 6 and 7. Pay: FRE 8.
+- Employees and unions: FRE 10, unions in 10.4. Related parties: FRE 11.
+- The directors' comments on results, margins and debt: FRE 2. The numbers are in asset_metrics, not in the text.
+- Guidance: FRE 3. Events: document_type 'material_fact', and 'other' by category.
+- FII reports: document_type 'management_report'. A stock has none.
+
 ## Quality flags
 
 - quotes.is_stale: the price repeats the day before with zero volume.

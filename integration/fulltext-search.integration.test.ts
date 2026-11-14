@@ -122,4 +122,14 @@ describe("FullTextIndexService.buildIndex()", () => {
 
     expect(await searchChunks("cambial")).toStrictEqual([expect.objectContaining({ section: "Riscos", page: 4 })]);
   });
+
+  it("returns the seq of each chunk, so (filing_id, seq) names the chunk in asset_filing_chunks (AC6)", async () => {
+    const hits = await store.writer.readRows("SELECT seq, text FROM search_chunks('dividendos', 'BR:stock:PETR4', 'material_fact', NULL, 'text')");
+    expect(hits).toStrictEqual([{ seq: 2, text: "Os dividendos pagos somaram R$ 0,30 por ação." }]);
+
+    const [hit] = hits;
+    const seq = Number(hit?.seq ?? 0);
+    const stored = await store.writer.readRows("SELECT text FROM asset_filing_chunks WHERE filing_id = 'f1' AND seq = ?", [seq]);
+    expect(stored).toStrictEqual([{ text: hit?.text ?? null }]);
+  });
 });

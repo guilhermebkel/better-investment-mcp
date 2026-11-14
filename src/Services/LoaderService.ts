@@ -32,10 +32,10 @@ import type { ProviderRegistryService } from "@/Services/ProviderRegistryService
 import { SqlGuardService } from "@/Services/SqlGuardService.ts";
 import type { StoreService } from "@/Services/StoreService.ts";
 import { ConcurrencyUtil } from "@/Utils/ConcurrencyUtil.ts";
+import { DisclosureTypeUtil } from "@/Utils/DisclosureTypeUtil.ts";
 import { LogUtil } from "@/Utils/LogUtil.ts";
 
 const ASSET_TABLE = "asset";
-const DISCLOSURE_DOCUMENT_TYPES = ["fre", "vlmo", "cgvn"] as const;
 const DOCUMENT_SOURCE = "cvm";
 const MS_PER_MINUTE = 60_000;
 const FAILURE_WINDOW_MINUTES = 60;
@@ -262,17 +262,24 @@ export class LoaderService implements LoaderPort {
     if (requirement.assetType === undefined) {
       return [{ ...base, status: "failed", error: "documents need the asset type of the asset" }];
     }
-    const filingsEntry = await this.ensureOne({
-      market,
-      ticker,
-      table: "asset_filings",
-      category: "filings",
-      assetType: requirement.assetType,
-    });
-    if (filingsEntry.status === "failed") {
-      return [{ ...base, status: "failed", error: `the filing list could not be loaded: ${filingsEntry.error ?? "unknown error"}` }];
+    // Why: the list comes from the category that lists the type (issue #42, S1); a filing id that the first list does not have is looked for in the disclosures list too.
+    let filings: FilingRow[] = [];
+    for (const category of LoaderService.readFilingListCategories(requirement)) {
+      const listEntry = await this.ensureOne({
+        market,
+        ticker,
+        category,
+        table: "asset_filings",
+        assetType: requirement.assetType,
+      });
+      if (listEntry.status === "failed") {
+        return [{ ...base, status: "failed", error: `the filing list could not be loaded: ${listEntry.error ?? "unknown error"}` }];
+      }
+      filings = await this.readFilings(requirement);
+      if (filings.length > 0) {
+        break;
+      }
     }
-    const filings = await this.readFilings(requirement);
     if (filings.length === 0) {
       const selector = requirement.filingId === undefined ? `filing type ${requirement.filingType ?? ""}` : `filing id ${requirement.filingId}`;
       return [{ ...base, status: "failed", error: `no filing of ${market}:${ticker} matches ${selector}` }];
@@ -412,6 +419,13 @@ export class LoaderService implements LoaderPort {
       // Why: the chunks are stored even when the index cannot be built; the answer then says why search_chunks failed.
       return LoaderService.describe(error);
     }
+  }
+
+  private static readFilingListCategories(requirement: Requirement): CacheCategory[] {
+    if (requirement.filingId !== undefined) {
+      return ["filings", "disclosures"];
+    }
+    return DisclosureTypeUtil.isDisclosure(requirement.filingType ?? "") ? ["disclosures"] : ["filings"];
   }
 
   private async readFilings(requirement: Requirement): Promise<FilingRow[]> {
@@ -611,7 +625,7 @@ export class LoaderService implements LoaderPort {
   }
 
   private static readFilingScope(category: CacheCategory): SqlScope {
-    const types = [...DISCLOSURE_DOCUMENT_TYPES];
+    const types = [...DisclosureTypeUtil.TYPES];
     const placeholders = types.map(() => "?").join(", ");
     const operator = LoaderService.CATEGORY_TO_FILING_OPERATOR[category] ?? "NOT IN";
     return { sql: ` AND document_type ${operator} (${placeholders})`, values: types };
