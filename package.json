@@ -1,6 +1,6 @@
 {
   "name": "better-investment-mcp",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "MCP server that gives AI agents Brazilian asset data (prices, dividends, fundamentals, filings, FII reports) through one read-only SQL tool. Unofficial; not investment advice.",
   "license": "MIT",
   "author": "Guilherme Mota",
