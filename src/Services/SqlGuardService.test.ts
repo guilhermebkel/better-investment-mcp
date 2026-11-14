@@ -13,6 +13,16 @@ const PETR4 = { market: "BR", ticker: "PETR4", assetType: "stock" } as const;
 const VALE3 = { market: "BR", ticker: "VALE3", assetType: "stock" } as const;
 
 const ACCEPTED: [string, string, Requirement[]][] = [
+  ["a filing type of a disclosure (FRE) is listed by the disclosures category (AC2)", "SELECT filing_id FROM asset_filings WHERE asset_id = 'BR:stock:PETR4' AND document_type = 'fre'", [
+    { table: "asset_filings", category: "disclosures", ...PETR4, period: {} },
+  ]],
+  ["a filing type that is not a disclosure is listed by the filings category", "SELECT filing_id FROM asset_filings WHERE asset_id = 'BR:stock:PETR4' AND document_type = 'material_fact'", [
+    { table: "asset_filings", category: "filings", ...PETR4, period: {} },
+  ]],
+  ["two kinds of filing type load both lists", "SELECT filing_id FROM asset_filings WHERE asset_id = 'BR:stock:PETR4' AND document_type IN ('fre', 'material_fact')", [
+    { table: "asset_filings", category: "filings", ...PETR4, period: {} },
+    { table: "asset_filings", category: "disclosures", ...PETR4, period: {} },
+  ]],
   ["a single asset with =", "SELECT close FROM asset_quotes WHERE asset_id = 'BR:stock:PETR4'", [
     { table: "asset_quotes", category: "quotes", ...PETR4, period: {} },
   ]],
