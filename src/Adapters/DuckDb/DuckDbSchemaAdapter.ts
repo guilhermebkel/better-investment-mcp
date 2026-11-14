@@ -4,7 +4,7 @@ const ASSET_ID_COLUMN = "asset_id VARCHAR NOT NULL";
 const REFERENCE_COLUMNS = "reference_time_start DATE NOT NULL, reference_time_end DATE NOT NULL";
 
 export class DuckDbSchemaAdapter {
-  static readonly VERSION = 9;
+  static readonly VERSION = 10;
 
   static readonly STATEMENTS: readonly string[] = [
     "CREATE TABLE schema_version (version INTEGER NOT NULL);",
@@ -17,7 +17,7 @@ export class DuckDbSchemaAdapter {
     `CREATE TABLE asset_metrics (${ASSET_ID_COLUMN}, metric VARCHAR NOT NULL, ${REFERENCE_COLUMNS}, value DOUBLE, unit VARCHAR NOT NULL, version INTEGER, filing_id VARCHAR, PRIMARY KEY (asset_id, metric, reference_time_start, reference_time_end));`,
     `CREATE TABLE asset_expectations (${ASSET_ID_COLUMN}, ${REFERENCE_COLUMNS}, survey_time DATE NOT NULL, calculation_base INTEGER NOT NULL, mean DOUBLE, median DOUBLE, std_dev DOUBLE, min DOUBLE, max DOUBLE, respondents INTEGER, PRIMARY KEY (asset_id, reference_time_start, survey_time, calculation_base));`,
     `CREATE TABLE asset_holdings (${ASSET_ID_COLUMN}, ${REFERENCE_COLUMNS}, block VARCHAR NOT NULL, application_type VARCHAR, held_code VARCHAR, held_description VARCHAR, held_issuer VARCHAR, quantity DOUBLE, market_value DOUBLE);`,
-    `CREATE TABLE asset_filings (filing_id VARCHAR PRIMARY KEY, ${ASSET_ID_COLUMN}, document_type VARCHAR NOT NULL, category VARCHAR, subject VARCHAR, reference_time_start DATE, reference_time_end DATE, published_at TIMESTAMPTZ, version INTEGER, url VARCHAR, file_hash VARCHAR, source_file VARCHAR);`,
+    `CREATE TABLE asset_filings (filing_id VARCHAR PRIMARY KEY, ${ASSET_ID_COLUMN}, document_type VARCHAR NOT NULL, category VARCHAR, category_type VARCHAR, subject VARCHAR, reference_time_start DATE, reference_time_end DATE, published_at TIMESTAMPTZ, version INTEGER, url VARCHAR, file_hash VARCHAR, source_file VARCHAR);`,
     `CREATE TABLE asset_filing_items (${ASSET_ID_COLUMN}, filing_id VARCHAR NOT NULL, section VARCHAR NOT NULL, row_json VARCHAR NOT NULL);`,
     `CREATE TABLE asset_filing_chunks (filing_id VARCHAR NOT NULL, ${ASSET_ID_COLUMN}, document_type VARCHAR NOT NULL, section VARCHAR, page INTEGER, seq INTEGER NOT NULL, text VARCHAR NOT NULL, PRIMARY KEY (filing_id, seq));`,
     "CREATE TABLE load_runs (run_id VARCHAR PRIMARY KEY, category VARCHAR NOT NULL, asset_id VARCHAR NOT NULL, source VARCHAR NOT NULL, started_at TIMESTAMPTZ NOT NULL, finished_at TIMESTAMPTZ, expires_at TIMESTAMPTZ, rows_read BIGINT, error VARCHAR, filing_id VARCHAR, reference_time_start DATE, reference_time_end DATE);",

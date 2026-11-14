@@ -104,9 +104,11 @@ What a fund holds, from the CVM monthly holdings file. Key `(asset_id, reference
 
 ### `asset_filings`
 
-One row per document. Key `filing_id`. Columns: `asset_id`, `document_type` (`material_fact`, `management_report`, `other`, `fre`, `vlmo`, `cgvn`, and the others CVM names), `category` (CVM's category), `subject`, `reference_time_start` and `reference_time_end` (the period the document refers to), `published_at` (TIMESTAMP, when it was filed, with the time zone of the source), `version`, `url`, `file_hash` (SHA-256 of the document, for change detection), `source_file` (the file of the CVM zip the row came from).
+One row per document. Key `filing_id`. Columns: `asset_id`, `document_type` (`material_fact`, `management_report`, `other`, `fre`, `vlmo`, `cgvn`, and the others CVM names), `category` (CVM's category), `category_type` (CVM's `Tipo`, the second level of the category, for example `AGE` under `Assembleia`, or `Apresentações a analistas/agentes do mercado` under `Comunicado ao Mercado`; empty when CVM gives none), `subject`, `reference_time_start` and `reference_time_end` (the period the document refers to), `published_at` (TIMESTAMP, when it was filed, with the time zone of the source), `version`, `url`, `file_hash` (SHA-256 of the document, for change detection), `source_file` (the file of the CVM zip the row came from).
 
 `document_type = 'sustainability'` is set from the CVM IPE category, by exact match: `Relatório de Sustentabilidade`, `Relato Integrado` and `Relatório de Informações Financeiras Relacionadas à Sustentabilidade - Padrão ISSB`. `category` keeps the exact CVM name, so the three stay distinguishable. `Política de Sustentabilidade` is a policy, not a report, so it is `other`, and so is a `Comunicado ao Mercado` whose subject names a report. Coverage is partial: the rows need the company's CNPJ (`asset.legal_id`), and a report that CVM files under another category stays `other`.
+
+Investor relations content is found by `category` and `category_type`, not by `document_type`: `Calendário de Eventos Corporativos` (category); `Comunicado ao Mercado` with `Apresentações a analistas/agentes do mercado` or `Esclarecimentos sobre questionamentos da CVM/B3` (category_type); `Fato Relevante` (category, `document_type = 'material_fact'`). Rows filed before the schema version 10 have no `category_type` until the store is rebuilt.
 
 ### `asset_filing_items`
 

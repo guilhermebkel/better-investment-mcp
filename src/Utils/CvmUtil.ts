@@ -118,6 +118,7 @@ export class CvmUtil {
       filing_id: row.filing_id ?? null,
       document_type: row.filing_type ?? null,
       category: row.category ?? null,
+      category_type: row.category_type ?? null,
       subject: row.subject ?? null,
       reference_time_start: reference,
       reference_time_end: reference,

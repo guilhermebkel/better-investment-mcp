@@ -241,7 +241,7 @@ Each category has a default, so a query works with no provider variable. A secon
 | yfinance (Python library) | quotes, dividends and splits, as an alternative to Yahoo | Needs `python3` and `pip install yfinance` on the machine; the Docker image already has both. Unofficial. |
 | StatusInvest | fundamentals, FII monthly data | Blocked: the site answers with a Cloudflare challenge, which the server does not bypass. |
 | CVM | filings list (IPE) | Open data. A ticker needs a CNPJ link that no source gives yet. |
-| CVM | ITR, DFP, Formulário de Referência | Not built (issue #11). |
+| CVM | ITR, DFP, Formulário de Referência | Built (issue #11). Open data; each yearly zip is streamed. |
 | FNET | FII management reports | Built only if a spike passes. |
 
 Each load records the vendor that produced it in `load_runs`. The answer of `query_sql` does not name it.
