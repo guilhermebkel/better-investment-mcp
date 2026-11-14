@@ -109,6 +109,6 @@ export type CategoryReading = {
   problems: string[];
 };
 
-export type MetricGroup = "statement" | "fundamental" | "fii" | "fund" | "macro" | "treasury" | "fx";
+export type MetricGroup = "statement" | "fundamental" | "fii" | "fund" | "macro" | "treasury" | "fx" | "sector" | "index";
 
 export type SearchMode = "text";

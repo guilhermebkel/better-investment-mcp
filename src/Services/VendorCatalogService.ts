@@ -1,3 +1,4 @@
+import { B3IndexMembershipAdapter } from "@/Adapters/B3/B3IndexMembershipAdapter.ts";
 import { B3ListingAdapter } from "@/Adapters/B3/B3ListingAdapter.ts";
 import { B3CotahistAdapter } from "@/Adapters/B3/B3CotahistAdapter.ts";
 import { BcbAdapter } from "@/Adapters/Bcb/BcbAdapter.ts";
@@ -15,6 +16,7 @@ import { CvmTickerAdapter } from "@/Adapters/Cvm/CvmTickerAdapter.ts";
 import { FnetAdapter } from "@/Adapters/Fnet/FnetAdapter.ts";
 import { FnetDocumentAdapter } from "@/Adapters/Fnet/FnetDocumentAdapter.ts";
 import { HttpAdapter } from "@/Adapters/Http/HttpAdapter.ts";
+import { IbgeSectorAdapter } from "@/Adapters/Ibge/IbgeSectorAdapter.ts";
 import { StatusInvestAdapter } from "@/Adapters/StatusInvest/StatusInvestAdapter.ts";
 import { TesouroAdapter } from "@/Adapters/Tesouro/TesouroAdapter.ts";
 import { YahooAdapter } from "@/Adapters/Yahoo/YahooAdapter.ts";
@@ -23,6 +25,8 @@ import type { CategoryToVendors } from "@/Protocols/ProviderProtocol.ts";
 import { ProviderRegistryService } from "@/Services/ProviderRegistryService.ts";
 
 const CVM_FILE_TIMEOUT_MS = 120_000;
+const IBGE_MAX_RESPONSE_BYTES = 20_971_520;
+const IBGE_TIMEOUT_MS = 60_000;
 
 export class VendorCatalogService {
   static build(): CategoryToVendors {
@@ -62,6 +66,11 @@ export class VendorCatalogService {
     // Why: one ticker-to-CNPJ lookup serves every CVM adapter, so the company list is read once for all of them.
     const b3Http = new HttpAdapter({ allowedHosts: [B3ListingAdapter.HOST] });
     const b3Listing = new B3ListingAdapter(b3Http);
+    const ibgeHttp = new HttpAdapter({
+      allowedHosts: [IbgeSectorAdapter.HOST],
+      maxBytes: IBGE_MAX_RESPONSE_BYTES,
+      timeoutMs: IBGE_TIMEOUT_MS,
+    });
     const b3CotahistHttp = new HttpAdapter({
       allowedHosts: [B3CotahistAdapter.HOST],
       maxBytes: B3CotahistAdapter.MAX_FILE_BYTES,
@@ -106,6 +115,8 @@ export class VendorCatalogService {
       proceedings: {
         cvm: new CvmProceedingsAdapter(cvmHttp, cvmTicker.resolveCnpj, (cnpj) => cvmRegistry.readNames(cnpj)),
       },
+      sector: { ibge: new IbgeSectorAdapter(ibgeHttp) },
+      index_membership: { b3: new B3IndexMembershipAdapter(b3Http) },
     };
   }
 }

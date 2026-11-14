@@ -57,6 +57,8 @@ One interface per data category, one adapter per vendor (`docs/adr/0005-one-prov
 - `FundProvider`: a fund's registry, daily quota and holdings, keyed by CNPJ. `INVESTMENT_MCP_FUND_PROVIDER`. CVM.
 - `DisclosuresProvider`: a company's reference form, securities holdings and governance rows (FRE, VLMO, CGVN). `INVESTMENT_MCP_DISCLOSURES_PROVIDER`. CVM.
 - `ProceedingsProvider`: CVM sanctioning proceedings, linked to a stock only by the defendant's name (ADR 0029). `INVESTMENT_MCP_PROCEEDINGS_PROVIDER`. CVM.
+- `SectorProvider`: IBGE SIDRA, the number of companies by CNAE class (`BR:sector:<code>`, `sector.companies`). `INVESTMENT_MCP_SECTOR_PROVIDER`. IBGE.
+- `IndexMembershipProvider`: the weight of a stock in the B3 indexes ISE, ICO2 and IDIVERSA (`index.*`); IGPTW is blocked on this server. `INVESTMENT_MCP_INDEX_MEMBERSHIP_PROVIDER`. B3.
 <!-- providers:end -->
 
 `scripts/source-coverage.json` classifies each provider as `implemented`, `planned` or `excluded` with a reason, and `pnpm source:drift` fails when this list and that file disagree.

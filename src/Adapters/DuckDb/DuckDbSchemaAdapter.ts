@@ -36,7 +36,7 @@ export class DuckDbSchemaAdapter {
       "  UNION ALL SELECT 'expectations', asset_id, min(reference_time_start), max(reference_time_end) FROM asset_expectations GROUP BY asset_id",
       "  UNION ALL SELECT 'filings', asset_id, min(reference_time_start), max(reference_time_end) FROM asset_filings GROUP BY asset_id",
       "  UNION ALL SELECT 'proceedings', asset_id, min(opened_time), max(opened_time) FROM asset_proceedings GROUP BY asset_id",
-      "  UNION ALL SELECT CASE split_part(metric, '.', 1) WHEN 'statement' THEN 'statements' WHEN 'fundamental' THEN 'fundamentals' WHEN 'fii' THEN 'fund_data' WHEN 'fund' THEN 'fund' WHEN 'macro' THEN 'macro' WHEN 'treasury' THEN 'treasury' WHEN 'fx' THEN 'fx' END, asset_id, min(reference_time_start), max(reference_time_end) FROM asset_metrics GROUP BY 1, 2",
+      "  UNION ALL SELECT CASE split_part(metric, '.', 1) WHEN 'statement' THEN 'statements' WHEN 'fundamental' THEN 'fundamentals' WHEN 'fii' THEN 'fund_data' WHEN 'fund' THEN 'fund' WHEN 'macro' THEN 'macro' WHEN 'treasury' THEN 'treasury' WHEN 'fx' THEN 'fx' WHEN 'sector' THEN 'sector' WHEN 'index' THEN 'index_membership' END, asset_id, min(reference_time_start), max(reference_time_end) FROM asset_metrics GROUP BY 1, 2",
       ")",
       "SELECT latest_run.asset_id, latest_run.category, period_span.first_date, period_span.last_date, latest_run.expires_at",
       "FROM latest_run LEFT JOIN period_span USING (category, asset_id) WHERE latest_run.run_rank = 1;",

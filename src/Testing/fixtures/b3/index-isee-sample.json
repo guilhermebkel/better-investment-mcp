@@ -1,0 +1,37 @@
+{
+ "page": {
+  "pageNumber": -1,
+  "pageSize": -1,
+  "totalRecords": 68,
+  "totalPages": -68
+ },
+ "header": {
+  "date": "16/11/26",
+  "text": "Quantidade Teórica Total",
+  "part": "100,000",
+  "partAcum": null,
+  "textReductor": "Redutor",
+  "reductor": "196.103.554,26012074",
+  "theoricalQty": "53.695.534.483"
+ },
+ "results": [
+  {
+   "segment": null,
+   "cod": "TTEN3",
+   "asset": "3TENTOS",
+   "type": "ON      NM",
+   "part": "0,273",
+   "partAcum": null,
+   "theoricalQty": "194.838.126"
+  },
+  {
+   "segment": null,
+   "cod": "ITUB4",
+   "asset": "ITAUUNIBANCO",
+   "type": "PN      N1",
+   "part": "3,218",
+   "partAcum": null,
+   "theoricalQty": "607.529.313"
+  }
+ ]
+}

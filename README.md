@@ -225,6 +225,8 @@ Each category has a default, so a query works with no provider variable. A secon
 | `INVESTMENT_MCP_FX_PROVIDER` | `BR:bcb` | Closing PTAX rate per currency. |
 | `INVESTMENT_MCP_DISCLOSURES_PROVIDER` | `BR:cvm` | Company disclosures (FRE, VLMO, CGVN). |
 | `INVESTMENT_MCP_PROCEEDINGS_PROVIDER` | `BR:cvm` | CVM sanctioning proceedings of a stock, linked by the defendant's name (ADR 0029). |
+| `INVESTMENT_MCP_SECTOR_PROVIDER` | `BR:ibge` | Number of companies by CNAE class, from IBGE (ADR 0030). |
+| `INVESTMENT_MCP_INDEX_MEMBERSHIP_PROVIDER` | `BR:b3` | A stock's weight in the B3 indexes (ADR 0031). |
 | `INVESTMENT_MCP_FUND_PROVIDER` | `BR:cvm` | Fund registry, daily figures and holdings, keyed by CNPJ. |
 
 ## Data sources
@@ -244,8 +246,8 @@ Each category has a default, so a query works with no provider variable. A secon
 | CVM | filings list (IPE) | Open data. A ticker needs a CNPJ link that no source gives yet. |
 | CVM | ITR, DFP, Formulário de Referência | Built (issue #11). Open data; each yearly zip is streamed. |
 | CVM | sanctioning proceedings against a company (processo sancionador) | Open data (ODbL). A defendant is linked to a stock only when its name equals the company's name or previous legal name (ADR 0029). |
-| IBGE SIDRA | sector series: number of companies (table 6449) and producer price index (table 6903) | Not built: the IBGE terms could not be read; the owner decides (ADR 0030). |
-| B3 | index portfolios (ISE, ICO2, IGPTW, IDIVERSA) | Not built: the B3 terms for this route could not be read; the owner decides (ADR 0031). |
+| IBGE SIDRA | sector series: number of companies by CNAE class (table 6449) | Built, accepted by the owner (ADR 0030). The attribution text is still to be quoted; the producer price index (table 6903) is not built. |
+| B3 | index membership: ISE, ICO2 and IDIVERSA weights of a stock | Built, accepted by the owner (ADR 0031). The current portfolio only. IGPTW answers HTTP 403, so a load fails until it is readable. |
 | FNET | FII management reports | Built only if a spike passes. |
 
 Each load records the vendor that produced it in `load_runs`. The answer of `query_sql` does not name it.

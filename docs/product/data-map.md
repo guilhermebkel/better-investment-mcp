@@ -113,6 +113,10 @@ One row per document. Key `filing_id`. Columns: `asset_id`, `document_type` (`ma
 
 Investor relations content is found by `category` and `category_type`, not by `document_type`: `Calendário de Eventos Corporativos` (category); `Comunicado ao Mercado` with `Apresentações a analistas/agentes do mercado` or `Esclarecimentos sobre questionamentos da CVM/B3` (category_type); `Fato Relevante` (category, `document_type = 'material_fact'`). Rows filed before the schema version 10 have no `category_type` until the store is rebuilt.
 
+### Sector and index metrics
+
+Sector (`BR:sector:<CNAE code>`) and index membership are rows of `asset_metrics`, in the groups `sector` and `index`. `sector.companies`: the number of companies of a CNAE 2.0 class, unit `count`, one row per year (IBGE table 6449, ADR 0030). `index.isee`, `index.ico2`, `index.idvr` and `index.gptw`: the weight of a stock in a B3 index, unit `percent`, dated with the portfolio date (ADR 0031). `sector.producer_price_index` is not built.
+
 ### `asset_proceedings`
 
 One row per case and defendant, from CVM's sanctioning proceedings. Key `(asset_id, case_number, defendant_name)`. Columns: `case_number` (CVM's NUP), `defendant_name` (as CVM wrote it), `subject`, `summary`, `opened_time` (DATE, the period column), `current_phase`, `current_subphase`, `last_movement_time`, `defendant_status` (the defendant's latest status in the case) and `defendant_status_time`. A defendant is linked to a stock only when its normalized name equals the stock's registry name or its previous legal name (ADR 0029). The file has no CNPJ.

@@ -72,6 +72,8 @@ export class SqlGuardService implements SqlGuardPort {
     macro: "macro",
     treasury: "treasury",
     fx: "fx",
+    sector: "sector",
+    index: "index_membership",
   };
 
   static readonly ASSET_FILTERS: TableFilters = { columns: ["asset_id"], anyOf: [] };

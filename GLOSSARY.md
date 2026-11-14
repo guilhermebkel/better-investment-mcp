@@ -107,6 +107,10 @@ The statement in `get_overview` that the output describes and locates informatio
 A CVM proceeding (processo sancionador) against one or more defendants. A row of `asset_proceedings` is one case and one defendant. The defendant is linked to a stock only by its name, equal to the company's name or previous legal name (ADR 0029).
 _Avoid_: lawsuit, case file
 
+**Sector**:
+A CNAE 2.0 class, division, group or section, as IBGE writes its code (`BR:sector:29.10-7`). It is not a listed company: its metrics are counts and indexes of its companies (ADR 0030).
+_Avoid_: industry, segment
+
 ## Data quality
 
 **Stale**:

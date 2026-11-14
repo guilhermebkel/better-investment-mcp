@@ -1,0 +1,28 @@
+{
+ "page": {
+  "pageNumber": -1,
+  "pageSize": -1,
+  "totalRecords": 88,
+  "totalPages": -88
+ },
+ "header": {
+  "date": "16/11/26",
+  "text": "Quantidade Teórica Total",
+  "part": "100,000",
+  "partAcum": null,
+  "textReductor": "Redutor",
+  "reductor": "622.532.633,94473190",
+  "theoricalQty": "46.601.052.479"
+ },
+ "results": [
+  {
+   "segment": null,
+   "cod": "ABCB4",
+   "asset": "ABC BRASIL",
+   "type": "PN      N2",
+   "part": "0,304",
+   "partAcum": null,
+   "theoricalQty": "114.777.679"
+  }
+ ]
+}
