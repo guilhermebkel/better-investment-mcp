@@ -64,6 +64,11 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
       - name: Set the version and the date on the landing page
         run: node scripts/site-version.mjs "$VERSION"
+      # Why: pnpm check runs ensure-deps, which fails when tesseract (with por and eng) or ghostscript is missing; the runner has neither. Same packages as scripts/ensure-tools.mjs.
+      - name: Install the system tools the check needs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr tesseract-ocr-por tesseract-ocr-eng ghostscript
       - name: Check everything the release ships
         run: pnpm check
       - name: Commit, tag and push
