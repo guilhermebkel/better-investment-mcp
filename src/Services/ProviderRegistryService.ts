@@ -39,6 +39,9 @@ export class ProviderRegistryService {
     fx: "BR:bcb",
     fund: "BR:cvm",
     disclosures: "BR:cvm",
+    proceedings: "BR:cvm",
+    sector: "BR:ibge",
+    index_membership: "BR:b3",
   };
 
   static readonly CATEGORY_TO_SETTING: Record<CacheCategory, ProviderSettingName> = {
@@ -57,6 +60,9 @@ export class ProviderRegistryService {
     fx: "INVESTMENT_MCP_FX_PROVIDER",
     fund: "INVESTMENT_MCP_FUND_PROVIDER",
     disclosures: "INVESTMENT_MCP_DISCLOSURES_PROVIDER",
+    proceedings: "INVESTMENT_MCP_PROCEEDINGS_PROVIDER",
+    sector: "INVESTMENT_MCP_SECTOR_PROVIDER",
+    index_membership: "INVESTMENT_MCP_INDEX_MEMBERSHIP_PROVIDER",
   };
 
   private readonly categoryToSettings: Record<CacheCategory, VendorSettings>;
@@ -80,6 +86,9 @@ export class ProviderRegistryService {
       fx: ProviderRegistryService.parseSetting(env, "fx"),
       fund: ProviderRegistryService.parseSetting(env, "fund"),
       disclosures: ProviderRegistryService.parseSetting(env, "disclosures"),
+      proceedings: ProviderRegistryService.parseSetting(env, "proceedings"),
+      sector: ProviderRegistryService.parseSetting(env, "sector"),
+      index_membership: ProviderRegistryService.parseSetting(env, "index_membership"),
     };
   }
 
@@ -100,6 +109,9 @@ export class ProviderRegistryService {
       fx: {},
       fund: {},
       disclosures: {},
+      proceedings: {},
+      sector: {},
+      index_membership: {},
     };
   }
 

@@ -46,7 +46,7 @@
     },
     "RegistryProvider": {
       "status": "implemented",
-      "reason": "A company's legal name, sector and situation from CVM's company file (cad_cia_aberta); the CVM registry adapter fills company_registry."
+      "reason": "A company's legal name, sector and situation from CVM's company file (cad_cia_aberta), and its IR site, activity and previous legal name from CVM's FCA general form; the CVM registry adapter fills company_registry and asset_attribute."
     },
     "FxProvider": {
       "status": "implemented",
@@ -59,6 +59,18 @@
     "DisclosuresProvider": {
       "status": "implemented",
       "reason": "A company's FRE, VLMO and CGVN rows from the CVM yearly zips, streamed and kept with their section, date and version; the CVM disclosure adapter fills company_disclosures."
+    },
+    "ProceedingsProvider": {
+      "status": "implemented",
+      "reason": "CVM's sanctioning proceedings (processo_sancionador.zip, ODbL), linked to a stock only when the defendant's name equals the company's name or previous legal name; the CVM proceedings adapter fills asset_proceedings (ADR 0029)."
+    },
+    "SectorProvider": {
+      "status": "implemented",
+      "reason": "IBGE SIDRA table 6449: the number of companies by CNAE 2.0 class (sector.companies, ADR 0030). The producer price index (table 6903) is not built: its variable and classification ids could not be read from this server."
+    },
+    "IndexMembershipProvider": {
+      "status": "implemented",
+      "reason": "The weight of a stock in the B3 indexes ISEE, ICO2 and IDVR (index.*, ADR 0031); IGPTW answers HTTP 403 from this server, so a load fails until it is readable."
     }
   }
 }

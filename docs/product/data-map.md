@@ -17,6 +17,7 @@ The store is at schema version 9 (`DuckDbSchemaAdapter.VERSION`). A table of an 
 | `asset_expectations` | `asset_id` | `reference_time_start` |
 | `asset_holdings` | `asset_id` | `reference_time_start` |
 | `asset_filings` | `asset_id` | `reference_time_start` |
+| `asset_proceedings` | `asset_id` | `opened_time` |
 | `asset_filing_items` | `asset_id` | none |
 | `asset_filing_chunks` | `asset_id` and `document_type` or `filing_id` | none |
 | `asset_coverage`, `load_runs`, `load_files` | none (catalog) | none |
@@ -58,6 +59,8 @@ One row per asset. Filled by the registry, identifier and quote loads.
 ### `asset_attribute`
 
 Descriptors some assets have: `attribute` and `value`, key `(asset_id, attribute)`. For a fund: `administrator`, `administrator_cnpj`, `manager`, `fund_type`, `class_name`.
+
+For a stock the registry load writes `ir_site`, `activity_description`, `activity_sector` and `previous_legal_name`, from CVM's FCA general form (ADR 0029). A fund's attributes are listed in the fund section.
 
 ### `asset_quotes`
 
@@ -104,9 +107,19 @@ What a fund holds, from the CVM monthly holdings file. Key `(asset_id, reference
 
 ### `asset_filings`
 
-One row per document. Key `filing_id`. Columns: `asset_id`, `document_type` (`material_fact`, `management_report`, `other`, `fre`, `vlmo`, `cgvn`, and the others CVM names), `category` (CVM's category), `subject`, `reference_time_start` and `reference_time_end` (the period the document refers to), `published_at` (TIMESTAMP, when it was filed, with the time zone of the source), `version`, `url`, `file_hash` (SHA-256 of the document, for change detection), `source_file` (the file of the CVM zip the row came from).
+One row per document. Key `filing_id`. Columns: `asset_id`, `document_type` (`material_fact`, `management_report`, `other`, `fre`, `vlmo`, `cgvn`, and the others CVM names), `category` (CVM's category), `category_type` (CVM's `Tipo`, the second level of the category, for example `AGE` under `Assembleia`, or `Apresentações a analistas/agentes do mercado` under `Comunicado ao Mercado`; empty when CVM gives none), `subject`, `reference_time_start` and `reference_time_end` (the period the document refers to), `published_at` (TIMESTAMP, when it was filed, with the time zone of the source), `version`, `url`, `file_hash` (SHA-256 of the document, for change detection), `source_file` (the file of the CVM zip the row came from).
 
 `document_type = 'sustainability'` is set from the CVM IPE category, by exact match: `Relatório de Sustentabilidade`, `Relato Integrado` and `Relatório de Informações Financeiras Relacionadas à Sustentabilidade - Padrão ISSB`. `category` keeps the exact CVM name, so the three stay distinguishable. `Política de Sustentabilidade` is a policy, not a report, so it is `other`, and so is a `Comunicado ao Mercado` whose subject names a report. Coverage is partial: the rows need the company's CNPJ (`asset.legal_id`), and a report that CVM files under another category stays `other`.
+
+Investor relations content is found by `category` and `category_type`, not by `document_type`: `Calendário de Eventos Corporativos` (category); `Comunicado ao Mercado` with `Apresentações a analistas/agentes do mercado` or `Esclarecimentos sobre questionamentos da CVM/B3` (category_type); `Fato Relevante` (category, `document_type = 'material_fact'`). Rows filed before the schema version 10 have no `category_type` until the store is rebuilt.
+
+### Sector and index metrics
+
+Sector (`BR:sector:<CNAE code>`) and index membership are rows of `asset_metrics`, in the groups `sector` and `index`. `sector.companies`: the number of companies of a CNAE 2.0 class, unit `count`, one row per year (IBGE table 6449, ADR 0030). `index.isee`, `index.ico2`, `index.idvr` and `index.gptw`: the weight of a stock in a B3 index, unit `percent`, dated with the portfolio date (ADR 0031). `sector.producer_price_index` is not built.
+
+### `asset_proceedings`
+
+One row per case and defendant, from CVM's sanctioning proceedings. Key `(asset_id, case_number, defendant_name)`. Columns: `case_number` (CVM's NUP), `defendant_name` (as CVM wrote it), `subject`, `summary`, `opened_time` (DATE, the period column), `current_phase`, `current_subphase`, `last_movement_time`, `defendant_status` (the defendant's latest status in the case) and `defendant_status_time`. A defendant is linked to a stock only when its normalized name equals the stock's registry name or its previous legal name (ADR 0029). The file has no CNPJ.
 
 ### `asset_filing_items`
 
@@ -140,6 +153,7 @@ A category is the contract a provider fills. A category fills the tables listed 
 | `statements` | `asset_metrics` (`statement.*`) | CVM |
 | `fund_data` | `asset_metrics` (`fii.*`) | CVM; StatusInvest |
 | `fund` | `asset_metrics` (`fund.*`), `asset_attribute`, `asset_holdings` | CVM |
+| `proceedings` | `asset_proceedings` | CVM |
 | `filings` | `asset_filings` | CVM |
 | `documents` | `asset_filing_chunks` | CVM (the document link) |
 | `disclosures` | `asset_filings`, `asset_filing_items` (FRE, VLMO, CGVN) | CVM |

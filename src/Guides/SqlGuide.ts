@@ -60,11 +60,14 @@ Filings of a company:
 SELECT published_at, document_type, subject, url FROM asset_filings WHERE asset_id = 'BR:stock:PETR4' ORDER BY published_at DESC
 \`\`\`
 
-Dollar sell rate (PTAX), last five days, in reais per dollar:\n\`\`\`sql\nSELECT reference_time_start, value FROM asset_metrics WHERE asset_id = 'BR:currency:USD' AND metric = 'fx.sell_rate' ORDER BY reference_time_start DESC LIMIT 5\n\`\`\`
-
 Stock splits of a company, newest first:
 \`\`\`sql
 SELECT ex_time, ratio FROM asset_splits WHERE asset_id = 'BR:stock:PETR4' ORDER BY ex_time DESC
+\`\`\`
+
+Analyst presentations of a company, newest first (investor relations):
+\`\`\`sql
+SELECT published_at, subject, url FROM asset_filings WHERE asset_id = 'BR:stock:PETR4' AND category_type = 'Apresentações a analistas/agentes do mercado' ORDER BY published_at DESC
 \`\`\`
 
 Quarterly reports (ITR) filed since November 2025:

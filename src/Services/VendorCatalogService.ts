@@ -1,3 +1,4 @@
+import { B3IndexMembershipAdapter } from "@/Adapters/B3/B3IndexMembershipAdapter.ts";
 import { B3ListingAdapter } from "@/Adapters/B3/B3ListingAdapter.ts";
 import { B3CotahistAdapter } from "@/Adapters/B3/B3CotahistAdapter.ts";
 import { BcbAdapter } from "@/Adapters/Bcb/BcbAdapter.ts";
@@ -7,6 +8,7 @@ import { CvmDocumentAdapter } from "@/Adapters/Cvm/CvmDocumentAdapter.ts";
 import { CvmFundMonthlyAdapter } from "@/Adapters/Cvm/CvmFundMonthlyAdapter.ts";
 import { CvmFundAdapter } from "@/Adapters/Cvm/CvmFundAdapter.ts";
 import { CvmDisclosureAdapter } from "@/Adapters/Cvm/CvmDisclosureAdapter.ts";
+import { CvmProceedingsAdapter } from "@/Adapters/Cvm/CvmProceedingsAdapter.ts";
 import { CvmRegistryAdapter } from "@/Adapters/Cvm/CvmRegistryAdapter.ts";
 import { BcbPtaxAdapter } from "@/Adapters/Bcb/BcbPtaxAdapter.ts";
 import { CvmStatementAdapter } from "@/Adapters/Cvm/CvmStatementAdapter.ts";
@@ -14,6 +16,7 @@ import { CvmTickerAdapter } from "@/Adapters/Cvm/CvmTickerAdapter.ts";
 import { FnetAdapter } from "@/Adapters/Fnet/FnetAdapter.ts";
 import { FnetDocumentAdapter } from "@/Adapters/Fnet/FnetDocumentAdapter.ts";
 import { HttpAdapter } from "@/Adapters/Http/HttpAdapter.ts";
+import { IbgeSectorAdapter } from "@/Adapters/Ibge/IbgeSectorAdapter.ts";
 import { StatusInvestAdapter } from "@/Adapters/StatusInvest/StatusInvestAdapter.ts";
 import { TesouroAdapter } from "@/Adapters/Tesouro/TesouroAdapter.ts";
 import { YahooAdapter } from "@/Adapters/Yahoo/YahooAdapter.ts";
@@ -22,6 +25,8 @@ import type { CategoryToVendors } from "@/Protocols/ProviderProtocol.ts";
 import { ProviderRegistryService } from "@/Services/ProviderRegistryService.ts";
 
 const CVM_FILE_TIMEOUT_MS = 120_000;
+const IBGE_MAX_RESPONSE_BYTES = 20_971_520;
+const IBGE_TIMEOUT_MS = 60_000;
 
 export class VendorCatalogService {
   static build(): CategoryToVendors {
@@ -61,6 +66,11 @@ export class VendorCatalogService {
     // Why: one ticker-to-CNPJ lookup serves every CVM adapter, so the company list is read once for all of them.
     const b3Http = new HttpAdapter({ allowedHosts: [B3ListingAdapter.HOST] });
     const b3Listing = new B3ListingAdapter(b3Http);
+    const ibgeHttp = new HttpAdapter({
+      allowedHosts: [IbgeSectorAdapter.HOST],
+      maxBytes: IBGE_MAX_RESPONSE_BYTES,
+      timeoutMs: IBGE_TIMEOUT_MS,
+    });
     const b3CotahistHttp = new HttpAdapter({
       allowedHosts: [B3CotahistAdapter.HOST],
       maxBytes: B3CotahistAdapter.MAX_FILE_BYTES,
@@ -70,6 +80,8 @@ export class VendorCatalogService {
       return (await b3Listing.findFund(ticker))?.legalId;
     };
     const cvmTicker = new CvmTickerAdapter(cvmHttp, CvmAdapter.BASE_URL, undefined, findFundCnpj);
+    // Why: the company names are read by the registry and by the proceedings, so one instance serves both.
+    const cvmRegistry = new CvmRegistryAdapter(cvmHttp, cvmTicker.resolveCnpj);
     return {
       ...ProviderRegistryService.buildEmptyCatalog(),
       quotes: {
@@ -96,10 +108,15 @@ export class VendorCatalogService {
       treasury: { tesouro: new TesouroAdapter(tesouroHttp) },
       expectations: { bcb: new BcbFocusAdapter(focusHttp) },
       identifiers: { b3: b3Listing },
-      registry: { cvm: new CvmRegistryAdapter(cvmHttp, cvmTicker.resolveCnpj) },
+      registry: { cvm: cvmRegistry },
       fx: { bcb: new BcbPtaxAdapter(focusHttp) },
       fund: { cvm: new CvmFundAdapter(cvmHttp) },
       disclosures: { cvm: new CvmDisclosureAdapter(cvmHttp, cvmTicker.resolveCnpj) },
+      proceedings: {
+        cvm: new CvmProceedingsAdapter(cvmHttp, cvmTicker.resolveCnpj, (cnpj) => cvmRegistry.readNames(cnpj)),
+      },
+      sector: { ibge: new IbgeSectorAdapter(ibgeHttp) },
+      index_membership: { b3: new B3IndexMembershipAdapter(b3Http) },
     };
   }
 }

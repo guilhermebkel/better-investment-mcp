@@ -263,6 +263,8 @@ export class CvmAdapter extends CvmBaseAdapter implements ProviderPort<"filings"
       filing_id: createHash("sha256").update(identity).digest("hex").slice(0, FILING_ID_LENGTH),
       filing_type: CvmAdapter.readFilingKind(category),
       category,
+      // Why: Tipo is the second level of the IPE category (for example, an analyst presentation under Comunicado ao Mercado); it is kept as CVM writes it (issue #41).
+      category_type: CvmUtil.readOrNull(columnToValue.Tipo),
       reference_date: CvmUtil.readOrNull(columnToValue.Data_Referencia),
       delivered_at: deliveredOn ? `${deliveredOn}${LOCAL_TIME_OFFSET}` : null,
       subject: CvmUtil.readOrNull(columnToValue.Assunto),

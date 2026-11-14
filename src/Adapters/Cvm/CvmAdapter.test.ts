@@ -45,6 +45,17 @@ describe("CvmAdapter.readRows()", () => {
     expect(rows[0]?.url).toContain("rad.cvm.gov.br");
   });
 
+  it("keeps the IPE Tipo as category_type, so an analyst presentation is told apart from another notice (issue #41)", async () => {
+    const [first = ""] = SAMPLE.split("\n").slice(1).filter((line) => line.startsWith(PETROBRAS));
+    const notice = first.replace(";Assembleia;AGE;", ";Comunicado ao Mercado;Apresentações a analistas/agentes do mercado;");
+    expect(notice).not.toBe(first);
+    const text = `${SAMPLE.split("\n")[0]}\n${first}\n${notice}\n`;
+    const rows = await CvmAdapter.readRows(splitLines(text), "33000167000101", rowKey);
+    const filings = rows.map((row) => CvmUtil.buildAssetFiling(row));
+    expect(filings.map((filing) => filing.category_type)).toStrictEqual(["AGE", "Apresentações a analistas/agentes do mercado"]);
+    expect(filings.map((filing) => filing.category)).toStrictEqual(["Assembleia", "Comunicado ao Mercado"]);
+  });
+
   it("keeps both deliveries of the same document, each with its own delivery date and a unique id (AC5)", async () => {
     const [first = ""] = SAMPLE.split("\n").slice(1).filter((line) => line.startsWith(PETROBRAS));
     const redelivery = first.replace(";2024-03-22;AP", ";2024-05-02;AP").replace("IPE250420240104537305-83", "IPE020520240104999999-01");

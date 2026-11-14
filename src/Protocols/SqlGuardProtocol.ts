@@ -13,7 +13,8 @@ export type DataTable
     | "asset_holdings"
     | "asset_filings"
     | "asset_filing_items"
-    | "asset_filing_chunks";
+    | "asset_filing_chunks"
+    | "asset_proceedings";
 
 export type Requirement = {
   table: DataTable;
@@ -108,6 +109,6 @@ export type CategoryReading = {
   problems: string[];
 };
 
-export type MetricGroup = "statement" | "fundamental" | "fii" | "fund" | "macro" | "treasury" | "fx";
+export type MetricGroup = "statement" | "fundamental" | "fii" | "fund" | "macro" | "treasury" | "fx" | "sector" | "index";
 
 export type SearchMode = "text";

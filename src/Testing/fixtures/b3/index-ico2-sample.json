@@ -1,0 +1,28 @@
+{
+ "page": {
+  "pageNumber": -1,
+  "pageSize": -1,
+  "totalRecords": 61,
+  "totalPages": -61
+ },
+ "header": {
+  "date": "16/11/26",
+  "text": "Quantidade Teórica Total",
+  "part": "100,000",
+  "partAcum": null,
+  "textReductor": "Redutor",
+  "reductor": "284.175.690,57560845",
+  "theoricalQty": "50.825.608.960"
+ },
+ "results": [
+  {
+   "segment": null,
+   "cod": "TTEN3",
+   "asset": "3TENTOS",
+   "type": "ON      NM",
+   "part": "0,255",
+   "partAcum": null,
+   "theoricalQty": "194.756.625"
+  }
+ ]
+}

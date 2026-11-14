@@ -6,6 +6,11 @@ All notable changes to this project are in this file. The format follows [Keep a
 
 ### Added
 
+- `asset_filings.category_type`: the CVM IPE `Tipo`, so an analyst presentation can be told apart from another notice (issue #41, phase 1).
+- A stock's IR site, activity, sector and previous legal name from CVM's FCA form, in `asset_attribute` (issue #41, phase 2).
+- CVM sanctioning proceedings in `asset_proceedings`, linked to a stock only by the defendant's name (ADR 0029, issue #41, phase 2).
+- IBGE sector series: the number of companies by CNAE class, as `BR:sector:<code>` (ADR 0030, issue #41, phase 3).
+- B3 index membership: a stock's weight in the ISE, ICO2 and IDIVERSA indexes (ADR 0031, issue #41, phase 4). IGPTW is blocked from this server.
 - `notify_load_finish` (ADR 0028): a notice, one POST with the final status and the row counts of a background load and no data, to the https `callback_url` given, when the load finishes, for loaded and failed loads. Each load takes at most 5 notices. This is the one tool that is not read-only.
 
 ### Fixed
