@@ -52,10 +52,11 @@ One interface per data category, one adapter per vendor (`docs/adr/0005-one-prov
 - `TreasuryProvider`: Tesouro Direto prices and rates per bond family. `INVESTMENT_MCP_TREASURY_PROVIDER`. Tesouro Transparente.
 - `ExpectationsProvider`: annual market expectations (the BCB Focus survey). `INVESTMENT_MCP_EXPECTATIONS_PROVIDER`. BCB Olinda.
 - `IdentifiersProvider`: a ticker's CNPJ and ISIN, from the B3 listing and detail. `INVESTMENT_MCP_IDENTIFIERS_PROVIDER`. B3.
-- `RegistryProvider`: a company's legal name, sector and situation. `INVESTMENT_MCP_REGISTRY_PROVIDER`. CVM.
+- `RegistryProvider`: a company's legal name, sector and situation, and its IR site, activity and previous legal name from CVM's FCA form. `INVESTMENT_MCP_REGISTRY_PROVIDER`. CVM.
 - `FxProvider`: the closing PTAX rate of a currency per day. `INVESTMENT_MCP_FX_PROVIDER`. BCB Olinda.
 - `FundProvider`: a fund's registry, daily quota and holdings, keyed by CNPJ. `INVESTMENT_MCP_FUND_PROVIDER`. CVM.
 - `DisclosuresProvider`: a company's reference form, securities holdings and governance rows (FRE, VLMO, CGVN). `INVESTMENT_MCP_DISCLOSURES_PROVIDER`. CVM.
+- `ProceedingsProvider`: CVM sanctioning proceedings, linked to a stock only by the defendant's name (ADR 0029). `INVESTMENT_MCP_PROCEEDINGS_PROVIDER`. CVM.
 <!-- providers:end -->
 
 `scripts/source-coverage.json` classifies each provider as `implemented`, `planned` or `excluded` with a reason, and `pnpm source:drift` fails when this list and that file disagree.

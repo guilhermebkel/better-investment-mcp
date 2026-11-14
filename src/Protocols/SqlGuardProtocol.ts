@@ -13,7 +13,8 @@ export type DataTable
     | "asset_holdings"
     | "asset_filings"
     | "asset_filing_items"
-    | "asset_filing_chunks";
+    | "asset_filing_chunks"
+    | "asset_proceedings";
 
 export type Requirement = {
   table: DataTable;

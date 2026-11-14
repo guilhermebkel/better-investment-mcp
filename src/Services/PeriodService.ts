@@ -17,6 +17,8 @@ export class PeriodService {
     asset_metrics: "reference_time_start",
     asset_expectations: "reference_time_start",
     asset_filings: "reference_time_start",
+    // Why: a proceeding is an event, placed by the day it was opened (issue #41, S3).
+    asset_proceedings: "opened_time",
   };
 
   // Why: what a reader sees in a table with no row for a month, so an empty month is not read as missing data.

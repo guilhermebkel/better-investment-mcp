@@ -59,6 +59,7 @@ export class SqlGuardService implements SqlGuardPort {
     asset_holdings: "fund",
     asset_filings: "filings",
     asset_filing_items: "disclosures",
+    asset_proceedings: "proceedings",
     asset_filing_chunks: "documents",
   };
 
@@ -77,6 +78,7 @@ export class SqlGuardService implements SqlGuardPort {
   static readonly TABLE_TO_FILTERS: Record<DataTable, TableFilters> = {
     asset: SqlGuardService.ASSET_FILTERS,
     asset_attribute: SqlGuardService.ASSET_FILTERS,
+    asset_proceedings: SqlGuardService.ASSET_FILTERS,
     asset_quotes: SqlGuardService.ASSET_FILTERS,
     asset_dividends: SqlGuardService.ASSET_FILTERS,
     asset_splits: SqlGuardService.ASSET_FILTERS,

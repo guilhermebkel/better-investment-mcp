@@ -103,6 +103,10 @@ The system where FII documents are published.
 **Usage notice**:
 The statement in `get_overview` that the output describes and locates information and is not investment advice.
 
+**Sanctioning proceeding**:
+A CVM proceeding (processo sancionador) against one or more defendants. A row of `asset_proceedings` is one case and one defendant. The defendant is linked to a stock only by its name, equal to the company's name or previous legal name (ADR 0029).
+_Avoid_: lawsuit, case file
+
 ## Data quality
 
 **Stale**:

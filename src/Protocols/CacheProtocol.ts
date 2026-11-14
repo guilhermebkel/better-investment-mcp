@@ -1,6 +1,6 @@
 import type { PeriodWindow } from "@/Protocols/PeriodProtocol.ts";
 
-export type CacheCategory = "quotes" | "dividends" | "fundamentals" | "statements" | "fund_data" | "filings" | "documents" | "macro" | "treasury" | "expectations" | "identifiers" | "registry" | "fx" | "fund" | "disclosures";
+export type CacheCategory = "quotes" | "dividends" | "fundamentals" | "statements" | "fund_data" | "filings" | "documents" | "macro" | "treasury" | "expectations" | "identifiers" | "registry" | "fx" | "fund" | "disclosures" | "proceedings";
 
 export type CacheRunStart = {
   category: CacheCategory;

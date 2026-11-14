@@ -52,6 +52,7 @@ describe("StoreService.open()", () => {
         "asset_filings",
         "asset_holdings",
         "asset_metrics",
+        "asset_proceedings",
         "asset_quotes",
         "asset_splits",
         "load_files",

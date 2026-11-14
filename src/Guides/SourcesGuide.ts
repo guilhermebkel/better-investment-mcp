@@ -10,7 +10,8 @@ Each answer says what was loaded, with its period and the error if any.
 - Statements, company filings, fund files and FRE, VLMO, CGVN: CVM open data.
 - Sustainability reports: the CVM filings whose category is "Relatório de Sustentabilidade", "Relato Integrado" or the ISSB sustainability report. Coverage is partial: a company that CVM does not file in those categories has none here, and the company needs a CNPJ.
 - Investor relations content: the CVM filings in the categories "Calendário de Eventos Corporativos", "Fato Relevante", and "Comunicado ao Mercado" with the category type "Apresentações a analistas/agentes do mercado" or "Esclarecimentos sobre questionamentos da CVM/B3". Filter asset_filings by category_type to tell them apart.
-- Company and fund registry, and the B3 identifiers (CNPJ, ISIN): CVM and B3.
+- Company and fund registry, and the B3 identifiers (CNPJ, ISIN): CVM and B3. A stock's IR site, activity and previous legal name come from CVM's FCA form.
+- Sanctioning proceedings (CVM, ODbL): a defendant is linked to a stock only when its name equals the company's name or previous legal name; no other match is made.
 - Macro series and PTAX exchange rates: BCB open data. Market expectations (Focus): BCB open data.
 - Treasury bonds: Tesouro Transparente, one bond per asset_id (family and maturity, for example SELIC_2029-03-01).
 

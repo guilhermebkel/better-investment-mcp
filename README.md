@@ -224,6 +224,7 @@ Each category has a default, so a query works with no provider variable. A secon
 | `INVESTMENT_MCP_REGISTRY_PROVIDER` | `BR:cvm` | Company registry of a stock, from CVM. |
 | `INVESTMENT_MCP_FX_PROVIDER` | `BR:bcb` | Closing PTAX rate per currency. |
 | `INVESTMENT_MCP_DISCLOSURES_PROVIDER` | `BR:cvm` | Company disclosures (FRE, VLMO, CGVN). |
+| `INVESTMENT_MCP_PROCEEDINGS_PROVIDER` | `BR:cvm` | CVM sanctioning proceedings of a stock, linked by the defendant's name (ADR 0029). |
 | `INVESTMENT_MCP_FUND_PROVIDER` | `BR:cvm` | Fund registry, daily figures and holdings, keyed by CNPJ. |
 
 ## Data sources
@@ -236,12 +237,15 @@ Each category has a default, so a query works with no provider variable. A secon
 | BCB Focus (Olinda) | annual market expectations: ipca, selic, pib_total, cambio | Open data. |
 | BCB PTAX (Olinda) | closing rate per currency and day (USD, EUR) | Open data. |
 | B3 listing and COTAHIST | CNPJ and ISIN of a ticker; daily quotes of the current and the previous year | Public site routes. The COTAHIST file is about 90 MB per year, so its first load takes minutes. |
-| CVM company and fund files | company registry (sector), fund registry, daily quota and holdings | Open data. |
+| CVM company and fund files | company registry (sector), the IR site, activity and previous legal name of a stock (FCA form), fund registry, daily quota and holdings | Open data. |
 | CVM FRE, VLMO and CGVN | reference form, securities holdings and governance rows of a company, by section, date and version | Open data. Each yearly zip is streamed; the last three years are read. |
 | yfinance (Python library) | quotes, dividends and splits, as an alternative to Yahoo | Needs `python3` and `pip install yfinance` on the machine; the Docker image already has both. Unofficial. |
 | StatusInvest | fundamentals, FII monthly data | Blocked: the site answers with a Cloudflare challenge, which the server does not bypass. |
 | CVM | filings list (IPE) | Open data. A ticker needs a CNPJ link that no source gives yet. |
 | CVM | ITR, DFP, Formulário de Referência | Built (issue #11). Open data; each yearly zip is streamed. |
+| CVM | sanctioning proceedings against a company (processo sancionador) | Open data (ODbL). A defendant is linked to a stock only when its name equals the company's name or previous legal name (ADR 0029). |
+| IBGE SIDRA | sector series: number of companies (table 6449) and producer price index (table 6903) | Not built: the IBGE terms could not be read; the owner decides (ADR 0030). |
+| B3 | index portfolios (ISE, ICO2, IGPTW, IDIVERSA) | Not built: the B3 terms for this route could not be read; the owner decides (ADR 0031). |
 | FNET | FII management reports | Built only if a spike passes. |
 
 Each load records the vendor that produced it in `load_runs`. The answer of `query_sql` does not name it.

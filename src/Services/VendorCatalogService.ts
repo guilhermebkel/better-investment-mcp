@@ -7,6 +7,7 @@ import { CvmDocumentAdapter } from "@/Adapters/Cvm/CvmDocumentAdapter.ts";
 import { CvmFundMonthlyAdapter } from "@/Adapters/Cvm/CvmFundMonthlyAdapter.ts";
 import { CvmFundAdapter } from "@/Adapters/Cvm/CvmFundAdapter.ts";
 import { CvmDisclosureAdapter } from "@/Adapters/Cvm/CvmDisclosureAdapter.ts";
+import { CvmProceedingsAdapter } from "@/Adapters/Cvm/CvmProceedingsAdapter.ts";
 import { CvmRegistryAdapter } from "@/Adapters/Cvm/CvmRegistryAdapter.ts";
 import { BcbPtaxAdapter } from "@/Adapters/Bcb/BcbPtaxAdapter.ts";
 import { CvmStatementAdapter } from "@/Adapters/Cvm/CvmStatementAdapter.ts";
@@ -70,6 +71,8 @@ export class VendorCatalogService {
       return (await b3Listing.findFund(ticker))?.legalId;
     };
     const cvmTicker = new CvmTickerAdapter(cvmHttp, CvmAdapter.BASE_URL, undefined, findFundCnpj);
+    // Why: the company names are read by the registry and by the proceedings, so one instance serves both.
+    const cvmRegistry = new CvmRegistryAdapter(cvmHttp, cvmTicker.resolveCnpj);
     return {
       ...ProviderRegistryService.buildEmptyCatalog(),
       quotes: {
@@ -96,10 +99,13 @@ export class VendorCatalogService {
       treasury: { tesouro: new TesouroAdapter(tesouroHttp) },
       expectations: { bcb: new BcbFocusAdapter(focusHttp) },
       identifiers: { b3: b3Listing },
-      registry: { cvm: new CvmRegistryAdapter(cvmHttp, cvmTicker.resolveCnpj) },
+      registry: { cvm: cvmRegistry },
       fx: { bcb: new BcbPtaxAdapter(focusHttp) },
       fund: { cvm: new CvmFundAdapter(cvmHttp) },
       disclosures: { cvm: new CvmDisclosureAdapter(cvmHttp, cvmTicker.resolveCnpj) },
+      proceedings: {
+        cvm: new CvmProceedingsAdapter(cvmHttp, cvmTicker.resolveCnpj, (cnpj) => cvmRegistry.readNames(cnpj)),
+      },
     };
   }
 }

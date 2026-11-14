@@ -142,3 +142,17 @@ export type CvmSubject = {
 export type NonMetricColumn = "market" | "ticker" | "asset_type" | "period" | "version" | "source_file" | "source";
 
 export type PeriodStartRule = (year: number, month: number, periodEnd: string) => string;
+
+export type CvmColumnToText = Record<string, string>;
+
+export type CvmCompanyReading = {
+  record: CvmColumnToText | undefined;
+  filing: CvmColumnToText | undefined;
+  files: ProviderFile[];
+};
+
+export type CvmDefendant = {
+  name: string;
+  situation: string | null;
+  statusTime: string | null;
+};
