@@ -1,0 +1,140 @@
+name: Branch image
+
+# Why: a push to a branch publishes its image as ghcr.io/<owner>/better-investment-mcp:<branch>, so the branch can be tested as a container before a release. Deleting the branch deletes that tag. The release tags (semver and latest) are never written here.
+on:
+  push:
+    branches-ignore: [main]
+  delete:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "branch name, for example feat/my-change"
+        required: true
+        type: string
+      action:
+        description: "deploy builds and pushes the branch's image; delete removes its tag"
+        required: true
+        default: deploy
+        type: choice
+        options: [deploy, delete]
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: ghcr.io/guilhermebkel/better-investment-mcp
+
+jobs:
+  deploy:
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.action == 'deploy')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      BRANCH: ${{ github.event_name == 'push' && github.ref_name || inputs.branch }}
+    outputs:
+      slug: ${{ steps.tag.outputs.slug }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Why: a manual run checks out the default branch unless the ref is given, which would build the wrong code.
+          ref: ${{ env.BRANCH }}
+      # Why: a Docker tag allows only [A-Za-z0-9_.-], 128 characters at most, and no leading dot or dash, so a branch such as feat/x becomes feat-x.
+      - id: tag
+        run: |
+          slug=$(printf '%s' "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9._-]+/-/g; s/^[.-]+//; s/[.-]+$//' | cut -c1-128)
+          if [ -z "$slug" ]; then
+            echo "::error::the branch name has no character a Docker tag allows"
+            exit 1
+          fi
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # Why: the same Dockerfile and platform as the release image; only the tag differs, so the branch's image is the one a release would build.
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ env.IMAGE }}:${{ steps.tag.outputs.slug }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  comment:
+    # Why: a push comes from a branch of this repository (a fork cannot push here), so the open pull request is in this repository too.
+    needs: deploy
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BRANCH: ${{ github.ref_name }}
+      SLUG: ${{ needs.deploy.outputs.slug }}
+    steps:
+      - name: Comment the image on the open pull request
+        run: |
+          set -euo pipefail
+          marker="<!-- branch-image -->"
+          image="${IMAGE}:${SLUG}"
+          prs=$(gh api -X GET "repos/${GITHUB_REPOSITORY}/pulls" -f state=open -f head="${GITHUB_REPOSITORY_OWNER}:${BRANCH}" --jq '.[].number')
+          if [ -z "$prs" ]; then
+            echo "No open pull request for ${BRANCH}; no comment."
+            exit 0
+          fi
+          body=$(printf '%s\n**Branch image**\n\n- Image: `%s`\n- Run it over stdio: `docker run -i --rm %s`\n\nLast commit: `%s`. The image tag is removed when the branch is deleted.' \
+            "$marker" "$image" "$image" "$GITHUB_SHA")
+          for pr in $prs; do
+            existing=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${pr}/comments" --paginate \
+              --jq "[.[] | select(.body | startswith(\"${marker}\"))][0].id // empty")
+            if [ -n "$existing" ]; then
+              gh api -X PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${existing}" -f body="$body" > /dev/null
+            else
+              gh api -X POST "repos/${GITHUB_REPOSITORY}/issues/${pr}/comments" -f body="$body" > /dev/null
+            fi
+          done
+
+  remove:
+    if: (github.event_name == 'delete' && github.event.ref_type == 'branch') || (github.event_name == 'workflow_dispatch' && inputs.action == 'delete')
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    env:
+      BRANCH: ${{ github.event_name == 'delete' && github.event.ref || inputs.branch }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - id: tag
+        run: |
+          slug=$(printf '%s' "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9._-]+/-/g; s/^[.-]+//; s/[.-]+$//' | cut -c1-128)
+          if [ -z "$slug" ]; then
+            echo "::error::the branch name has no character a Docker tag allows"
+            exit 1
+          fi
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+      - name: Delete the image tag of the branch
+        env:
+          SLUG: ${{ steps.tag.outputs.slug }}
+          PACKAGE: better-investment-mcp
+        run: |
+          set -euo pipefail
+          ids=$(gh api --paginate "users/${GITHUB_REPOSITORY_OWNER}/packages/container/${PACKAGE}/versions" \
+            --jq ".[] | select(.metadata.container.tags | index(\"${SLUG}\")) | .id" || true)
+          if [ -z "$ids" ]; then
+            echo "No image is tagged ${SLUG}; nothing to delete."
+            exit 0
+          fi
+          for id in $ids; do
+            # Why: GHCR refuses to delete the last tagged version of a package (HTTP 400). That is kept as a warning, not a failed cleanup.
+            if ! output=$(gh api -X DELETE "users/${GITHUB_REPOSITORY_OWNER}/packages/container/${PACKAGE}/versions/${id}" 2>&1); then
+              case "$output" in
+                *"last tagged version"*) echo "::warning::${SLUG} is the last tagged version of the package, so GHCR keeps it." ;;
+                *) echo "$output"; exit 1 ;;
+              esac
+            fi
+          done
