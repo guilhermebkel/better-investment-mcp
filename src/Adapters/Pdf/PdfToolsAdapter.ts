@@ -16,15 +16,18 @@ const BYTES_PER_MIB = 1_048_576;
 const MAX_OUTPUT_MIB = 256;
 const MAX_OUTPUT_BYTES = MAX_OUTPUT_MIB * BYTES_PER_MIB;
 const MAX_ERROR_CHARS = 300;
-const MISSING_PYMUPDF = "No module named 'fitz'";
+const MISSING_PYMUPDF = "No module named 'pymupdf'";
 const MISSING_COMMAND = "ENOENT";
 
 // Why: the table reader is a script run with -I, as the yfinance adapter does; PyMuPDF reads the bytes from stdin and prints the tables of each page as JSON.
+// Why: PyMuPDF prints its tips to stdout (for example, the pymupdf_layout hint), which would break the JSON, so stdout is sent to stderr while it works and the JSON goes to the real stdout.
 const TABLE_SCRIPT = `
 import json, sys
-import fitz
+json_stream = sys.stdout
+sys.stdout = sys.stderr
+import pymupdf
 data = sys.stdin.buffer.read()
-doc = fitz.open(stream=data, filetype="pdf")
+doc = pymupdf.open(stream=data, filetype="pdf")
 out = []
 for index, page in enumerate(doc, start=1):
     try:
@@ -35,7 +38,7 @@ for index, page in enumerate(doc, start=1):
         rows = [["" if cell is None else str(cell).replace("\\n", " ") for cell in row] for row in table.extract()]
         if rows:
             out.append({"page": index, "rows": rows})
-json.dump(out, sys.stdout)
+json.dump(out, json_stream)
 `;
 
 export class PdfToolsAdapter implements PdfToolsPort {
