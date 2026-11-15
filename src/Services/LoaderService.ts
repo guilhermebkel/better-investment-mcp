@@ -400,10 +400,10 @@ export class LoaderService implements LoaderPort {
       for (const chunk of chunks) {
         const values = [
           filing.filing_id, assetId, filing.filing_type,
-          chunk.section, chunk.page, chunk.seq, chunk.text,
+          chunk.section, chunk.item, chunk.page, chunk.seq, chunk.text,
         ];
         await writer.run(
-          "INSERT INTO asset_filing_chunks (filing_id, asset_id, document_type, section, page, seq, text) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          "INSERT INTO asset_filing_chunks (filing_id, asset_id, document_type, section, item, page, seq, text) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
           values,
         );
       }

@@ -4,7 +4,7 @@ const ASSET_ID_COLUMN = "asset_id VARCHAR NOT NULL";
 const REFERENCE_COLUMNS = "reference_time_start DATE NOT NULL, reference_time_end DATE NOT NULL";
 
 export class DuckDbSchemaAdapter {
-  static readonly VERSION = 12;
+  static readonly VERSION = 13;
 
   static readonly STATEMENTS: readonly string[] = [
     "CREATE TABLE schema_version (version INTEGER NOT NULL);",
@@ -22,7 +22,7 @@ export class DuckDbSchemaAdapter {
     `CREATE TABLE asset_complaints (${ASSET_ID_COLUMN}, trade_name VARCHAR NOT NULL, reference_time_start DATE NOT NULL, complaint_count BIGINT NOT NULL, answered BIGINT NOT NULL, rated BIGINT NOT NULL, resolved BIGINT NOT NULL, score_mean DOUBLE, response_days_mean DOUBLE, PRIMARY KEY (asset_id, trade_name, reference_time_start));`,
     `CREATE TABLE asset_news (${ASSET_ID_COLUMN}, url VARCHAR NOT NULL, title VARCHAR, domain VARCHAR, language VARCHAR, source_country VARCHAR, published_time TIMESTAMPTZ NOT NULL, PRIMARY KEY (asset_id, url));`,
     `CREATE TABLE asset_filing_items (${ASSET_ID_COLUMN}, filing_id VARCHAR NOT NULL, section VARCHAR NOT NULL, row_json VARCHAR NOT NULL);`,
-    `CREATE TABLE asset_filing_chunks (filing_id VARCHAR NOT NULL, ${ASSET_ID_COLUMN}, document_type VARCHAR NOT NULL, section VARCHAR, page INTEGER, seq INTEGER NOT NULL, text VARCHAR NOT NULL, PRIMARY KEY (filing_id, seq));`,
+    `CREATE TABLE asset_filing_chunks (filing_id VARCHAR NOT NULL, ${ASSET_ID_COLUMN}, document_type VARCHAR NOT NULL, section VARCHAR, item VARCHAR, page INTEGER, seq INTEGER NOT NULL, text VARCHAR NOT NULL, PRIMARY KEY (filing_id, seq));`,
     "CREATE TABLE load_runs (run_id VARCHAR PRIMARY KEY, category VARCHAR NOT NULL, asset_id VARCHAR NOT NULL, source VARCHAR NOT NULL, started_at TIMESTAMPTZ NOT NULL, finished_at TIMESTAMPTZ, expires_at TIMESTAMPTZ, rows_read BIGINT, error VARCHAR, filing_id VARCHAR, reference_time_start DATE, reference_time_end DATE);",
     "CREATE TABLE load_files (url VARCHAR NOT NULL, dataset VARCHAR NOT NULL, reference_year INTEGER NOT NULL, sha256 VARCHAR NOT NULL, size_bytes BIGINT NOT NULL, fetched_at TIMESTAMPTZ NOT NULL, is_current BOOLEAN NOT NULL, PRIMARY KEY (url, sha256));",
     [

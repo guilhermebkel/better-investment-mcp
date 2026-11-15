@@ -2,7 +2,7 @@ export const ANALYSIS_GUIDE = `# Analysis guide
 
 ## Where an analysis theme is in the filings
 
-The item titles follow the FRE form, and the labels are the company's file names, so search by item number (\`split_part(split_part(section, ' ', 2), '_', 1)\`).
+The item titles follow the FRE form. Find an item by its number with \`item = '<number>'\`, which CVM's form gives (topic \`fre\`); the label is the company's file name.
 
 - Business, products, segments, markets and competition: FRE items 1.2 to 1.5; competition risks in 4.1.
 - History: FRE 1.1. Regulation: FRE 1.6 and 1.8.

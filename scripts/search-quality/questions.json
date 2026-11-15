@@ -1,0 +1,602 @@
+[
+  {
+    "id": "T1",
+    "ticker": "TOTS3",
+    "id_doc": 161802,
+    "question": "A TOTVS é líder em ERP no Brasil? Qual a fatia de mercado dela?",
+    "keywords": "market share participação mercado ERP líder",
+    "phrase": "market share",
+    "relevant": [
+      {
+        "item": "1.4",
+        "quote": "o 2º player no Brasil detinha 16% de participação. Na metodologia da"
+      },
+      {
+        "item": "1.4",
+        "quote": "crescimento à medida que passam a se tornar prioridade de"
+      }
+    ]
+  },
+  {
+    "id": "T2",
+    "ticker": "TOTS3",
+    "id_doc": 161802,
+    "question": "Com quem a TOTVS compete?",
+    "keywords": "concorrentes concorrência competidores competição players",
+    "phrase": "competi",
+    "relevant": [
+      {
+        "item": "1.4",
+        "quote": "crescimento à medida que passam a se tornar prioridade de"
+      },
+      {
+        "item": "1.4",
+        "quote": "expandindo seus mercados de atuação, avançando na Este documento é"
+      },
+      {
+        "item": "1.4",
+        "quote": "mercados de software de aplicação empresarial e Techfin possuem como"
+      },
+      {
+        "item": "4.1",
+        "quote": "concorrentes, em decorrência de alianças estratégicas entre os"
+      }
+    ]
+  },
+  {
+    "id": "T3",
+    "ticker": "TOTS3",
+    "id_doc": 161802,
+    "question": "A TOTVS já teve greve? Como é a relação com os sindicatos?",
+    "keywords": "greve greves paralisações sindicato sindicatos sindicais",
+    "phrase": "greve",
+    "relevant": [
+      {
+        "item": "10.4",
+        "quote": "vigente. Na TOTVS, todos os participantes são cobertos por acordos"
+      }
+    ]
+  },
+  {
+    "id": "T4",
+    "ticker": "TOTS3",
+    "id_doc": 161802,
+    "question": "Quanto do lucro a TOTVS paga de dividendos?",
+    "keywords": "dividendo dividendos mínimo obrigatório lucro líquido distribuição",
+    "phrase": "dividendo mínimo obrigatório",
+    "relevant": [
+      {
+        "item": "2.7",
+        "quote": "obrigatória. Ademais, ainda conforme a Lei das S.A., a Companhia"
+      },
+      {
+        "item": "2.7",
+        "quote": "das S.A. e no artigo 37 do Estatuto Social da Companhia, será"
+      },
+      {
+        "item": "2.7",
+        "quote": "informando órgão responsável pela aprovação, data da aprovação e,"
+      }
+    ]
+  },
+  {
+    "id": "T5",
+    "ticker": "TOTS3",
+    "id_doc": 161802,
+    "question": "A TOTVS está muito endividada? Qual a dívida líquida?",
+    "keywords": "dívida líquida bruta endividamento índice alavancagem",
+    "phrase": "dívida líquida",
+    "relevant": [
+      {
+        "item": "2.1",
+        "quote": "Líquido) (2) (195.639) (265.942) Índice de Endividamento (3) 0,2 0,2"
+      },
+      {
+        "item": "2.1",
+        "quote": "manteve em 0,2, o índice de liquidez corrente foi de 2,0 e o índice"
+      },
+      {
+        "item": "2.5",
+        "quote": "dezembro de (Em milhares de Reais) 2025 2024 Dívida Bruta 1.764.837"
+      },
+      {
+        "item": "2.5",
+        "quote": "(Caixa Líquido) (195.639) (265.942) Índice de Endividamento sobre"
+      },
+      {
+        "item": "2.5",
+        "quote": "das dívidas da Companhia. Este indicador é uma das referências para"
+      }
+    ]
+  },
+  {
+    "id": "T6",
+    "ticker": "TOTS3",
+    "id_doc": 161802,
+    "question": "Qual o risco de um ataque hacker para a TOTVS?",
+    "keywords": "ataque ataques cibernéticos cibernética hacker segurança informação",
+    "phrase": "ciberné",
+    "relevant": [
+      {
+        "item": "4.1",
+        "quote": "telecomunicações e integrações com sistemas de terceiros."
+      },
+      {
+        "item": "4.1",
+        "quote": "ou indisponibilidade em fornecedores, pode paralisar as operações dos"
+      }
+    ]
+  },
+  {
+    "id": "T7",
+    "ticker": "TOTS3",
+    "id_doc": 161802,
+    "question": "Qual a rotatividade de funcionários da TOTVS?",
+    "keywords": "rotatividade turnover turn-over empregados colaboradores",
+    "phrase": "rotatividade",
+    "relevant": [
+      {
+        "item": "10.1",
+        "quote": "31 de dezembro de 2025 Atividade Brasil Total Segurança, limpeza e"
+      }
+    ]
+  },
+  {
+    "id": "W1",
+    "ticker": "WEGE3",
+    "id_doc": 161870,
+    "question": "Contra quem a WEG compete?",
+    "keywords": "concorrentes concorrência competidores competição",
+    "phrase": "compet",
+    "relevant": [
+      {
+        "item": "1.4",
+        "quote": "do mercado externo apresentou crescimento de 2,8% no ano. iii."
+      },
+      {
+        "item": "1.4",
+        "quote": "atua. Atuando num mercado aberto e com os mais diversos concorrentes"
+      },
+      {
+        "item": "4.1",
+        "quote": "afetar adversamente. O mercado dos nossos produtos é caracterizado"
+      }
+    ]
+  },
+  {
+    "id": "W2",
+    "ticker": "WEGE3",
+    "id_doc": 161870,
+    "question": "A WEG já teve greve nos últimos anos?",
+    "keywords": "greve greves paralisações sindicato sindicatos sindicais",
+    "phrase": "greve",
+    "relevant": [
+      {
+        "item": "10.4",
+        "quote": "Telefone: (47) 3422-2304. BENTO GONÇALVES/RS SINDICATO: Sindicato dos"
+      }
+    ]
+  },
+  {
+    "id": "W3",
+    "ticker": "WEGE3",
+    "id_doc": 161870,
+    "question": "Com que frequência a WEG paga dividendos?",
+    "keywords": "periodicidade dividendos dividendo juros capital próprio pagamento",
+    "phrase": "periodicidade",
+    "relevant": [
+      {
+        "item": "2.7",
+        "quote": "resultados apurados em 30 de junho e 31 de dezembro de cada ano; (ii)"
+      }
+    ]
+  },
+  {
+    "id": "W4",
+    "ticker": "WEGE3",
+    "id_doc": 161870,
+    "question": "O preço do cobre e do aço afeta os resultados da WEG?",
+    "keywords": "cobre aço commodities preço matérias-primas",
+    "phrase": "cobre",
+    "relevant": [
+      {
+        "item": "1.4",
+        "quote": "considera ainda as variações de custos das matérias-primas. As"
+      },
+      {
+        "item": "4.1",
+        "quote": "uma parcela relevante do custo final de alguns de nossos produtos."
+      },
+      {
+        "item": "4.3",
+        "quote": "Liquidez O risco de liquidez representa a possibilidade de"
+      },
+      {
+        "item": "4.3",
+        "quote": "em momentos distintos. Um aumento nas taxas de juros poderá elevar o"
+      }
+    ]
+  },
+  {
+    "id": "W5",
+    "ticker": "WEGE3",
+    "id_doc": 161870,
+    "question": "Os diretores da WEG ganham bônus ou ações?",
+    "keywords": "remuneração variável bônus incentivo longo prazo ações diretoria",
+    "phrase": "remuneração variável",
+    "relevant": [
+      {
+        "item": "8.1",
+        "quote": "de acordo com as funções específicas e responsabilidades inerentes a"
+      },
+      {
+        "item": "8.1",
+        "quote": "(Plano ILP), contingente ao atingimento de metas. Tal forma de"
+      },
+      {
+        "item": "8.1",
+        "quote": "Remuneração Conselho de Administração Diretoria Estatutária Conselho"
+      }
+    ]
+  },
+  {
+    "id": "P1",
+    "ticker": "PETR4",
+    "id_doc": 161309,
+    "question": "Quem concorre com a Petrobras na venda de combustíveis?",
+    "keywords": "concorrentes concorrência competidores combustíveis derivados",
+    "phrase": "concorrentes",
+    "relevant": [
+      {
+        "item": "1.4",
+        "quote": "do Rio de Janeiro, as centrais petroquímicas, e os formuladores de"
+      }
+    ]
+  },
+  {
+    "id": "P2",
+    "ticker": "PETR4",
+    "id_doc": 161309,
+    "question": "Quanto do mercado de diesel a Petrobras atende?",
+    "keywords": "participação mercado demanda diesel atendeu market share",
+    "phrase": "diesel",
+    "relevant": [
+      {
+        "item": "1.4",
+        "quote": "oportunidades de negócio identificadas pelas equipes comerciais,"
+      }
+    ]
+  },
+  {
+    "id": "P3",
+    "ticker": "PETR4",
+    "id_doc": 161309,
+    "question": "A Petrobras teve greves recentemente?",
+    "keywords": "greve greves paralisações sindicato sindicatos sindicais",
+    "phrase": "greve",
+    "relevant": [
+      {
+        "item": "4.4",
+        "quote": "de alguns empregados durante vários dias nas dependências da"
+      },
+      {
+        "item": "10.4",
+        "quote": "com todos os sindicatos representantes dos empregados, petroleiros e"
+      },
+      {
+        "item": "10.4",
+        "quote": "impactos nas suas operações e assegurar o atendimento das"
+      }
+    ]
+  },
+  {
+    "id": "P4",
+    "ticker": "PETR4",
+    "id_doc": 161309,
+    "question": "Qual é a regra de dividendos da Petrobras? Quanto do caixa ela distribui?",
+    "keywords": "política remuneração acionistas dividendos fluxo caixa livre",
+    "phrase": "remuneração aos acionistas",
+    "relevant": [
+      {
+        "item": "2.7",
+        "quote": "juros sobre capital próprio e/ou de recompra de suas próprias ações."
+      },
+      {
+        "item": "2.7",
+        "quote": "em vigor e de resultado positivo acumulado, a serem verificados no"
+      },
+      {
+        "item": "2.7",
+        "quote": "dos fluxos de caixa do consolidado. As aquisições de participações"
+      },
+      {
+        "item": "2.7",
+        "quote": "a sustentabilidade financeira da Companhia seja preservada.  (4) A"
+      }
+    ]
+  },
+  {
+    "id": "P5",
+    "ticker": "PETR4",
+    "id_doc": 161309,
+    "question": "O governo pode interferir no preço dos combustíveis da Petrobras?",
+    "keywords": "preços paridade internacional governo federal interferência combustíveis derivados",
+    "phrase": "paridade",
+    "relevant": [
+      {
+        "item": "1.10",
+        "quote": "preços de venda no mercado interno da gasolina, dos óleos Diesel e"
+      },
+      {
+        "item": "4.1",
+        "quote": "equipe de gestão ou Conselho de Administração podem propor novas"
+      },
+      {
+        "item": "4.1",
+        "quote": "inferior ao preço regionalizado de referência definido pela ANP,"
+      },
+      {
+        "item": "4.1",
+        "quote": "capacidade do governo federal brasileiro de influenciar os preços dos"
+      }
+    ]
+  },
+  {
+    "id": "P6",
+    "ticker": "PETR4",
+    "id_doc": 161309,
+    "question": "O governo como controlador pode prejudicar o acionista minoritário da Petrobras?",
+    "keywords": "União Federal acionista controlador controladora minoritários interesses",
+    "phrase": "minoritários",
+    "relevant": [
+      {
+        "item": "4.1",
+        "quote": "Companhia e, por conseguinte, ela tem o poder de eleger a maioria dos"
+      },
+      {
+        "item": "4.1",
+        "quote": "Formulário de Referência. b.2) Alterações na política de remuneração"
+      },
+      {
+        "item": "4.1",
+        "quote": "equipe de gestão ou Conselho de Administração podem propor novas"
+      }
+    ]
+  },
+  {
+    "id": "P7",
+    "ticker": "PETR4",
+    "id_doc": 161309,
+    "question": "Os executivos da Petrobras ganham bônus? Como é pago?",
+    "keywords": "remuneração variável bônus incentivo diretoria executiva",
+    "phrase": "remuneração variável",
+    "relevant": [
+      {
+        "item": "8.1",
+        "quote": "para os acionistas e para a sociedade. O PPP está alinhado ao Plano"
+      },
+      {
+        "item": "8.1",
+        "quote": "Petrobras (PETR3), capturando, dessa forma, o interesse do emissor"
+      },
+      {
+        "item": "8.1",
+        "quote": "0,00% 0,00% Outros 0,00% 0,00% 0,00% Benefícios pós-emprego 1,67%"
+      },
+      {
+        "item": "8.12",
+        "quote": "pode exercer o direito de recebimento das parcelas diferidas após"
+      }
+    ]
+  },
+  {
+    "id": "I1",
+    "ticker": "ITUB4",
+    "id_doc": 161946,
+    "question": "O Itaú paga dividendos todo mês?",
+    "keywords": "periodicidade dividendos dividendo mensal semestral",
+    "phrase": "periodicidade",
+    "relevant": [
+      {
+        "item": "2.7",
+        "quote": "e observados os incisos II e III do mesmo dispositivo legal. c."
+      },
+      {
+        "item": "2.7",
+        "quote": "dividendos/JCP que deve ser distribuído como mínimo obrigatório (veja"
+      }
+    ]
+  },
+  {
+    "id": "I2",
+    "ticker": "ITUB4",
+    "id_doc": 161946,
+    "question": "Quantos funcionários do Itaú atuam em sindicatos?",
+    "keywords": "sindicato sindicatos sindicais colaboradores funcionários",
+    "phrase": "sindicato",
+    "relevant": [
+      {
+        "item": "10.4",
+        "quote": "com o intuito de buscar soluções negociadas de forma respeitosa e em"
+      }
+    ]
+  },
+  {
+    "id": "I3",
+    "ticker": "ITUB4",
+    "id_doc": 161946,
+    "question": "Quem aprova as transações do Itaú com partes relacionadas?",
+    "keywords": "partes relacionadas transações aprovação comitê política",
+    "phrase": "partes relacionadas",
+    "relevant": [
+      {
+        "item": "7.2",
+        "quote": "de Presidente ou de Copresidente; e (ii) 70 anos de idade na data de"
+      },
+      {
+        "item": "11.1",
+        "quote": "contábeis, e estabelece regras e procedimentos para transações desse"
+      },
+      {
+        "item": "11.1",
+        "quote": "Política para Transações com Partes Relacionadas. A Resolução CVM nº"
+      }
+    ]
+  },
+  {
+    "id": "I4",
+    "ticker": "ITUB4",
+    "id_doc": 161946,
+    "question": "Quais são os principais rivais do Itaú no varejo bancário?",
+    "keywords": "concorrentes concorrência competidores principais bancos",
+    "phrase": "concorrentes",
+    "relevant": [
+      {
+        "item": "1.3",
+        "quote": "atendendo a mais de 1,6 milhão de clientes. O Itaú Empresas tem"
+      },
+      {
+        "item": "1.4",
+        "quote": "de 10,7%, sendo o maior banco privado nesse segmento no Brasil."
+      }
+    ]
+  },
+  {
+    "id": "I5",
+    "ticker": "ITUB4",
+    "id_doc": 161946,
+    "question": "Qual a participação do Itaú no mercado de cartões de crédito?",
+    "keywords": "cartões crédito participação mercado market share",
+    "phrase": "cartões de crédito",
+    "relevant": [
+      {
+        "item": "1.3",
+        "quote": "Cartões de crédito Somos líderes no segmento de cartões de crédito no"
+      },
+      {
+        "item": "1.3",
+        "quote": "principalmente o Nubank, o Mercado Pago e o Banco Inter. Crédito"
+      },
+      {
+        "item": "1.4",
+        "quote": "de 10,7%, sendo o maior banco privado nesse segmento no Brasil."
+      }
+    ]
+  },
+  {
+    "id": "I6",
+    "ticker": "ITUB4",
+    "id_doc": 161946,
+    "question": "Qual a rotatividade de funcionários do Itaú?",
+    "keywords": "rotatividade turnover colaboradores empregados",
+    "phrase": "rotatividade",
+    "relevant": [
+      {
+        "item": "10.1",
+        "quote": "-0,1 p.p Gênero Homens 4,2% 5,3% 5,2% -0,1 p.p Mulheres 3,2% 3,8%"
+      }
+    ]
+  },
+  {
+    "id": "M1",
+    "ticker": "MGLU3",
+    "id_doc": 159326,
+    "question": "Quem são os concorrentes do Magalu?",
+    "keywords": "concorrentes concorrência competidores competitiva players",
+    "phrase": "compet",
+    "relevant": [
+      {
+        "item": "1.4",
+        "quote": "pequenos e médios players seguem enfrentando dificuldades de"
+      },
+      {
+        "item": "1.4",
+        "quote": "a tradicional “Liquidação Fantástica”, que também contribui para um"
+      }
+    ]
+  },
+  {
+    "id": "M2",
+    "ticker": "MGLU3",
+    "id_doc": 159326,
+    "question": "O Magalu já teve greve de funcionários?",
+    "keywords": "greve greves paralisações sindicato sindicatos sindicais",
+    "phrase": "greve",
+    "relevant": [
+      {
+        "item": "10.4",
+        "quote": "Operação Logística, Tecnologia, Motorista, Pagamentos Digitais. Não"
+      }
+    ]
+  },
+  {
+    "id": "M3",
+    "ticker": "MGLU3",
+    "id_doc": 159326,
+    "question": "Qual o dividendo mínimo que o Magalu paga?",
+    "keywords": "dividendo dividendos mínimo obrigatório lucro líquido ajustado",
+    "phrase": "dividendo",
+    "relevant": [
+      {
+        "item": "2.7",
+        "quote": "lucro líquido ajustado (após a constituição das Reservas de"
+      },
+      {
+        "item": "2.7",
+        "quote": "de Administração poderá declarar juros sobre o capital próprio, nos"
+      }
+    ]
+  },
+  {
+    "id": "M4",
+    "ticker": "MGLU3",
+    "id_doc": 159326,
+    "question": "O Magalu depende muito de algum fornecedor?",
+    "keywords": "fornecedor fornecedores maior compras concentração dependência",
+    "phrase": "fornecedor",
+    "relevant": [
+      {
+        "item": "1.4",
+        "quote": "pulverizadas. No ano de 2025, nosso maior fornecedor representou"
+      },
+      {
+        "item": "4.1",
+        "quote": "representando diluição do risco de concentração em aproximadamente"
+      }
+    ]
+  },
+  {
+    "id": "M5",
+    "ticker": "MGLU3",
+    "id_doc": 159326,
+    "question": "O Magalu está muito endividado? Quanto deve?",
+    "keywords": "dívida bruta líquida endividamento empréstimos financiamentos alavancagem",
+    "phrase": "dívida",
+    "relevant": [
+      {
+        "item": "2.1",
+        "quote": "3.092,0 milhões. A Companhia possui, portanto, liquidez necessária"
+      },
+      {
+        "item": "2.1",
+        "quote": "15.719,4 15.835,3 Fluxo de Caixa Ajustado gerado pelas atividades"
+      },
+      {
+        "item": "2.1",
+        "quote": "alongamento do endividamento da Companhia. Em 31 de dezembro de 2025,"
+      },
+      {
+        "item": "2.1",
+        "quote": "(Financiamento de inovação 100% do CDI + 1,75 a.a. dez/30 14.176 0"
+      },
+      {
+        "item": "2.5",
+        "quote": "circulante) (3.946,2) (3.180,0) Dívida Bruta (4.944,5) (4.582,2)"
+      },
+      {
+        "item": "2.5",
+        "quote": "ao caixa líquido, propiciando melhor leitura do desempenho financeiro"
+      }
+    ]
+  }
+]

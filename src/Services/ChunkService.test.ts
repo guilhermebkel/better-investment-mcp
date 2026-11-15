@@ -5,7 +5,7 @@ describe("ChunkService.split()", () => {
   it("keeps a short segment as one chunk with its section and page", () => {
     const chunks = ChunkService.split([{ section: "Dividendos", page: 4, text: "Pagos R$ 0,30 por acao." }]);
 
-    expect(chunks).toStrictEqual([{ section: "Dividendos", page: 4, seq: 1, text: "Pagos R$ 0,30 por acao." }]);
+    expect(chunks).toStrictEqual([{ section: "Dividendos", item: null, page: 4, seq: 1, text: "Pagos R$ 0,30 por acao." }]);
   });
 
   it("numbers the chunks in document order across segments", () => {

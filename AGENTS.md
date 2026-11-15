@@ -38,6 +38,7 @@ Folders are created when the first file needs them.
     pnpm source:drift  # fails when a data provider in docs/product/architecture.md is not classified in scripts/source-coverage.json
     pnpm check:tool-docs # fails when README.md or AGENTS.md state a number or name of tools that src/Operations does not have
     pnpm test:changed  # tests related to files changed against origin/main
+    pnpm search:quality -- <cache-dir> --out <file>  # the search quality set over five real FREs (downloads from RAD; not part of pnpm check)
     pnpm typecheck
     pnpm lint          # Oxlint and a minimal ESLint, in parallel
     pnpm lint:fix      # same, applying the autofixable rules

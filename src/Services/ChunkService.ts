@@ -10,6 +10,7 @@ export class ChunkService {
     const pieces = segments.flatMap((segment) => {
       return ChunkService.chunkText(DocumentTextService.normalize(segment.text)).map((text) => ({
         section: segment.section,
+        item: segment.item ?? null,
         page: segment.page,
         text,
       }));

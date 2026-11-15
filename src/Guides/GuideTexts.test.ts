@@ -1,3 +1,4 @@
+import { FullTextIndexService } from "@/Services/FullTextIndexService.ts";
 import { describe, expect, it } from "vitest";
 import { DuckDbAdapter } from "@/Adapters/DuckDb/DuckDbAdapter.ts";
 import { DuckDbSchemaAdapter } from "@/Adapters/DuckDb/DuckDbSchemaAdapter.ts";
@@ -30,15 +31,15 @@ const seedDatabase = async (database: DatabasePort): Promise<void> => {
     ('BR:fund:00.017.024/0001-53', 'fund.quota', DATE '2026-11-06', DATE '2026-11-06', 10.2, 'brl_per_quota')`);
   await database.run("INSERT INTO asset_expectations (asset_id, reference_time_start, reference_time_end, survey_time, calculation_base, mean, median, std_dev, min, max, respondents) VALUES ('BR:index:IPCA', DATE '2027-01-01', DATE '2027-12-31', DATE '2025-01-03', 0, 4.1, 4.0, 0.3, 3.5, 4.8, 40)");
   await database.run("INSERT INTO asset_filings (filing_id, asset_id, document_type, category, subject, reference_time_start, reference_time_end, published_at, version, url, file_hash) VALUES ('f1', 'BR:stock:PETR4', 'material_fact', 'Fato Relevante', 'Ata', DATE '2024-03-22', DATE '2024-03-22', TIMESTAMPTZ '2024-03-22 00:00:00-03', 1, 'https://www.rad.cvm.gov.br/ENET/f1', NULL)");
-  await database.run("INSERT INTO asset_filing_chunks (filing_id, asset_id, document_type, section, page, seq, text) VALUES ('f1', 'BR:stock:PETR4', 'material_fact', 'Dividendos', 1, 1, 'Pagamento de dividendos e lucro líquido do exercício')");
+  await database.run("INSERT INTO asset_filing_chunks (filing_id, asset_id, document_type, section, item, page, seq, text) VALUES ('f1', 'BR:stock:PETR4', 'material_fact', 'Dividendos', NULL, 1, 1, 'Pagamento de dividendos e lucro líquido do exercício')");
   await database.run("INSERT INTO asset_filings (filing_id, asset_id, document_type, category, subject, reference_time_start, reference_time_end, published_at, version, url, file_hash) VALUES ('fre-1', 'BR:stock:PETR4', 'fre', 'Formulário de Referência', 'FRE', DATE '2025-12-31', DATE '2025-12-31', TIMESTAMPTZ '2026-03-30 00:00:00-03', 5, 'https://www.rad.cvm.gov.br/ENET/fre-1', NULL)");
-  await database.run(`INSERT INTO asset_filing_chunks (filing_id, asset_id, document_type, section, page, seq, text) VALUES
-    ('fre-1', 'BR:stock:PETR4', 'fre', 'AtividadesEmissor 1.2 - Produtos', 2, 1, 'Participação de mercado nas refinarias do país.'),
-    ('fre-1', 'BR:stock:PETR4', 'fre', 'FatoresRisco 4.1 - Descrição dos fatores de risco', 5, 2, 'Concorrentes podem reduzir a participação de mercado.'),
-    ('fre-1', 'BR:stock:PETR4', 'fre', 'FatoresRisco 4.1 - Descrição dos fatores de risco', 5, 3, 'Dividendos e proventos dependem do lucro líquido.'),
-    ('fre-1', 'BR:stock:PETR4', 'fre', 'FatoresRisco 4.1_Rod2 Validação_RI', 6, 6, 'Riscos do emissor com label sem espaço.'),
-    ('fre-1', 'BR:stock:PETR4', 'fre', 'RemuneracaoAdministradores 8.1 - Remuneração', 9, 4, 'A remuneração total dos administradores.'),
-    ('fre-1', 'BR:stock:PETR4', 'fre', 'RemuneracaoAdministradores 8.10 - Anexo', 12, 5, 'Anexo de remuneração por cargo.')`);
+  await database.run(`INSERT INTO asset_filing_chunks (filing_id, asset_id, document_type, section, item, page, seq, text) VALUES
+    ('fre-1', 'BR:stock:PETR4', 'fre', 'AtividadesEmissor 1.2 - Produtos', '1.2', 2, 1, 'Participação de mercado nas refinarias do país.'),
+    ('fre-1', 'BR:stock:PETR4', 'fre', 'FatoresRisco 4.1 - Descrição dos fatores de risco', '4.1', 5, 2, 'Concorrentes podem reduzir a participação de mercado.'),
+    ('fre-1', 'BR:stock:PETR4', 'fre', 'FatoresRisco 4.1 - Descrição dos fatores de risco', '4.1', 5, 3, 'Dividendos e proventos dependem do lucro líquido.'),
+    ('fre-1', 'BR:stock:PETR4', 'fre', 'FatoresRisco 4.1_Rod2 Validação_RI', '4.1', 6, 6, 'Riscos do emissor com label sem espaço.'),
+    ('fre-1', 'BR:stock:PETR4', 'fre', 'RemuneracaoAdministradores 8.1 - Remuneração', '8.1', 9, 4, 'A remuneração total dos administradores.'),
+    ('fre-1', 'BR:stock:PETR4', 'fre', 'RemuneracaoAdministradores 8.10 - Anexo', '8.10', 12, 5, 'Anexo de remuneração por cargo.')`);
   // Why: search_chunks is built on the full-text extension, which the unit suite does not install; this stand-in has the same arguments and columns, so the example runs on the same schema.
   await database.run(`CREATE OR REPLACE MACRO search_chunks(q_text, q_asset_id, q_document_type, q_section, q_mode) AS TABLE
     SELECT asset_id, document_type, filing_id, section, page, seq, text, 1.0 AS score FROM asset_filing_chunks
@@ -55,22 +56,22 @@ describe("GuideTexts.topicToText()", () => {
     expect(readExamples("search").length).toBeGreaterThan(0);
   });
 
-  it("finds the item 8.1 without the items 8.10 to 8.19 when it asks for the item number (AC8)", async () => {
+  it("finds the item 8.1 without the items 8.10 to 8.19 when it asks for the item number (AC14)", async () => {
     const database = await DuckDbAdapter.openWriter(":memory:");
     await DuckDbSchemaAdapter.createSchema(database);
     await seedDatabase(database);
-    const rows = await database.readRows("SELECT seq, section FROM asset_filing_chunks WHERE asset_id = 'BR:stock:PETR4' AND filing_id = 'fre-1' AND split_part(section, ' ', 2) = '8.1' ORDER BY seq");
+    const rows = await database.readRows("SELECT seq, section FROM asset_filing_chunks WHERE asset_id = 'BR:stock:PETR4' AND filing_id = 'fre-1' AND item = '8.1' ORDER BY seq");
     expect(rows).toStrictEqual([{ seq: 4, section: "RemuneracaoAdministradores 8.1 - Remuneração" }]);
     const byLike = await database.readRows("SELECT seq FROM asset_filing_chunks WHERE filing_id = 'fre-1' AND section LIKE 'RemuneracaoAdministradores 8.1%' ORDER BY seq");
     expect(byLike).toStrictEqual([{ seq: 4 }, { seq: 5 }]);
     database.close();
   });
 
-  it("finds the item 4.1 whether the label follows a space or an underscore (issue #42 correction)", async () => {
+  it("finds the item 4.1 whatever the label says, because the item comes from CVM's element (issue #61)", async () => {
     const database = await DuckDbAdapter.openWriter(":memory:");
     await DuckDbSchemaAdapter.createSchema(database);
     await seedDatabase(database);
-    const rows = await database.readRows("SELECT seq FROM asset_filing_chunks WHERE asset_id = 'BR:stock:PETR4' AND filing_id = 'fre-1' AND split_part(split_part(section, ' ', 2), '_', 1) = '4.1' ORDER BY seq");
+    const rows = await database.readRows("SELECT seq FROM asset_filing_chunks WHERE asset_id = 'BR:stock:PETR4' AND filing_id = 'fre-1' AND item = '4.1' ORDER BY seq");
     expect(rows).toStrictEqual([{ seq: 2 }, { seq: 3 }, { seq: 6 }]);
     database.close();
   });
@@ -79,6 +80,8 @@ describe("GuideTexts.topicToText()", () => {
     const database = await DuckDbAdapter.openWriter(":memory:");
     await DuckDbSchemaAdapter.createSchema(database);
     await seedDatabase(database);
+    // Why: the search examples run on the index the server builds, so the search macro exists when they are read.
+    await FullTextIndexService.buildIndex(database);
     const guard = new SqlGuardService(database);
     for (const sql of readExamples(topic)) {
       const verdict = await guard.checkSql(sql);
