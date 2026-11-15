@@ -18,6 +18,6 @@ A company files its reference form (FRE) as a zip with one XML. The structured f
 ## Consequences
 
 - A search on a section name alone does not match a form item: `search_chunks` filters the section by exact name, so the item label is part of the name. The guide and the data map say so.
-- The section is `<tag> <label>`, where the label is the company's file name for the PDF (issue #42): `section = '<tag> <number>'` is not a reliable filter. Filter the item by `split_part(section, ' ', 2)`, which gives the number. The shape is in `docs/product/search.md`.
+- The section is `<tag> <label>`, where the label is the company's file name for the PDF (issue #42): `section = '<tag> <number>'` is not a reliable filter. Filter the item by `split_part(split_part(section, ' ', 2), '_', 1)`, which gives the number whether the label follows a space or an underscore. The shape is in `docs/product/search.md`.
 - The form's structured fields stay in `asset_filing_items`; the text is in `asset_filing_chunks`.
 - A form zip that holds no XML, or an XML with no item, is refused by name and nothing is stored.
