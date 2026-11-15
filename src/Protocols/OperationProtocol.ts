@@ -12,10 +12,16 @@ export type OperationOutput = {
 
 export type OperationResult = OperationOutput & { isError: boolean };
 
+export type OperationAnnotationName = "readOnlyHint" | "idempotentHint" | "openWorldHint" | "destructiveHint";
+
+export type OperationAnnotationNameToFlag = Readonly<Record<OperationAnnotationName, boolean>>;
+
+export type OperationAnnotations = OperationAnnotationNameToFlag;
+
 export interface OperationPort<Input> {
   readonly name: string;
   readonly description: string;
-  readonly isReadOnly: boolean;
+  readonly annotations: OperationAnnotations;
   readonly inputSchema: z.ZodType<Input>;
   execute(input: Input): Promise<OperationResult>;
 }

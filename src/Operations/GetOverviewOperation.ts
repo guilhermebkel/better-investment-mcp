@@ -1,5 +1,5 @@
 import type { GetOverviewInput, OverviewDependencies } from "@/Protocols/GetOverviewProtocol.ts";
-import type { OperationPort, OperationResult } from "@/Protocols/OperationProtocol.ts";
+import type { OperationAnnotations, OperationPort, OperationResult } from "@/Protocols/OperationProtocol.ts";
 import { GetOverviewInputSchema } from "@/Schemas/GetOverviewSchema.ts";
 import { GUIDE_TOPICS } from "@/Schemas/GetGuideSchema.ts";
 
@@ -11,7 +11,13 @@ export class GetOverviewOperation implements OperationPort<GetOverviewInput> {
 
   readonly name = GetOverviewOperation.NAME;
   readonly description = "Read-only. Describes the server and its usage notice. Call it first to see what the server does. It takes no input and returns a short text.";
-  readonly isReadOnly = true;
+  readonly annotations: OperationAnnotations = {
+    readOnlyHint: true,
+    idempotentHint: true,
+    openWorldHint: false,
+    destructiveHint: false,
+  };
+
   readonly inputSchema = GetOverviewInputSchema;
 
   private readonly dependencies: OverviewDependencies;

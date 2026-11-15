@@ -108,5 +108,11 @@ describe("SqlGuardService.checkSql()", () => {
       expect(verdict.isAccepted).toBe(false);
       expect(JSON.stringify(verdict)).toContain(fragment);
     });
+
+    it.each(REFUSED)("refuses %s and names the guide topic sql (AC2)", async (_name, sql) => {
+      const verdict = await guard.checkSql(sql);
+
+      expect(JSON.stringify(verdict)).toContain("topic \\\"sql\\\"");
+    });
   });
 });

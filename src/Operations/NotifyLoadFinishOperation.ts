@@ -1,7 +1,7 @@
 import type { CallbackPort, LoadNotice } from "@/Protocols/CallbackProtocol.ts";
 import type { LoadJob, LoadJobSubscriber, SubscribeOutcome } from "@/Protocols/LoadJobProtocol.ts";
 import type { NotifyLoadFinishDependencies, NotifyLoadFinishInput } from "@/Protocols/NotifyLoadFinishProtocol.ts";
-import type { OperationPort, OperationResult } from "@/Protocols/OperationProtocol.ts";
+import type { OperationAnnotations, OperationPort, OperationResult } from "@/Protocols/OperationProtocol.ts";
 import { NotifyLoadFinishInputSchema } from "@/Schemas/NotifyLoadFinishSchema.ts";
 import { LogUtil } from "@/Utils/LogUtil.ts";
 
@@ -9,7 +9,13 @@ export class NotifyLoadFinishOperation implements OperationPort<NotifyLoadFinish
   static readonly NAME = "notifyLoadFinish";
   readonly name = NotifyLoadFinishOperation.NAME;
   readonly description = "Sends one notice, with the final status of a background load, to the https callback_url given, when that load finishes. It is not read-only: it makes one POST to that address, with the status and the number of rows and no data. Use it with the loading id of a query that answered while the load was still running.";
-  readonly isReadOnly = false;
+  readonly annotations: OperationAnnotations = {
+    readOnlyHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+    destructiveHint: false,
+  };
+
   readonly inputSchema = NotifyLoadFinishInputSchema;
 
   static readonly OUTCOME_TO_RESULT: Record<SubscribeOutcome, (loadingId: string, host: string) => OperationResult> = {
