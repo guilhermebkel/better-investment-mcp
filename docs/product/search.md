@@ -75,9 +75,33 @@ A chunk that says "ignore your instructions" comes back as the value of a `text`
 
 ## Quality
 
-The quality set (issue #10, S8) is not measured yet. It needs three real filings stored as fixtures, and ten questions with the passage each one should find. The sandbox this PR was written in received corrupted copies of three real CVM filings through its proxy (bad xref offsets and truncated transfers), so none of them could be stored as a fixture. The measurement has to be run on a machine that downloads the filings cleanly. Target: 8 of 10 questions with the passage in the top 5.
+The quality set is the 30 investor questions of issue #61, with the passages that answer each one. It is in `scripts/search-quality/questions.json`, and it is run by `pnpm build && pnpm search:quality -- <cache-dir> --out <file>`. The run downloads the five filings from RAD, so it is not part of `pnpm test`, `pnpm check` or CI. The metrics are tested without a network (`scripts/search-quality/metrics.test.mjs`).
 
-Issue #42, S6 (the TOTVS FRE 2025 version 5, `ID_DOC` 152065, as the quality set's filing): not measured. The sandbox of issue #42 could not download the zip in full: RAD closed the transfer at about 11.1 MB, of 11.7 MB, on each attempt, and does not resume (ADR 0025). No fixture was stored, so the question set and the measurement wait for a complete copy. The search guide's examples are checked by the guard and run on a seeded store, not against a real filing.
+A relevant chunk is one whose text, with whitespace collapsed, contains a quote of the question. Quotes locate a chunk; they are not always the sentence that answers the question. Three modes are measured: `keywords` (the query of the guide, with its variants), `keywords_phrase` (the same, with an `ILIKE` phrase filter on the output) and `question` (the full question, as the query).
+
+### Baseline (2026-11-15, measured before this issue's code)
+
+Five FREs of reference year 2026 (TOTS3, WEGE3, PETR4, ITUB4, MGLU3), loaded through the server's own load path, with no OCRmyPDF and no PyMuPDF on the measuring machine (so no OCR pages and no table chunks). The baseline is the reference: it is not changed by later runs.
+
+| How the query was written | Hits in top 5 | Hits in top 10 | MRR@10 | Median chunks matched | Queries with zero results |
+| --- | --- | --- | --- | --- | --- |
+| (a) Keywords with variants, no filter | 30/30 | 30/30 | 0.846 | 165 | 0 |
+| (c) Keywords with variants and an `ILIKE` phrase filter | 30/30 | 30/30 | 0.851 | 8 | 0 |
+| (d) Any word, the full question as the query | 19/30 | 23/30 | 0.545 | 505.5 | 0 |
+
+Limits of the baseline: five forms of 2026; the questions were written and the relevant chunks judged by one person, and the top 3 of three modes were read before pooling 26 more relevant chunks into 17 questions, which favours those modes; the BM25 statistics come from the five forms together; no OCR and no tables.
+
+### Run of 2026-11-15 (this issue's code, after the item column)
+
+The same five filings and the same questions, run by `pnpm search:quality` on the built server, with the same tools as the baseline (no OCRmyPDF; tesseract and ghostscript installed; `python3` without PyMuPDF, so no table chunks).
+
+| How the query was written | Hits in top 5 | Hits in top 10 | MRR@10 | Median chunks matched | Queries with zero results |
+| --- | --- | --- | --- | --- | --- |
+| (a) Keywords with variants, no filter | 29/30 | 30/30 | 0.842 | 165 | 0 |
+| (c) Keywords with variants and an `ILIKE` phrase filter | 30/30 | 30/30 | 0.829 | 8 | 0 |
+| (d) Any word, the full question as the query | 19/30 | 22/30 | 0.52 | 505.5 | 0 |
+
+Against the baseline: one question less in the top 5 for (a), and MRR@10 lower by 0.004 for (a), 0.022 for (c) and 0.025 for (d). The cause of the difference was not investigated: the baseline was measured before the item column and the chunk changes of this issue, and the five filings were downloaded again from RAD, which answered with retries. The baseline is not changed. The search ranking is the one of ADR 0044.
 
 ## Limits
 
