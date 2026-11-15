@@ -84,7 +84,7 @@ describe("McpServerSurface.build()", () => {
       expect(result.isError).toBe(false);
       const text = JSON.stringify(result.content);
       expect(text).toContain(USAGE_NOTICE);
-      expect(text).toContain("Guide topics for get_guide: sql, search, sources, limits.");
+      expect(text).toContain("Guide topics for get_guide: sql, search, sources, analysis, limits.");
     });
 
     it("refuses an extra field", async () => {
@@ -100,7 +100,7 @@ describe("McpServerSurface.build()", () => {
       const result = await client.callTool({ name: "get_guide", arguments: { topic: "tables" } });
 
       expect(result.isError).toBe(true);
-      expect(JSON.stringify(result)).toContain("expected one of \\\"sql\\\"|\\\"search\\\"|\\\"sources\\\"|\\\"limits\\\"");
+      expect(JSON.stringify(result)).toContain("expected one of \\\"sql\\\"|\\\"search\\\"|\\\"sources\\\"|\\\"analysis\\\"|\\\"limits\\\"");
     });
   });
 

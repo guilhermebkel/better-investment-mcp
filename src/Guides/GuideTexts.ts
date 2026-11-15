@@ -1,5 +1,6 @@
 import type { GuideTopic } from "@/Protocols/GetGuideProtocol.ts";
 import { LIMITS_GUIDE } from "@/Guides/LimitsGuide.ts";
+import { ANALYSIS_GUIDE } from "@/Guides/AnalysisGuide.ts";
 import { SEARCH_GUIDE } from "@/Guides/SearchGuide.ts";
 import { SOURCES_GUIDE } from "@/Guides/SourcesGuide.ts";
 import { SQL_GUIDE } from "@/Guides/SqlGuide.ts";
@@ -12,6 +13,7 @@ export class GuideTexts {
     sql: SQL_GUIDE,
     search: SEARCH_GUIDE,
     sources: SOURCES_GUIDE,
+    analysis: ANALYSIS_GUIDE,
     limits: LIMITS_GUIDE,
   };
 }
