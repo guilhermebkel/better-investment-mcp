@@ -1,4 +1,9 @@
-<h1 align="center">better-investment-mcp</h1>
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="design/svg/horizontal-dark.svg" />
+    <img src="design/svg/horizontal-light.svg" alt="better-investment-mcp" width="420" />
+  </picture>
+</h1>
 
 <p align="center">
   <strong>Let your AI agent read Brazilian asset data: prices, dividends, fundamentals, filings, FII reports and macro series, through one read-only SQL tool.</strong>
