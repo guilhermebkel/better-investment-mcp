@@ -1,4 +1,4 @@
-import type { OperationData, OperationPort, OperationResult } from "@/Protocols/OperationProtocol.ts";
+import type { OperationAnnotations, OperationData, OperationPort, OperationResult } from "@/Protocols/OperationProtocol.ts";
 import type { LoadedEntry } from "@/Protocols/LoaderProtocol.ts";
 import type { QuerySqlDependencies, QuerySqlInput } from "@/Protocols/QuerySqlProtocol.ts";
 import { QuerySqlInputSchema } from "@/Schemas/QuerySqlSchema.ts";
@@ -21,6 +21,8 @@ const convertRow = (row: Record<string, unknown>): Record<string, unknown> => {
 
 export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
   static readonly NAME = "querySql";
+  // Why: the seconds to wait before the same query is run again, while a load runs; the structured result and the prose both use this number (issue #56, S2).
+  static readonly RETRY_AFTER_SECONDS = 5;
   static readonly DESCRIPTION = "Read-only. Runs one SELECT over the server's tables and returns the rows. "
     + "Every asset table in the query needs a WHERE filter on asset_id (market:asset_type:code), compared with = or IN "
     + "and literal values; a query without them is refused with the filter to add. Output is limited to "
@@ -30,7 +32,13 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
 
   readonly name = QuerySqlOperation.NAME;
   readonly description = QuerySqlOperation.DESCRIPTION;
-  readonly isReadOnly = true;
+  readonly annotations: OperationAnnotations = {
+    readOnlyHint: true,
+    idempotentHint: true,
+    openWorldHint: true,
+    destructiveHint: false,
+  };
+
   readonly inputSchema = QuerySqlInputSchema;
 
   private readonly dependencies: QuerySqlDependencies;
@@ -82,7 +90,9 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
     // Why: the rows are in the text, which every client shows; the structured content carries only the counts and the report, so the rows are not sent twice.
     const limited = new OutputLimitService().limit(plainRows.map((row) => JSON.stringify(row)));
     const structuredResult: OperationData = {
-      ...(pending === undefined ? {} : { loadingId: pending.id }),
+      ...(pending === undefined
+        ? {}
+        : { loadingId: pending.id, retryAfterSeconds: QuerySqlOperation.RETRY_AFTER_SECONDS }),
       returnedRows: limited.returnedRows,
       truncated: limited.isTruncated,
       remainingRows: limited.remainingRows,
@@ -90,7 +100,7 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
       loaded: loaded.map((entry) => QuerySqlOperation.removeVendorKeys(entry)),
     };
     const message = [
-      QuerySqlOperation.describePending(pending),
+      QuerySqlOperation.describePending(pending, rows.length),
       QuerySqlOperation.describeRows(rows.length, limited.returnedRows, loaded),
       QuerySqlOperation.describePeriodicity(rows.length, loaded),
       QuerySqlOperation.describePeriods(loaded),
@@ -108,13 +118,17 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
     return Object.fromEntries(Object.entries(entry).filter(([key]) => !VENDOR_KEYS.has(key as "source")));
   }
 
-  private static describePending(pending: LoadJob | undefined): string {
+  private static describePending(pending: LoadJob | undefined, rowCount: number): string {
     if (pending === undefined) {
       return "";
     }
-    // Why: a row set answered while a load runs can be incomplete, so the answer says so and gives the id to follow.
+    const retry = `Run the same query again after ${QuerySqlOperation.RETRY_AFTER_SECONDS} seconds, and repeat until no load is still running; then answer from its complete rows. `;
+    // Why: a row set answered while a load runs can be incomplete, so the answer says so and gives the id to follow; with no row yet, it says that no row was found.
+    if (rowCount === 0) {
+      return `No rows were found yet while a load is still running in the background (id ${pending.id}) for ${LoadJobService.describe(pending)}; they may be incomplete. ${retry}`;
+    }
     return `A load is still running in the background (id ${pending.id}) for ${LoadJobService.describe(pending)}. `
-      + "The rows below are the ones already stored, so they may be incomplete. Run the same query again after a few seconds, and repeat until no load is still running; then answer from its complete rows. ";
+      + `The rows below are the ones already stored, so they may be incomplete. ${retry}`;
   }
 
   private static describeRows(rowCount: number, returnedRows: number, loaded: LoadedEntry[]): string {

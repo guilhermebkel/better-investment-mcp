@@ -22,13 +22,13 @@ The server has four tools. Three are read-only: `get_overview`, `get_guide` and 
 
 ## The SQL tool
 
-- **Only a `SELECT` runs (planned #4).** A statement of any other kind, more than one statement, `PRAGMA`, `COPY`, `ATTACH`, `INSTALL` and `LOAD` are refused before anything runs.
+- **Only a `SELECT` runs.** A statement of any other kind, more than one statement, `PRAGMA`, `COPY`, `ATTACH`, `INSTALL` and `LOAD` are refused before anything runs.
 - **The connection is read-only and has external access (files, network) disabled (planned #3).** The refusal does not depend on the SQL guard alone.
 - **Every asset table is filtered by `asset_id` with equality or `IN` with literal values.** `asset_metrics` also needs `metric`; `asset_filing_chunks` also needs `document_type` or `filing_id`. The rule is tested in `src/Services/SqlGuardService.test.ts` (ADR 0021).
-- **A refusal names the table, what is missing and a corrected example (planned #4).** The reader is a model that cannot ask a question.
-- **The server loads what is missing before it runs the query (planned #5).** The answer carries a `loaded` report: per category and asset, the source, the rows, the period and the error if any.
-- **An empty result for an asset that could not be loaded says so (planned #4).** It must not look like "no data".
-- **Output is limited to 1,024 rows and 50,000 characters, and a cut is always reported.** The service is `OutputLimitService`; `query_sql` applies it once the store exists (planned #4). The report says what was cut and how much remains.
+- **A refusal names the table, what is missing and a corrected example.** The reader is a model that cannot ask a question.
+- **The server loads what is missing before it runs the query.** The answer carries a `loaded` report: per category and asset, the source, the rows, the period and the error if any.
+- **An empty result for an asset that could not be loaded says so.** It must not look like "no data".
+- **Output is limited to 1,024 rows and 50,000 characters, and a cut is always reported.** The service is `OutputLimitService`; `query_sql` applies it once the store exists. The report says what was cut and how much remains.
 
 ## Third-party text
 
@@ -40,6 +40,7 @@ The server has four tools. Three are read-only: `get_overview`, `get_guide` and 
 
 - **Order: what it does; when to use it; when not to and which neighbor to use; what it returns and what it returns when empty; limits (review).** One sentence each.
 - **A description opens with the nature of the action (test).** Every read-only tool starts with "Read-only."
+- **Each tool declares its annotations in its operation, and the surface passes them on (test).** `readOnlyHint` and `idempotentHint` are true for the three read-only tools; `openWorldHint` is true for `query_sql` (it can start a load from a vendor) and for `notify_load_finish` (it POSTs to a URL), and false for `get_overview` and `get_guide`; `destructiveHint` is false for all four, and `notify_load_finish` has `readOnlyHint` false and `idempotentHint` false.
 - **A description has a length limit, set at today's worst case (test).** Long specifications go to a guide topic.
 - **Rules that span tools live in the server `instructions`, once (review).** The usual order of calls, the filter rule.
 - **A description may name a neighbor tool to route or to say where a value comes from, never to prescribe the order of a flow (review).**
@@ -50,7 +51,7 @@ The server has four tools. Three are read-only: `get_overview`, `get_guide` and 
 - **Concise by default (review).** Rows are returned as the query selects them; the tool adds nothing the query did not ask for except the `loaded` report and the truncation notice.
 - **A truncated result says so and says how to get the rest (test).** `truncated: true` plus what to change in the query.
 - **Numbers are numbers, with the unit in the column name (review).** `amount_brl`, not "R$ 1,2 mi".
-- **Every row keeps the `source` that produced it (planned #5).** The agent can tell which vendor a number came from.
+- **Every row keeps the `source` that produced it.** The agent can tell which vendor a number came from.
 - **A secret never leaves (test).** Every output path is tested with a fake secret (`RedactUtil`).
 - **A result is structured (review).** The text content carries the summary and the data as JSON, because some clients show only the text to the model. `structuredContent` carries the counts, the truncation and the report, not the rows, so the rows are not sent twice. Every tool declares an `outputSchema`.
 
@@ -59,7 +60,7 @@ The server has four tools. Three are read-only: `get_overview`, `get_guide` and 
 - **A failed execution is a result with `isError: true` (test).** It names what failed, why, and what to do next; protocol errors are only for an unknown tool or invalid arguments.
 - **An invalid value comes back with the valid ones (test).** An unknown guide topic returns the list of topics; an unknown series returns the known series.
 - **An error message has no stack trace and no secret (test).**
-- **A vendor failure is reported with the vendor and the cause (planned #5).** "Yahoo answered with a rate limit", not "request failed".
+- **A vendor failure is reported with the vendor and the cause.** "Yahoo answered with a rate limit", not "request failed".
 
 ## Documentation on demand
 

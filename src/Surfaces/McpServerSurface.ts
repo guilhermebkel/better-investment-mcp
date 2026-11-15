@@ -28,7 +28,7 @@ export class McpServerSurface {
           description: operation.description,
           inputSchema: operation.inputSchema,
           outputSchema: OperationOutputSchema,
-          annotations: { readOnlyHint: operation.isReadOnly },
+          annotations: operation.annotations,
         },
         async (input) => McpServerSurface.buildCallResult(await operation.execute(input)),
       );

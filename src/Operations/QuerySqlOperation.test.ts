@@ -452,8 +452,33 @@ describe("QuerySqlOperation.execute()", () => {
     rmSync(directory, { recursive: true, force: true });
 
     expect(result.isError).toBe(false);
-    expect(result.message).toContain("A load is still running in the background (id ");
+    expect(result.message).toContain("No rows were found yet while a load is still running in the background (id ");
     expect(result.message).toContain("may be incomplete");
+    expect(result.message).toContain("after 5 seconds");
     expect(typeof result.structuredResult?.loadingId).toBe("string");
+    // Why: the retry number is one integer in the structured result, the same number the prose gives (issue #56, AC3).
+    expect(result.structuredResult?.retryAfterSeconds).toBe(5);
+  });
+
+  it("carries neither loadingId nor retryAfterSeconds when no load is running (AC4)", async () => {
+    const directory = mkdtempSync(TEMP_PREFIX);
+    vi.spyOn(process.stderr, "write").mockReturnValue(true);
+    const store = await StoreService.open(
+      { INVESTMENT_MCP_LOG_LEVEL: "error", INVESTMENT_MCP_CACHE_DIR: directory, INVESTMENT_MCP_CACHE_TTL_SECONDS: 60 },
+      () => START_MS,
+    );
+    const requirement = { table: "asset_quotes" as const, category: "quotes" as const, market: BR_MARKET, ticker: PETR4_TICKER, assetType: STOCK };
+    const operation = new QuerySqlOperation({
+      guard: { checkSql: () => Promise.resolve({ isAccepted: true as const, requirements: [requirement] }) },
+      loader: { ensure: () => Promise.resolve([]) },
+      openReader: () => store.openReader(),
+    });
+
+    const result = await operation.execute({ sql: PETR4_SQL });
+    store.close();
+    rmSync(directory, { recursive: true, force: true });
+
+    expect(result.structuredResult).not.toHaveProperty("loadingId");
+    expect(result.structuredResult).not.toHaveProperty("retryAfterSeconds");
   });
 });

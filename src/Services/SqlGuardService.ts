@@ -125,11 +125,17 @@ export class SqlGuardService implements SqlGuardPort {
     ]);
 
   static readonly MAX_ASSETS = 50;
+  static readonly GUIDE_POINTER = "For the syntax and the filters, read the guide topic \"sql\" with get_guide.";
 
   private readonly parser: DatabasePort;
 
   constructor(parser: DatabasePort) {
     this.parser = parser;
+  }
+
+  private static buildRefusal(message: string): GuardVerdict {
+    // Why: every refusal names the guide topic that teaches the syntax and the filters (issue #56, S1).
+    return { isAccepted: false, message: `${message} ${SqlGuardService.GUIDE_POINTER}` };
   }
 
   async checkSql(sql: string): Promise<GuardVerdict> {
@@ -139,11 +145,11 @@ export class SqlGuardService implements SqlGuardPort {
     const parsed = ParsedSqlSchema.parse(JSON.parse(astText));
     if (parsed.error) {
       const message = SqlGuardService.describeParserError(parsed.error_type, parsed.error_message);
-      return { isAccepted: false, message };
+      return SqlGuardService.buildRefusal(message);
     }
     const statements = parsed.statements ?? [];
     if (statements.length !== 1) {
-      return { isAccepted: false, message: "Send exactly one SELECT statement per query." };
+      return SqlGuardService.buildRefusal("Send exactly one SELECT statement per query.");
     }
     const selects = statements.flatMap((statement) => SqlGuardService.collectSelects(statement.node));
     const cteNames = selects.flatMap((select) => SqlGuardService.readCteNames(select));
@@ -153,12 +159,12 @@ export class SqlGuardService implements SqlGuardPort {
     const checks = selects.map((select) => SqlGuardService.checkSelect(select, cteNames));
     const problems = [...cteProblems, ...checks.flatMap((check) => check.problems)];
     if (problems.length > 0) {
-      return { isAccepted: false, message: problems.join("\n") };
+      return SqlGuardService.buildRefusal(problems.join("\n"));
     }
     const requirements = checks.flatMap((check) => check.requirements);
     if (requirements.length > SqlGuardService.MAX_ASSETS) {
       const message = `One query can load at most ${SqlGuardService.MAX_ASSETS} assets; this one asks for ${requirements.length}. Filter fewer tickers.`;
-      return { isAccepted: false, message };
+      return SqlGuardService.buildRefusal(message);
     }
     return { isAccepted: true, requirements };
   }

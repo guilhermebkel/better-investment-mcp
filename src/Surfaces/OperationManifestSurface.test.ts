@@ -23,7 +23,7 @@ describe("OperationManifestSurface.listOperations()", () => {
 
   it("starts the description of every read-only tool with Read-only.", () => {
     const readOnly = OperationManifestSurface.listOperations(UNUSED_DEPENDENCIES)
-      .filter((operation) => operation.isReadOnly);
+      .filter((operation) => operation.annotations.readOnlyHint);
 
     expect(readOnly.map((operation) => operation.description.startsWith("Read-only."))).toStrictEqual([true, true, true]);
   });
@@ -31,7 +31,7 @@ describe("OperationManifestSurface.listOperations()", () => {
   it("marks notify_load_finish as not read-only, and says what it sends", () => {
     const notify = OperationManifestSurface.listOperations(UNUSED_DEPENDENCIES).find((operation) => operation.name === "notifyLoadFinish");
 
-    expect(notify?.isReadOnly).toBe(false);
+    expect(notify?.annotations.readOnlyHint).toBe(false);
     expect(notify?.description).toContain("POST");
   });
 });
@@ -39,5 +39,17 @@ describe("OperationManifestSurface.listOperations()", () => {
 describe("OperationManifestSurface.formatToolName()", () => {
   it("turns a camelCase operation name into the snake_case tool name", () => {
     expect(OperationManifestSurface.formatToolName("querySql")).toBe("query_sql");
+  });
+
+  it("declares the annotations of every tool in one place (AC5)", () => {
+    const annotations = Object.fromEntries(OperationManifestSurface.listOperations(UNUSED_DEPENDENCIES)
+      .map((operation) => [operation.name, operation.annotations]));
+
+    expect(annotations).toStrictEqual({
+      getGuide: { readOnlyHint: true, idempotentHint: true, openWorldHint: false, destructiveHint: false },
+      getOverview: { readOnlyHint: true, idempotentHint: true, openWorldHint: false, destructiveHint: false },
+      querySql: { readOnlyHint: true, idempotentHint: true, openWorldHint: true, destructiveHint: false },
+      notifyLoadFinish: { readOnlyHint: false, idempotentHint: false, openWorldHint: true, destructiveHint: false },
+    });
   });
 });
