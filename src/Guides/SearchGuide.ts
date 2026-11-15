@@ -17,7 +17,7 @@ Name asset_id, and document_type or filing_id. Without them the query is refused
 
 ## Reference form (FRE)
 
-An FRE section is \`<tag> <label>\`, for example \`FatoresRisco 4.1 - Descrição dos fatores de risco\`. The item number is the second word. The labels are the company's file names, so use the number, not the label.
+An FRE section is \`<tag> <label>\`, for example \`FatoresRisco 4.1 - Descrição dos fatores de risco\`. The item number is the second word, cut at the first \`_\` (some companies write \`4.1_<label>\`). The labels are the company's file names, so use the number, not the label.
 
 ## Examples
 
@@ -38,7 +38,7 @@ SELECT filing_id, seq, section, page, text, score FROM search_chunks('dividendos
 
 One FRE item, in page order (item 4.1 is the risk factors):
 \`\`\`sql
-SELECT section, page, seq, text FROM asset_filing_chunks WHERE asset_id = 'BR:stock:PETR4' AND filing_id = 'fre-1' AND split_part(section, ' ', 2) = '4.1' ORDER BY page, seq
+SELECT section, page, seq, text FROM asset_filing_chunks WHERE asset_id = 'BR:stock:PETR4' AND filing_id = 'fre-1' AND split_part(split_part(section, ' ', 2), '_', 1) = '4.1' ORDER BY page, seq
 \`\`\`
 
 Word variants and a synonym in one query. Any word matches, and the score ranks chunks with more of them first:
@@ -56,7 +56,7 @@ The neighbours of a hit, read by seq:
 SELECT seq, section, page, text FROM asset_filing_chunks WHERE asset_id = 'BR:stock:PETR4' AND filing_id = 'fre-1' AND seq BETWEEN 1 AND 3 ORDER BY seq
 \`\`\`
 
-Wrong, do not write it: \`section = 'FatoresRisco 4.1'\` matches no chunk, because the label follows the number; and \`section LIKE 'RemuneracaoAdministradores 8.1%'\` also matches items 8.10 to 8.19. Use \`split_part(section, ' ', 2) = '8.1'\`.
+Wrong, do not write it: \`section = 'FatoresRisco 4.1'\` matches no chunk, because the label follows the number; and \`section LIKE 'RemuneracaoAdministradores 8.1%'\` also matches items 8.10 to 8.19. Use \`split_part(split_part(section, ' ', 2), '_', 1) = '8.1'\`.
 
 ## Notes
 

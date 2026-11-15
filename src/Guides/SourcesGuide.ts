@@ -19,7 +19,7 @@ Each answer says what was loaded, with its period and the error if any.
 
 ## Where an analysis theme is in the filings
 
-The item titles follow the FRE form, and the labels are the company's file names, so search by item number (\`split_part(section, ' ', 2)\`).
+The item titles follow the FRE form, and the labels are the company's file names, so search by item number (\`split_part(split_part(section, ' ', 2), '_', 1)\`).
 
 - Business, products, segments, markets and competition: FRE items 1.2 to 1.5; competition risks in 4.1.
 - History: FRE 1.1. Regulation: FRE 1.6 and 1.8.

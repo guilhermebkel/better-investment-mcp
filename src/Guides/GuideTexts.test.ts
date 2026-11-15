@@ -36,6 +36,7 @@ const seedDatabase = async (database: DatabasePort): Promise<void> => {
     ('fre-1', 'BR:stock:PETR4', 'fre', 'AtividadesEmissor 1.2 - Produtos', 2, 1, 'Participação de mercado nas refinarias do país.'),
     ('fre-1', 'BR:stock:PETR4', 'fre', 'FatoresRisco 4.1 - Descrição dos fatores de risco', 5, 2, 'Concorrentes podem reduzir a participação de mercado.'),
     ('fre-1', 'BR:stock:PETR4', 'fre', 'FatoresRisco 4.1 - Descrição dos fatores de risco', 5, 3, 'Dividendos e proventos dependem do lucro líquido.'),
+    ('fre-1', 'BR:stock:PETR4', 'fre', 'FatoresRisco 4.1_Rod2 Validação_RI', 6, 6, 'Riscos do emissor com label sem espaço.'),
     ('fre-1', 'BR:stock:PETR4', 'fre', 'RemuneracaoAdministradores 8.1 - Remuneração', 9, 4, 'A remuneração total dos administradores.'),
     ('fre-1', 'BR:stock:PETR4', 'fre', 'RemuneracaoAdministradores 8.10 - Anexo', 12, 5, 'Anexo de remuneração por cargo.')`);
   // Why: search_chunks is built on the full-text extension, which the unit suite does not install; this stand-in has the same arguments and columns, so the example runs on the same schema.
@@ -62,6 +63,15 @@ describe("GuideTexts.topicToText()", () => {
     expect(rows).toStrictEqual([{ seq: 4, section: "RemuneracaoAdministradores 8.1 - Remuneração" }]);
     const byLike = await database.readRows("SELECT seq FROM asset_filing_chunks WHERE filing_id = 'fre-1' AND section LIKE 'RemuneracaoAdministradores 8.1%' ORDER BY seq");
     expect(byLike).toStrictEqual([{ seq: 4 }, { seq: 5 }]);
+    database.close();
+  });
+
+  it("finds the item 4.1 whether the label follows a space or an underscore (issue #42 correction)", async () => {
+    const database = await DuckDbAdapter.openWriter(":memory:");
+    await DuckDbSchemaAdapter.createSchema(database);
+    await seedDatabase(database);
+    const rows = await database.readRows("SELECT seq FROM asset_filing_chunks WHERE asset_id = 'BR:stock:PETR4' AND filing_id = 'fre-1' AND split_part(split_part(section, ' ', 2), '_', 1) = '4.1' ORDER BY seq");
+    expect(rows).toStrictEqual([{ seq: 2 }, { seq: 3 }, { seq: 6 }]);
     database.close();
   });
 
