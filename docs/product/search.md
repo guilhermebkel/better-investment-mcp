@@ -108,5 +108,5 @@ Against the baseline: one question less in the top 5 for (a), and MRR@10 lower b
 - OCR is done for scanned pages when OCRmyPDF and Tesseract are installed, and the table reader runs when PyMuPDF is installed (ADR 0027). Without them a scanned page has no text, and the answer counts it (`pagesWithoutText`).
 - Only the chunks of the filing type or the filing id asked for are searched. A search over all filings of a company needs a load of each of them.
 - A stock has no `management_report` filing: its IPE list has `material_fact` and `sustainability` only. `management_report` is the FII report (CVM fund filings and FNET).
-- The management report and the notes of a DFP or an ITR are attached to its XML as PDFs, which the server does not read; whether the rendered PDF holds their text was not confirmed (ADR 0025).
+- The management report and the notes of a DFP are attached to its XML as complete PDFs (group 1653 and 412, ADR 0045), which the server does not read. Whether the rendered PDF holds their text is not decided: on 2026-11-15 the rendered PDF of each of four DFPs arrived cut and could not be read, so the research is open (ADR 0045).
 - Structured financial statements are in `financial_statements` (issue #11), not in the search; FNET documents are issue #12.
