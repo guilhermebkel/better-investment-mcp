@@ -13,6 +13,9 @@ Each answer says what was loaded, with its period and the error if any.
 - Company and fund registry, and the B3 identifiers (CNPJ, ISIN): CVM and B3. A stock's IR site, activity and previous legal name come from CVM's FCA form.
 - Sector series (IBGE): the number of companies by CNAE 2.0 code, yearly, for the asset BR:sector:<code>. The code is a CNAE 2.0 code as IBGE writes it, at section, division, group or class level (10, 29.10-7); a code that is not a category of IBGE table 6449 fails the load and names the code. The server does not link a stock to a CNAE: choose the code from the company's sector (asset.sector) and its FCA activity (asset_attribute activity_description and activity_sector). A holding's activity may differ from its operating companies'. The attribution of IBGE is not yet quoted here.
 - Index membership (B3): the weight of a stock in the ISE, ICO2 and IDIVERSA indexes, of the current portfolio only. The IGPTW index is blocked on this server.
+- Complaints (Consumidor.gov.br, monthly from 2021-08): found by a term, not by a ticker, as BR:complaints:<TERM>; trade_name shows what matched. One company has several trade names, and a term can match another company: PETROBRAS matches \`Postos Petrobras (Vibra Energia)\`. B2B companies have none.
+- Bank size (BCB IF.data, quarterly, ODbL, attribution Banco Central do Brasil, IFData): banking.total_assets and banking.credit_portfolio (brl), and their _share (percent of the file), for a listed bank's group, linked by the CNPJ root.
+- News (GDELT DOC 2.0, the last 3 months): BR:news:<TERM>; a term can match other companies. Use must cite the GDELT Project with a link to gdeltproject.org.
 - Sanctioning proceedings (CVM, ODbL): a defendant is linked to a stock only when its name equals the company's name or previous legal name; no other match is made.
 - Analyst consensus (price targets, recommendations, earnings estimates): not available. No free official source publishes it, and Yahoo's terms allow personal use only. The BCB Focus survey covers macro expectations, not companies.
 - Margins against international peers: not available, because the server has no foreign company data.
@@ -21,20 +24,7 @@ Each answer says what was loaded, with its period and the error if any.
 
 ## Analysis themes in the filings
 
-The filing items for each theme (business, risks, pay, guidance) are in get_guide topic "analysis".
-
-## Quality flags
-
-- quotes.is_stale: the price repeats the day before with zero volume.
-- quotes.suspect_tick: one day moved more than 25% and came back within 5% the next day. The row stays.
-- adj_close is the vendor's adjusted close; use it for returns across splits and dividends.
-
-## Units
-
-- macro: the unit column says it: percent_per_month for IPCA and IGPM, percent_per_day for CDI, percent_per_year for SELIC.
-- treasury.buy_rate and sell_rate are percent per year; the unit prices are reais per bond.
-- fx: brl_per_currency. Fund quota: brl_per_quota. Statements and FII reports: brl.
-- fundamental: as_published, the unit the source gave.
+The filing items for each theme, the quality flags and the units are in get_guide topic "analysis".
 
 ## See also
 

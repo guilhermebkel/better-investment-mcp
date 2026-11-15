@@ -128,9 +128,9 @@ export class CvmUtil {
     };
   }
 
-  static async* readLines(chunks: AsyncIterable<Uint8Array>): AsyncGenerator<string> {
-    // Why: the file is decoded in chunks and yielded as whole lines, so the decoded file is never held in memory as one string.
-    const decoder = new TextDecoder("windows-1252");
+  static async* readLines(chunks: AsyncIterable<Uint8Array>, encoding = "windows-1252"): AsyncGenerator<string> {
+    // Why: the file is decoded in chunks and yielded as whole lines, so the decoded file is never held in memory as one string. CVM files are windows-1252; another source passes its own encoding.
+    const decoder = new TextDecoder(encoding);
     let carry = "";
     for await (const chunk of chunks) {
       const parts = (carry + decoder.decode(chunk, { stream: true })).split(LINE_BREAK);

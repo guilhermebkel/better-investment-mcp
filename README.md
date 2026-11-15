@@ -232,6 +232,9 @@ Each category has a default, so a query works with no provider variable. A secon
 | `INVESTMENT_MCP_PROCEEDINGS_PROVIDER` | `BR:cvm` | CVM sanctioning proceedings of a stock, linked by the defendant's name (ADR 0029). |
 | `INVESTMENT_MCP_SECTOR_PROVIDER` | `BR:ibge` | Number of companies by CNAE class, from IBGE (ADR 0030). |
 | `INVESTMENT_MCP_INDEX_MEMBERSHIP_PROVIDER` | `BR:b3` | A stock's weight in the B3 indexes (ADR 0031). |
+| `INVESTMENT_MCP_COMPLAINTS_PROVIDER` | `BR:consumidor_gov` | Complaints finished per trade name and month, found by a term, from Consumidor.gov.br (ADR 0033). |
+| `INVESTMENT_MCP_BANKING_PROVIDER` | `BR:bcb` | A listed bank's group size and its share of the file, from BCB IF.data (ADR 0034). |
+| `INVESTMENT_MCP_NEWS_PROVIDER` | `BR:gdelt` | News articles by term, from GDELT DOC 2.0, the last 3 months (ADR 0041). |
 | `INVESTMENT_MCP_FUND_PROVIDER` | `BR:cvm` | Fund registry, daily figures and holdings, keyed by CNPJ. |
 
 ## Data sources

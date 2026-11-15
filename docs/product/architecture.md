@@ -59,6 +59,16 @@ One interface per data category, one adapter per vendor (`docs/adr/0005-one-prov
 - `ProceedingsProvider`: CVM sanctioning proceedings, linked to a stock only by the defendant's name (ADR 0029). `INVESTMENT_MCP_PROCEEDINGS_PROVIDER`. CVM.
 - `SectorProvider`: IBGE SIDRA, the number of companies by CNAE class (`BR:sector:<code>`, `sector.companies`). `INVESTMENT_MCP_SECTOR_PROVIDER`. IBGE.
 - `IndexMembershipProvider`: the weight of a stock in the B3 indexes ISE, ICO2 and IDIVERSA (`index.*`); IGPTW is blocked on this server. `INVESTMENT_MCP_INDEX_MEMBERSHIP_PROVIDER`. B3.
+- `ComplaintsProvider`: complaints finished per trade name and month, found by a term (`BR:complaints:<TERM>`, `asset_complaints`). `INVESTMENT_MCP_COMPLAINTS_PROVIDER`. Consumidor.gov.br (ADR 0033).
+- `BankingProvider`: the total assets and the credit portfolio of a listed bank's group, per quarter, and their share of the file (`banking.*`), linked by the CNPJ root. `INVESTMENT_MCP_BANKING_PROVIDER`. BCB IF.data (ADR 0034).
+- `NewsProvider`: news articles by term (`BR:news:<TERM>`, `asset_news`), the last 3 months. `INVESTMENT_MCP_NEWS_PROVIDER`. GDELT DOC 2.0 (ADR 0041).
+- `TelecomProvider`: mobile accesses per operator. Not built: Anatel is blocked (HTTP 403) and its terms could not be read (ADR 0035).
+- `ElectricityProvider`: consumers or energy per distribution company. Not built: ANEEL's portal could not be reached (ADR 0036).
+- `HealthPlansProvider`: beneficiaries per health plan operator. Not built: no terms page was found and the monthly files are over 1 GB (ADR 0037).
+- `InsuranceProvider`: premiums per insurer. Not built: SUSEP's pages answer HTTP 404 (ADR 0038).
+- `FuelProvider`: fuel sales per distributor. Not built: the dataset's licence is CC BY-ND, and the owner decides on derived values (ADR 0039).
+- `AviationProvider`: passengers per airline. Not built: ANAC's open data host could not be reached (ADR 0040).
+- `SanctionsProvider`: CEIS and CNEP sanctions, linked to a stock by the CNPJ root. Not built: the terms page answers a captcha (ADR 0042).
 <!-- providers:end -->
 
 `scripts/source-coverage.json` classifies each provider as `implemented`, `planned` or `excluded` with a reason, and `pnpm source:drift` fails when this list and that file disagree.

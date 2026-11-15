@@ -18,6 +18,8 @@ The store is at schema version 9 (`DuckDbSchemaAdapter.VERSION`). A table of an 
 | `asset_holdings` | `asset_id` | `reference_time_start` |
 | `asset_filings` | `asset_id` | `reference_time_start` |
 | `asset_proceedings` | `asset_id` | `opened_time` |
+| `asset_complaints` | `asset_id` and `trade_name` | `reference_time_start` |
+| `asset_news` | `asset_id` and `url` | `published_time` |
 | `asset_filing_items` | `asset_id` | none |
 | `asset_filing_chunks` | `asset_id` and `document_type` or `filing_id` | none |
 | `asset_coverage`, `load_runs`, `load_files` | none (catalog) | none |
@@ -117,6 +119,18 @@ Investor relations content is found by `category` and `category_type`, not by `d
 
 Sector (`BR:sector:<CNAE code>`) and index membership are rows of `asset_metrics`, in the groups `sector` and `index`. `sector.companies`: the number of companies of a CNAE 2.0 class, unit `count`, one row per year (IBGE table 6449, ADR 0030). `index.isee`, `index.ico2`, `index.idvr` and `index.gptw`: the weight of a stock in a B3 index, unit `percent`, dated with the portfolio date (ADR 0031). `sector.producer_price_index` is not built.
 
+### Banking metrics
+
+A listed bank's group is a row of `asset_metrics` in the group `banking`, per quarter (`reference_time_start` is the first day of the quarter, `reference_time_end` its last day). `banking.total_assets` and `banking.credit_portfolio`: the group's value in reais, unit `brl`. `banking.total_assets_share` and `banking.credit_portfolio_share`: the group's share of the same account over the whole file and quarter, unit `percent`. The link is the CNPJ root of the group's leader (ADR 0034).
+
+### `asset_complaints`
+
+One row per trade name and month, from Consumidor.gov.br. The asset is `BR:complaints:<TERM>`: a trade name matches when its normalized form contains the normalized term; `_` stands for a space, and accents and case do not matter (ADR 0033). Key `(asset_id, trade_name, reference_time_start)`. Columns: `trade_name` (as the file writes it), `reference_time_start` (DATE, the first day of the month), `complaint_count`, `answered`, `rated`, `resolved`, `score_mean` (null when no complaint of the month has a note) and `response_days_mean` (null when none).
+
+### `asset_news`
+
+One row per article, from GDELT DOC 2.0. The asset is `BR:news:<TERM>`, with the same term rule. Key `(asset_id, url)`. Columns: `url`, `title`, `domain`, `language`, `source_country` and `published_time` (TIMESTAMPTZ, the time GDELT saw the article, UTC). The API searches the last 3 months only (ADR 0041).
+
 ### `asset_proceedings`
 
 One row per case and defendant, from CVM's sanctioning proceedings. Key `(asset_id, case_number, defendant_name)`. Columns: `case_number` (CVM's NUP), `defendant_name` (as CVM wrote it), `subject`, `summary`, `opened_time` (DATE, the period column), `current_phase`, `current_subphase`, `last_movement_time`, `defendant_status` (the defendant's latest status in the case) and `defendant_status_time`. A defendant is linked to a stock only when its normalized name equals the stock's registry name or its previous legal name (ADR 0029). The file has no CNPJ.
@@ -154,6 +168,9 @@ A category is the contract a provider fills. A category fills the tables listed 
 | `fund_data` | `asset_metrics` (`fii.*`) | CVM; StatusInvest |
 | `fund` | `asset_metrics` (`fund.*`), `asset_attribute`, `asset_holdings` | CVM |
 | `proceedings` | `asset_proceedings` | CVM |
+| `complaints` | `asset_complaints` | Consumidor.gov.br (ADR 0033) |
+| `banking` | `asset_metrics` (`banking.*`) | BCB IF.data (ADR 0034) |
+| `news` | `asset_news` | GDELT DOC 2.0 (ADR 0041) |
 | `filings` | `asset_filings` | CVM |
 | `documents` | `asset_filing_chunks` | CVM (the document link) |
 | `disclosures` | `asset_filings`, `asset_filing_items` (FRE, VLMO, CGVN) | CVM |

@@ -13,6 +13,19 @@ The item titles follow the FRE form, and the labels are the company's file names
 - Guidance: FRE 3. Events: document_type 'material_fact', and 'other' by category.
 - FII reports: document_type 'management_report'. A stock has none.
 
+## Quality flags
+
+- quotes.is_stale: the price repeats the day before with zero volume.
+- quotes.suspect_tick: one day moved more than 25% and came back within 5% the next day. The row stays.
+- adj_close is the vendor's adjusted close; use it for returns across splits and dividends.
+
+## Units
+
+- macro: the unit column says it: percent_per_month for IPCA and IGPM, percent_per_day for CDI, percent_per_year for SELIC.
+- treasury.buy_rate and sell_rate are percent per year; the unit prices are reais per bond.
+- fx: brl_per_currency. Fund quota: brl_per_quota. Statements and FII reports: brl.
+- fundamental: as_published, the unit the source gave.
+
 ## See also
 
 - sources: which provider serves what, and the sector series.

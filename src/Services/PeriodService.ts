@@ -19,6 +19,8 @@ export class PeriodService {
     asset_filings: "reference_time_start",
     // Why: a proceeding is an event, placed by the day it was opened (issue #41, S3).
     asset_proceedings: "opened_time",
+    asset_complaints: "reference_time_start",
+    asset_news: "published_time",
   };
 
   // Why: what a reader sees in a table with no row for a month, so an empty month is not read as missing data.
@@ -26,12 +28,16 @@ export class PeriodService {
   static readonly CATEGORY_TO_PERIODICITY: Partial<Record<CacheCategory, string>> = {
     statements: "quarterly and yearly: one row per metric and period; reference_time_start and reference_time_end are the period",
     fund_data: "monthly: one row per metric and month; reference_time_start and reference_time_end are the month",
+    complaints: "monthly: one row per trade name and month; reference_time_start is the first day of the month",
   };
 
   static readonly TABLE_TO_PERIODICITY: Partial<Record<DataTable, string>> = {
     asset_metrics: "one row per metric and reference time; a month or a quarter has no value of its own unless the metric has one",
     asset_filings: "one row per filing; reference_time_start and reference_time_end are the period the document refers to, published_at is when it was filed",
   };
+
+  // Why: a category read by month loads the latest published month when no period is given, so it has no default window (issue #59, S10).
+  static readonly LATEST_MONTH_WHEN_UNSPECIFIED: readonly CacheCategory[] = ["complaints"];
 
   // Why: a single query loads at most this many years of files, because each yearly CVM zip is tens of megabytes; a longer period is refused with the reason.
   static readonly MAX_YEARS_PER_LOAD = MAX_YEARS_PER_LOAD;
@@ -82,7 +88,9 @@ export class PeriodService {
   }
 
   static isWithin(window: PeriodWindow, date: string): boolean {
-    return date >= window.from && date <= window.to;
+    // Why: a time stamp (an article's time) is compared by its day, so the last day of a window keeps every time of that day.
+    const day = date.slice(0, ISO_DATE_LENGTH);
+    return day >= window.from && day <= window.to;
   }
 
   static isEmpty(window: PeriodWindow): boolean {

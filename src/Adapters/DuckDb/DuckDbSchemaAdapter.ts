@@ -4,7 +4,7 @@ const ASSET_ID_COLUMN = "asset_id VARCHAR NOT NULL";
 const REFERENCE_COLUMNS = "reference_time_start DATE NOT NULL, reference_time_end DATE NOT NULL";
 
 export class DuckDbSchemaAdapter {
-  static readonly VERSION = 10;
+  static readonly VERSION = 12;
 
   static readonly STATEMENTS: readonly string[] = [
     "CREATE TABLE schema_version (version INTEGER NOT NULL);",
@@ -19,6 +19,8 @@ export class DuckDbSchemaAdapter {
     `CREATE TABLE asset_holdings (${ASSET_ID_COLUMN}, ${REFERENCE_COLUMNS}, block VARCHAR NOT NULL, application_type VARCHAR, held_code VARCHAR, held_description VARCHAR, held_issuer VARCHAR, quantity DOUBLE, market_value DOUBLE);`,
     `CREATE TABLE asset_filings (filing_id VARCHAR PRIMARY KEY, ${ASSET_ID_COLUMN}, document_type VARCHAR NOT NULL, category VARCHAR, category_type VARCHAR, subject VARCHAR, reference_time_start DATE, reference_time_end DATE, published_at TIMESTAMPTZ, version INTEGER, url VARCHAR, file_hash VARCHAR, source_file VARCHAR);`,
     `CREATE TABLE asset_proceedings (${ASSET_ID_COLUMN}, case_number VARCHAR NOT NULL, defendant_name VARCHAR NOT NULL, subject VARCHAR, summary VARCHAR, opened_time DATE, current_phase VARCHAR, current_subphase VARCHAR, last_movement_time DATE, defendant_status VARCHAR, defendant_status_time DATE, PRIMARY KEY (asset_id, case_number, defendant_name));`,
+    `CREATE TABLE asset_complaints (${ASSET_ID_COLUMN}, trade_name VARCHAR NOT NULL, reference_time_start DATE NOT NULL, complaint_count BIGINT NOT NULL, answered BIGINT NOT NULL, rated BIGINT NOT NULL, resolved BIGINT NOT NULL, score_mean DOUBLE, response_days_mean DOUBLE, PRIMARY KEY (asset_id, trade_name, reference_time_start));`,
+    `CREATE TABLE asset_news (${ASSET_ID_COLUMN}, url VARCHAR NOT NULL, title VARCHAR, domain VARCHAR, language VARCHAR, source_country VARCHAR, published_time TIMESTAMPTZ NOT NULL, PRIMARY KEY (asset_id, url));`,
     `CREATE TABLE asset_filing_items (${ASSET_ID_COLUMN}, filing_id VARCHAR NOT NULL, section VARCHAR NOT NULL, row_json VARCHAR NOT NULL);`,
     `CREATE TABLE asset_filing_chunks (filing_id VARCHAR NOT NULL, ${ASSET_ID_COLUMN}, document_type VARCHAR NOT NULL, section VARCHAR, page INTEGER, seq INTEGER NOT NULL, text VARCHAR NOT NULL, PRIMARY KEY (filing_id, seq));`,
     "CREATE TABLE load_runs (run_id VARCHAR PRIMARY KEY, category VARCHAR NOT NULL, asset_id VARCHAR NOT NULL, source VARCHAR NOT NULL, started_at TIMESTAMPTZ NOT NULL, finished_at TIMESTAMPTZ, expires_at TIMESTAMPTZ, rows_read BIGINT, error VARCHAR, filing_id VARCHAR, reference_time_start DATE, reference_time_end DATE);",
@@ -36,7 +38,9 @@ export class DuckDbSchemaAdapter {
       "  UNION ALL SELECT 'expectations', asset_id, min(reference_time_start), max(reference_time_end) FROM asset_expectations GROUP BY asset_id",
       "  UNION ALL SELECT 'filings', asset_id, min(reference_time_start), max(reference_time_end) FROM asset_filings GROUP BY asset_id",
       "  UNION ALL SELECT 'proceedings', asset_id, min(opened_time), max(opened_time) FROM asset_proceedings GROUP BY asset_id",
-      "  UNION ALL SELECT CASE split_part(metric, '.', 1) WHEN 'statement' THEN 'statements' WHEN 'fundamental' THEN 'fundamentals' WHEN 'fii' THEN 'fund_data' WHEN 'fund' THEN 'fund' WHEN 'macro' THEN 'macro' WHEN 'treasury' THEN 'treasury' WHEN 'fx' THEN 'fx' WHEN 'sector' THEN 'sector' WHEN 'index' THEN 'index_membership' END, asset_id, min(reference_time_start), max(reference_time_end) FROM asset_metrics GROUP BY 1, 2",
+      "  UNION ALL SELECT 'complaints', asset_id, min(reference_time_start), max(reference_time_start) FROM asset_complaints GROUP BY asset_id",
+      "  UNION ALL SELECT 'news', asset_id, CAST(min(published_time) AS DATE), CAST(max(published_time) AS DATE) FROM asset_news GROUP BY asset_id",
+      "  UNION ALL SELECT CASE split_part(metric, '.', 1) WHEN 'statement' THEN 'statements' WHEN 'fundamental' THEN 'fundamentals' WHEN 'fii' THEN 'fund_data' WHEN 'fund' THEN 'fund' WHEN 'macro' THEN 'macro' WHEN 'treasury' THEN 'treasury' WHEN 'fx' THEN 'fx' WHEN 'sector' THEN 'sector' WHEN 'index' THEN 'index_membership' WHEN 'banking' THEN 'banking' END, asset_id, min(reference_time_start), max(reference_time_end) FROM asset_metrics GROUP BY 1, 2",
       ")",
       "SELECT latest_run.asset_id, latest_run.category, period_span.first_date, period_span.last_date, latest_run.expires_at",
       "FROM latest_run LEFT JOIN period_span USING (category, asset_id) WHERE latest_run.run_rank = 1;",

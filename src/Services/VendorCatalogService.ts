@@ -1,3 +1,6 @@
+import { BcbIfDataAdapter } from "@/Adapters/Bcb/BcbIfDataAdapter.ts";
+import { GdeltAdapter } from "@/Adapters/Gdelt/GdeltAdapter.ts";
+import { ConsumidorGovAdapter } from "@/Adapters/ConsumidorGov/ConsumidorGovAdapter.ts";
 import { B3IndexMembershipAdapter } from "@/Adapters/B3/B3IndexMembershipAdapter.ts";
 import { B3ListingAdapter } from "@/Adapters/B3/B3ListingAdapter.ts";
 import { B3CotahistAdapter } from "@/Adapters/B3/B3CotahistAdapter.ts";
@@ -27,6 +30,12 @@ import { ProviderRegistryService } from "@/Services/ProviderRegistryService.ts";
 const CVM_FILE_TIMEOUT_MS = 120_000;
 const IBGE_MAX_RESPONSE_BYTES = 20_971_520;
 const IBGE_TIMEOUT_MS = 60_000;
+const CONSUMIDOR_GOV_MAX_FILE_BYTES = 33_554_432;
+const CONSUMIDOR_GOV_TIMEOUT_MS = 120_000;
+const BCB_IFDATA_MAX_RESPONSE_BYTES = 16_777_216;
+const BCB_IFDATA_TIMEOUT_MS = 60_000;
+const GDELT_MAX_RESPONSE_BYTES = 8_388_608;
+const GDELT_TIMEOUT_MS = 60_000;
 
 export class VendorCatalogService {
   static build(): CategoryToVendors {
@@ -66,6 +75,21 @@ export class VendorCatalogService {
     // Why: one ticker-to-CNPJ lookup serves every CVM adapter, so the company list is read once for all of them.
     const b3Http = new HttpAdapter({ allowedHosts: [B3ListingAdapter.HOST] });
     const b3Listing = new B3ListingAdapter(b3Http);
+    const consumidorGovHttp = new HttpAdapter({
+      allowedHosts: [ConsumidorGovAdapter.HOST],
+      maxBytes: CONSUMIDOR_GOV_MAX_FILE_BYTES,
+      timeoutMs: CONSUMIDOR_GOV_TIMEOUT_MS,
+    });
+    const bcbIfDataHttp = new HttpAdapter({
+      allowedHosts: [BcbIfDataAdapter.HOST],
+      maxBytes: BCB_IFDATA_MAX_RESPONSE_BYTES,
+      timeoutMs: BCB_IFDATA_TIMEOUT_MS,
+    });
+    const gdeltHttp = new HttpAdapter({
+      allowedHosts: [GdeltAdapter.HOST],
+      maxBytes: GDELT_MAX_RESPONSE_BYTES,
+      timeoutMs: GDELT_TIMEOUT_MS,
+    });
     const ibgeHttp = new HttpAdapter({
       allowedHosts: [IbgeSectorAdapter.HOST],
       maxBytes: IBGE_MAX_RESPONSE_BYTES,
@@ -117,6 +141,9 @@ export class VendorCatalogService {
       },
       sector: { ibge: new IbgeSectorAdapter(ibgeHttp) },
       index_membership: { b3: new B3IndexMembershipAdapter(b3Http) },
+      complaints: { consumidor_gov: new ConsumidorGovAdapter(consumidorGovHttp) },
+      banking: { bcb: new BcbIfDataAdapter(bcbIfDataHttp, cvmTicker.resolveCnpj) },
+      news: { gdelt: new GdeltAdapter(gdeltHttp) },
     };
   }
 }
