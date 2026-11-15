@@ -44,6 +44,7 @@ describe("StoreService.open()", () => {
       expect(rows.map((row) => row.table_name)).toStrictEqual([
         "asset",
         "asset_attribute",
+        "asset_complaints",
         "asset_coverage",
         "asset_dividends",
         "asset_expectations",
@@ -52,6 +53,7 @@ describe("StoreService.open()", () => {
         "asset_filings",
         "asset_holdings",
         "asset_metrics",
+        "asset_news",
         "asset_proceedings",
         "asset_quotes",
         "asset_splits",
@@ -78,7 +80,7 @@ describe("StoreService.open()", () => {
       store = await StoreService.open(buildEnv());
 
       expect(stderr).toHaveBeenCalledWith(expect.stringContaining("\"event\":\"store_replaced\""));
-      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 10 }]);
+      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 12 }]);
     });
   });
 
@@ -89,7 +91,7 @@ describe("StoreService.open()", () => {
       store = await StoreService.open(buildEnv());
 
       expect(stderr).toHaveBeenCalledWith(expect.stringContaining("\"reason\":\"it cannot be opened\""));
-      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 10 }]);
+      expect(await store.writer.readRows("SELECT version FROM schema_version")).toStrictEqual([{ version: 12 }]);
     });
   });
 

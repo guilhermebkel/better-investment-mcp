@@ -192,6 +192,11 @@ export class LoaderService implements LoaderPort {
     if (PeriodService.TABLE_TO_PERIOD_COLUMN[requirement.table] === undefined) {
       return undefined;
     }
+    // Why: a category that is read by month without a period loads the latest month only, so it has no default window (issue #59, S10).
+    const isLatestOnly = PeriodService.LATEST_MONTH_WHEN_UNSPECIFIED.includes(requirement.category);
+    if (requirement.period === undefined && isLatestOnly) {
+      return undefined;
+    }
     return PeriodService.resolve(requirement.period, this.clock().getUTCFullYear());
   }
 
@@ -533,15 +538,18 @@ export class LoaderService implements LoaderPort {
   ): Promise<TableReplaceOutcome> {
     const { writer } = this.store;
     const assetId = LoaderService.buildAssetId(requirement);
-    const periodColumn = window === undefined ? undefined : PeriodService.TABLE_TO_PERIOD_COLUMN[table as DataTable];
+    const periodColumn = PeriodService.TABLE_TO_PERIOD_COLUMN[table as DataTable];
+    // Why: a load without a window replaces the periods it fetched, read from its rows; a load with no rows in such a table keeps the rows already stored.
+    const span = window ?? (periodColumn === undefined ? undefined : LoaderService.readSpan(rows, periodColumn));
+    const isKeepingStoredRows = window === undefined && periodColumn !== undefined && span === undefined;
     // Why: a period load replaces only the rows of its own window, so the rows of another period stay in the store.
-    const periodWhere = periodColumn === undefined ? "" : ` AND ${periodColumn} BETWEEN ? AND ?`;
+    const periodWhere = periodColumn === undefined || span === undefined ? "" : ` AND ${periodColumn} BETWEEN ? AND ?`;
     // Why: the values are bound only when the WHERE clause has their placeholders; a table with no period column (asset_splits) has none.
-    const periodValues = periodWhere === "" || window === undefined ? [] : [window.from, window.to];
+    const periodValues = periodWhere === "" || span === undefined ? [] : [span.from, span.to];
     // Why: a filing list reload keeps the hash of each document already stored, so an unchanged document is not downloaded again into the chunks.
     const filingIdToHash = await this.readStoredHashes(table, requirement);
     // Why: the asset row is merged, not replaced: each load fills the columns it knows and keeps the others, so a CVM load does not erase a name that Yahoo gave.
-    if (table !== ASSET_TABLE) {
+    if (table !== ASSET_TABLE && !isKeepingStoredRows) {
       const scope = LoaderService.readScope(table, requirement.category);
       await writer.run(`DELETE FROM ${table} WHERE asset_id = ?${scope.sql}${periodWhere}`, [assetId, ...scope.values, ...periodValues]);
     }
@@ -569,6 +577,13 @@ export class LoaderService implements LoaderPort {
       await writer.run(`INSERT INTO ${table} (${names.join(", ")}) VALUES ${placeholders}`, values);
     }
     return { written: prepared.length, outsidePeriod };
+  }
+
+  private static readSpan(rows: readonly ProviderRow[], column: string): PeriodWindow | undefined {
+    const dates = rows.map((row) => row[column]).filter((value): value is string => typeof value === "string").sort();
+    const first = dates[0];
+    const last = dates[dates.length - 1];
+    return first === undefined || last === undefined ? undefined : { from: first, to: last };
   }
 
   private async readStoredHashes(table: string, requirement: Requirement): Promise<Map<string, string>> {

@@ -13,7 +13,7 @@ describe("GetOverviewOperation.execute()", () => {
     expect(result.isError).toBe(false);
     expect(result.message).toContain("- asset_quotes: daily prices");
     expect(result.message).toContain("Filter rule: every asset table needs WHERE asset_id");
-    expect(result.message).toContain("Guide topics for get_guide: sql, search, sources, limits.");
+    expect(result.message).toContain("Guide topics for get_guide: sql, search, sources, analysis, limits.");
     expect(result.message).toContain(GetOverviewOperation.USAGE_NOTICE);
   });
 

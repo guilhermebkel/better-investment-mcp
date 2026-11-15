@@ -61,6 +61,8 @@ export class SqlGuardService implements SqlGuardPort {
     asset_filings: "filings",
     asset_filing_items: "disclosures",
     asset_proceedings: "proceedings",
+    asset_complaints: "complaints",
+    asset_news: "news",
     asset_filing_chunks: "documents",
   };
 
@@ -81,6 +83,7 @@ export class SqlGuardService implements SqlGuardPort {
     fx: "fx",
     sector: "sector",
     index: "index_membership",
+    banking: "banking",
   };
 
   static readonly ASSET_FILTERS: TableFilters = { columns: ["asset_id"], anyOf: [] };
@@ -88,6 +91,8 @@ export class SqlGuardService implements SqlGuardPort {
     asset: SqlGuardService.ASSET_FILTERS,
     asset_attribute: SqlGuardService.ASSET_FILTERS,
     asset_proceedings: SqlGuardService.ASSET_FILTERS,
+    asset_complaints: SqlGuardService.ASSET_FILTERS,
+    asset_news: SqlGuardService.ASSET_FILTERS,
     asset_quotes: SqlGuardService.ASSET_FILTERS,
     asset_dividends: SqlGuardService.ASSET_FILTERS,
     asset_splits: SqlGuardService.ASSET_FILTERS,

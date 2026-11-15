@@ -14,7 +14,9 @@ export type DataTable
     | "asset_filings"
     | "asset_filing_items"
     | "asset_filing_chunks"
-    | "asset_proceedings";
+    | "asset_proceedings"
+    | "asset_complaints"
+    | "asset_news";
 
 export type Requirement = {
   table: DataTable;
@@ -111,6 +113,6 @@ export type CategoryReading = {
 
 export type CategoryReader = (readValues: (column: string) => string[] | undefined) => CategoryReading;
 
-export type MetricGroup = "statement" | "fundamental" | "fii" | "fund" | "macro" | "treasury" | "fx" | "sector" | "index";
+export type MetricGroup = "statement" | "fundamental" | "fii" | "fund" | "macro" | "treasury" | "fx" | "sector" | "index" | "banking";
 
 export type SearchMode = "text";

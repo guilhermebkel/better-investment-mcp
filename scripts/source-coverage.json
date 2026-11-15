@@ -71,6 +71,46 @@
     "IndexMembershipProvider": {
       "status": "implemented",
       "reason": "The weight of a stock in the B3 indexes ISEE, ICO2 and IDVR (index.*, ADR 0031); IGPTW answers HTTP 403 from this server, so a load fails until it is readable."
+    },
+    "ComplaintsProvider": {
+      "status": "implemented",
+      "reason": "Consumidor.gov.br's monthly files of finished complaints (finalizadas_YYYY-MM.zip, from 2021-08), counted per trade name that matches a term (asset_complaints, ADR 0033). The terms allow the use of the published statistics for any purpose."
+    },
+    "BankingProvider": {
+      "status": "implemented",
+      "reason": "BCB IF.data: the total assets and the credit operations of a listed bank's group per quarter, and their share of the file (banking.*, ADR 0034). The dataset is ODbL: attribution and share-alike apply, and the owner decides on the derived values."
+    },
+    "NewsProvider": {
+      "status": "implemented",
+      "reason": "GDELT DOC 2.0: articles by term over the last 3 months (asset_news, ADR 0041). The terms allow any use with a citation to the GDELT Project; the API answers one request every five seconds."
+    },
+    "TelecomProvider": {
+      "status": "excluded",
+      "reason": "Anatel: its open data page answers HTTP 403 and its host could not be reached; the terms were not read (ADR 0035)."
+    },
+    "ElectricityProvider": {
+      "status": "excluded",
+      "reason": "ANEEL: its open data host could not be reached and its gov.br page answers 404; no terms were read (ADR 0036)."
+    },
+    "HealthPlansProvider": {
+      "status": "excluded",
+      "reason": "ANS: no terms page was found on its portal, and a month of the state files is over 1 GB, the size the owner rejected for the Receita CNPJ files (ADR 0037)."
+    },
+    "InsuranceProvider": {
+      "status": "excluded",
+      "reason": "SUSEP: its open data pages answer HTTP 404; no terms were read (ADR 0038)."
+    },
+    "FuelProvider": {
+      "status": "excluded",
+      "reason": "ANP: the dataset is under CC BY-ND 3.0, which forbids derived values; the owner decides, and the dataset was not located (ADR 0039)."
+    },
+    "AviationProvider": {
+      "status": "excluded",
+      "reason": "ANAC: its open data host could not be reached; no dataset with its columns could be read (ADR 0040)."
+    },
+    "SanctionsProvider": {
+      "status": "excluded",
+      "reason": "CGU: the terms page answers a captcha; the server never bypasses it (ADR 0042)."
     }
   }
 }

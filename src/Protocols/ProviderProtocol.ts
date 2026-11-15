@@ -15,6 +15,9 @@ import type { DisclosuresProvider } from "@/Protocols/DisclosuresProviderProtoco
 import type { ProceedingsProvider } from "@/Protocols/ProceedingsProviderProtocol.ts";
 import type { SectorProvider } from "@/Protocols/SectorProviderProtocol.ts";
 import type { IndexMembershipProvider } from "@/Protocols/IndexMembershipProviderProtocol.ts";
+import type { ComplaintsProvider } from "@/Protocols/ComplaintsProviderProtocol.ts";
+import type { BankingProvider } from "@/Protocols/BankingProviderProtocol.ts";
+import type { NewsProvider } from "@/Protocols/NewsProviderProtocol.ts";
 import type { FundProvider } from "@/Protocols/FundProviderProtocol.ts";
 import type { FxProvider } from "@/Protocols/FxProviderProtocol.ts";
 import type { RegistryProvider } from "@/Protocols/RegistryProviderProtocol.ts";
@@ -85,7 +88,10 @@ export type ProviderSettingName
     | "INVESTMENT_MCP_DISCLOSURES_PROVIDER"
     | "INVESTMENT_MCP_PROCEEDINGS_PROVIDER"
     | "INVESTMENT_MCP_SECTOR_PROVIDER"
-    | "INVESTMENT_MCP_INDEX_MEMBERSHIP_PROVIDER";
+    | "INVESTMENT_MCP_INDEX_MEMBERSHIP_PROVIDER"
+    | "INVESTMENT_MCP_COMPLAINTS_PROVIDER"
+    | "INVESTMENT_MCP_BANKING_PROVIDER"
+    | "INVESTMENT_MCP_NEWS_PROVIDER";
 
 export type VendorToProvider<Provider> = Record<string, Provider>;
 
@@ -108,6 +114,9 @@ export type CategoryToVendors = {
   proceedings: VendorToProvider<ProceedingsProvider>;
   sector: VendorToProvider<SectorProvider>;
   index_membership: VendorToProvider<IndexMembershipProvider>;
+  complaints: VendorToProvider<ComplaintsProvider>;
+  banking: VendorToProvider<BankingProvider>;
+  news: VendorToProvider<NewsProvider>;
 };
 
 export type MarketToVendor = Record<string, string>;

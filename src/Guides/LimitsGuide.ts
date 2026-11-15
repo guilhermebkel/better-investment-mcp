@@ -21,5 +21,6 @@ export const LIMITS_GUIDE = `# Limits guide
 ## See also
 
 - sources: which vendor serves what.
+- analysis: the filing items for each theme, the quality flags and the units.
 - sql: the filter rule.
 `;
