@@ -153,3 +153,17 @@ describe("CvmDocumentAdapter.fetchDocument()", () => {
     expect(requested).toStrictEqual([]);
   });
 });
+
+describe("CvmDocumentAdapter.readSecureLink()", () => {
+  it("reads a RAD link written as http:// as https://, so RAD's redirect is not needed (issue #61)", () => {
+    const link = "http://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=155122";
+
+    expect(CvmDocumentAdapter.readSecureLink(link)).toBe("https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=155122");
+  });
+
+  it("keeps any other link as it is", () => {
+    const other = "https://dados.cvm.gov.br/dados/x.zip";
+
+    expect(CvmDocumentAdapter.readSecureLink(other)).toBe(other);
+  });
+});

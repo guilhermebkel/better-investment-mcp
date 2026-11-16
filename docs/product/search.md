@@ -21,7 +21,12 @@ A document is loaded only when a query asks for `asset_filing_chunks` with a `fi
 - An HTML page is read by block. A heading (`h1` to `h4`) starts a section; the text under it is one segment per paragraph. Scripts, styles and the head are dropped.
 - The format is read from the bytes, not from the content type. CVM sends PDFs with `text/html`.
 - A zip that holds PDF entries (the periodic report, ITR) is read as its PDFs, page by page; with one PDF the chunks have no section, with several each section is the file name.
-- A CVM reference form (FRE) is a zip with one XML. Its items are PDFs inside the XML, read the same way (ADR 0024): each chunk's `section` is the form tag and the item's file label, written `<tag> <label>`, for example `FatoresRisco 4.1 - Descrição dos fatores de risco`. The label is the file name the company gave the item's PDF, without `.pdf` or `.docx`, so the item number is the second word, cut at the first `_`: `split_part(split_part(section, ' ', 2), '_', 1)` gives `4.1`. Labels differ by company: a stock may write `FatoresRisco 4.1_Rod2 Validação_RI…` with no space after the number, which `split_part(section, ' ', 2)` alone would read as `4.1_Rod2` (checked on PETR4, `ID_DOC` 157150, 2026-11-15). The section `FatoresRisco 4.1` alone does not match, because the label follows the number, and `LIKE 'RemuneracaoAdministradores 8.1%'` also matches items 8.10 to 8.19. The item's `page` is the page of that item's PDF. The 13 tags of an FRE and their item numbers are in the search guide (`get_guide` with topic `search`). A blank slot of the form is skipped. The XML is read as cp1252, although it declares UTF-8.
+- The notes to the financial statements of a DFP or ITR (CVM group 412) are attached to its XML as a complete PDF. They are read from the XML as the section `NotasExplicativas`, because the rendered PDF of some filings lacks them (ADR 0045, phase 4). The management report (group 1653) is in the rendered PDF of every checked filing, so it is not read again. An attachment that is not a readable PDF is skipped and counted (`skippedAttachments`).
+- A CVM reference form (FRE) is a zip with one XML: the XML whose root is `XmlFormularioReferencia`, not the first XML of the zip (a real zip also holds `FormularioCadastral.xml`). Its items are PDFs inside the XML, read the same way (ADR 0024). Each chunk has two names (ADR 0043):
+  - `item`: CVM's item number, `1.4`, `8.20`, read from the element that holds the item's PDF inside its section tag, through a table of 13 section tags. For example, a PDF in `InfoSegmentosOperacionais` under `AtividadesEmissor` is item `1.3`. The table is in `src/Services/FormReferenceService.ts`, with its source. A PDF directly under its section tag, or an element that is not in the table, has `item` NULL; its text is still stored.
+  - `section`: `<tag> <label>`, for example `FatoresRisco 4.1 - Descrição dos fatores de risco`. The label is the file name the company gave the PDF, without `.pdf` or `.docx`. It can carry another number: `2.4_Item 6.5_FRE 2026_…` is item `6.5` in `OrganogramaAcionistasGrupoEconomico`, and `IUH - 1.3` and `1.04` are items `1.3` and `1.4`. The item number is never read from the label.
+  - The labels seen on ITUB4, WEGE3 and PETR4 (checked on 2026-11-15) are in ADR 0043, with the 98 of 381 items that the old file-name rule got wrong.
+  - The item's `page` is the page of that item's PDF. A blank slot of the form is skipped. The XML is read as cp1252, although it declares UTF-8.
 - A document is read from the link the filing names, on any http or https host; the size limit (100 MiB) and the timeout (60 seconds) still apply. The server does not check the host of a document link.
 - For CVM, only a PDF or a form zip is stored. The CVM site sometimes answers 200 with an HTML error page; that page is refused (`CvmDocumentAdapter`).
 - Some CVM documents cannot be read. The load entry names the filing (`filing <filing_id>: ...`), writes no chunk for it, and leaves the other filings of the query loaded. Downloads from `www.rad.cvm.gov.br` have been seen to be cut off before their end; the cause is not known (`docs/adr/0025-cvm-rad-download-reproduction.md`). Coverage of sustainability and other CVM documents is therefore partial.
@@ -42,7 +47,11 @@ A document is loaded only when a query asks for `asset_filing_chunks` with a `fi
 - Numbers are kept as their digits: the index uses the ignore pattern `(\.|[^a-z0-9])+`, so `25` is a token, `12%` gives `12`, and `0,30` gives two tokens, `0` and `30`. The default DuckDB pattern drops digits, which is why this one is set.
 - Stemmer limit: DuckDB's Portuguese stemmer does not map every singular and plural to the same stem. `dividendo` becomes `divid`, and `dividendos` becomes `dividend`, so a query for one does not find the other. `sindicato` becomes `sindicat` and `sindicais` becomes `sindic`, while `concorrente`, `concorrentes` and `concorrência` all become `concorrent`. `pago` and `pagos` both become `pag`. A query can try the other forms (checked with DuckDB's `stem()`, DuckDB 2.0.0).
 - The index spans every chunk in the store, not only the asset asked, so BM25 term weights depend on everything loaded.
-- A query with several words matches a chunk that has any one of them: DuckDB's default is `conjunctive := 0`. There is no phrase, boolean or synonym syntax, so `AND` and `OR` are searched as words. For a phrase, add `AND text ILIKE '%...%'` on the macro output; for a synonym, list it as another word of the query.
+- A query with several words matches a chunk that has any one of them: DuckDB's default is `conjunctive := 0`. There is no phrase, boolean or synonym syntax, so `AND` and `OR` are searched as words. For a phrase, add `AND text ILIKE '%...%'` on the macro output. For a synonym, the agent lists it as another word of the query: the server never expands a query (ADR 0044).
+
+### Query with variants
+
+The agent writes 2 to 6 keywords with their variants, never the user's full question (ADR 0044). The search guide holds a table of variants to send together (competitors, dividends, strikes and unions, and others). On 30 investor questions, keywords with variants found a relevant chunk in the top 5 for 30 of them, and the full question for 19. The guide is the place for the variants: the server adds none.
 
 ## The search macro
 
@@ -52,7 +61,7 @@ FROM search_chunks('lucro líquido', 'BR:stock:PETR4', 'material_fact', NULL, 't
 ORDER BY score DESC
 ```
 
-- The rows are `asset_id, document_type, filing_id, section, page, seq, text, score`. `(filing_id, seq)` names the chunk in `asset_filing_chunks`, so its neighbours are one query away (`seq BETWEEN …`).
+- The rows are `asset_id, document_type, filing_id, section, item, page, seq, text, score`. `(filing_id, seq)` names the chunk in `asset_filing_chunks`, so its neighbours are one query away (`seq BETWEEN …`).
 
 - Arguments, in order: the query text, `asset_id`, `document_type`, `section` and `mode`. `section` is NULL for no section; `mode` is `'text'`, the only one for now (ADR 0023).
 - The macro's arguments count as filters for the SQL guard (`docs/product/sql-guard.md`). A query that passes `NULL` for `asset_id` or `document_type` is refused with the missing filter.
@@ -67,14 +76,50 @@ A chunk that says "ignore your instructions" comes back as the value of a `text`
 
 ## Quality
 
-The quality set (issue #10, S8) is not measured yet. It needs three real filings stored as fixtures, and ten questions with the passage each one should find. The sandbox this PR was written in received corrupted copies of three real CVM filings through its proxy (bad xref offsets and truncated transfers), so none of them could be stored as a fixture. The measurement has to be run on a machine that downloads the filings cleanly. Target: 8 of 10 questions with the passage in the top 5.
+The quality set is the 30 investor questions of issue #61, with the passages that answer each one. It is in `scripts/search-quality/questions.json`, and it is run by `pnpm build && pnpm search:quality -- <cache-dir> --out <file>`. The run downloads the five filings from RAD, so it is not part of `pnpm test`, `pnpm check` or CI. The metrics are tested without a network (`scripts/search-quality/metrics.test.mjs`).
 
-Issue #42, S6 (the TOTVS FRE 2025 version 5, `ID_DOC` 152065, as the quality set's filing): not measured. The sandbox of issue #42 could not download the zip in full: RAD closed the transfer at about 11.1 MB, of 11.7 MB, on each attempt, and does not resume (ADR 0025). No fixture was stored, so the question set and the measurement wait for a complete copy. The search guide's examples are checked by the guard and run on a seeded store, not against a real filing.
+A relevant chunk is one whose text, with whitespace collapsed, contains a quote of the question. Quotes locate a chunk; they are not always the sentence that answers the question. Three modes are measured: `keywords` (the query of the guide, with its variants), `keywords_phrase` (the same, with an `ILIKE` phrase filter on the output) and `question` (the full question, as the query).
+
+### Baseline (2026-11-15, measured before this issue's code)
+
+Five FREs of reference year 2026 (TOTS3, WEGE3, PETR4, ITUB4, MGLU3), loaded through the server's own load path, with no OCRmyPDF and no PyMuPDF on the measuring machine (so no OCR pages and no table chunks). The baseline is the reference: it is not changed by later runs.
+
+| How the query was written | Hits in top 5 | Hits in top 10 | MRR@10 | Median chunks matched | Queries with zero results |
+| --- | --- | --- | --- | --- | --- |
+| (a) Keywords with variants, no filter | 30/30 | 30/30 | 0.846 | 165 | 0 |
+| (c) Keywords with variants and an `ILIKE` phrase filter | 30/30 | 30/30 | 0.851 | 8 | 0 |
+| (d) Any word, the full question as the query | 19/30 | 23/30 | 0.545 | 505.5 | 0 |
+
+Limits of the baseline: five forms of 2026; the questions were written and the relevant chunks judged by one person, and the top 3 of three modes were read before pooling 26 more relevant chunks into 17 questions, which favours those modes; the BM25 statistics come from the five forms together; no OCR and no tables.
+
+### Run of 2026-11-15 (this issue's code, after the item column)
+
+The same five filings and the same questions, run by `pnpm search:quality` on the built server, with the same tools as the baseline (no OCRmyPDF; tesseract and ghostscript installed; `python3` without PyMuPDF, so no table chunks).
+
+| How the query was written | Hits in top 5 | Hits in top 10 | MRR@10 | Median chunks matched | Queries with zero results |
+| --- | --- | --- | --- | --- | --- |
+| (a) Keywords with variants, no filter | 29/30 | 30/30 | 0.842 | 165 | 0 |
+| (c) Keywords with variants and an `ILIKE` phrase filter | 30/30 | 30/30 | 0.829 | 8 | 0 |
+| (d) Any word, the full question as the query | 19/30 | 22/30 | 0.52 | 505.5 | 0 |
+
+Against the baseline: one question less in the top 5 for (a), and MRR@10 lower by 0.004 for (a), 0.022 for (c) and 0.025 for (d). The cause of the difference was not investigated: the baseline was measured before the item column and the chunk changes of this issue, and the five filings were downloaded again from RAD, which answered with retries. The baseline is not changed. The search ranking is the one of ADR 0044.
+
+### Run of 2026-11-16 (after phase 4 and the browser download identity, ADR 0046)
+
+The same five FREs, all loaded again by the server (the FRE downloads now follow RAD's https redirect and use the document identity of ADR 0046). The run measured all 30 questions, which the earlier run did not complete on ITUB4.
+
+| How the query was written | Hits in top 5 | Hits in top 10 | MRR@10 | Median chunks matched | Queries with zero results |
+| --- | --- | --- | --- | --- | --- |
+| (a) Keywords with variants, no filter | 29/30 | 30/30 | 0.842 | 165 | 0 |
+| (c) Keywords with variants and an `ILIKE` phrase filter | 30/30 | 30/30 | 0.829 | 8 | 0 |
+| (d) Any word, the full question as the query | 19/30 | 22/30 | 0.521 | 505.5 | 0 |
+
+This run agrees with the run of 2026-11-15 to within 0.01 of MRR@10 in each mode. Against the baseline it is the same as the earlier run: one question less in the top 5 for (a), and lower MRR@10 for (c) and (d). The cause of that difference is not investigated, and the baseline is not changed.
 
 ## Limits
 
-- OCR is not done; a scanned page has no text.
+- OCR is done for scanned pages when OCRmyPDF and Tesseract are installed, and the table reader runs when PyMuPDF is installed (ADR 0027). Without them a scanned page has no text, and the answer counts it (`pagesWithoutText`).
 - Only the chunks of the filing type or the filing id asked for are searched. A search over all filings of a company needs a load of each of them.
 - A stock has no `management_report` filing: its IPE list has `material_fact` and `sustainability` only. `management_report` is the FII report (CVM fund filings and FNET).
-- The management report and the notes of a DFP or an ITR are attached to its XML as PDFs, which the server does not read; whether the rendered PDF holds their text was not confirmed (ADR 0025).
+- The management report and the notes of a DFP are attached to its XML as complete PDFs (group 1653 and 412, ADR 0045), which the server does not read. Whether the rendered PDF holds their text is not decided: on 2026-11-15 the rendered PDF of each of four DFPs arrived cut and could not be read, so the research is open (ADR 0045).
 - Structured financial statements are in `financial_statements` (issue #11), not in the search; FNET documents are issue #12.

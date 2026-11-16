@@ -170,6 +170,14 @@ describe("HttpAdapter.getCookies()", () => {
     expect(sent.cookie).toBe("A3=abc");
   });
 
+  it("sends the user agent given in its options instead of the default one", async () => {
+    const custom = "Mozilla/5.0 test-agent";
+    const adapter = new HttpAdapter({ allowedHosts: ["127.0.0.1"], userAgent: custom, retryDelayMs: 0 });
+    const sent = JSON.parse(await adapter.getText(`${origin}/any`)) as Record<string, string>;
+
+    expect(sent["user-agent"]).toBe(custom);
+  });
+
   it("returns the Set-Cookie values of an answer with a 404 status, without an error", async () => {
     const cookies = await new HttpAdapter({ allowedHosts: ["127.0.0.1"], retryDelayMs: 0 }).getCookies(`${origin}/cookie-404`);
 

@@ -22,6 +22,7 @@ export type CacheLoadResult = {
   errorMessage?: string;
   itemErrors?: string[];
   pagesWithoutText?: number;
+  skippedAttachments?: number;
   indexError?: string;
 };
 

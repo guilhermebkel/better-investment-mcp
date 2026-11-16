@@ -314,6 +314,7 @@ export class LoaderService implements LoaderPort {
       status: result.errorMessage === undefined ? "loaded" : "failed",
       rowsWritten: result.rowsWritten,
       ...(result.pagesWithoutText === undefined ? {} : { pagesWithoutText: result.pagesWithoutText }),
+      ...(result.skippedAttachments === undefined ? {} : { skippedAttachments: result.skippedAttachments }),
       ...(result.indexError === undefined ? {} : { indexError: result.indexError }),
       // Why: a failed document names its filing, so the agent can tell which one could not be read; the other filings of the query still load (issue #27).
       ...(result.errorMessage === undefined ? {} : { error: `${filing.filing_type} filing ${filing.filing_id}: ${result.errorMessage}` }),
@@ -342,6 +343,7 @@ export class LoaderService implements LoaderPort {
         source: DOCUMENT_SOURCE,
         isFallback: false,
         pagesWithoutText: download.pagesWithoutText,
+        skippedAttachments: download.skippedAttachments,
         ...(indexError === undefined ? {} : { indexError }),
       };
     } catch (error) {
@@ -361,7 +363,12 @@ export class LoaderService implements LoaderPort {
       const bytes = await provider.fetchDocument(filing.url);
       const hash = createHash("sha256").update(bytes).digest("hex");
       const extracted = await DocumentTextService.extract(bytes);
-      return { hash, chunks: ChunkService.split(extracted.segments), pagesWithoutText: extracted.pagesWithoutText };
+      return {
+        hash,
+        chunks: ChunkService.split(extracted.segments),
+        pagesWithoutText: extracted.pagesWithoutText,
+        skippedAttachments: extracted.skippedAttachments,
+      };
     } catch (error) {
       return { hash: "", chunks: [], pagesWithoutText: 0, errorMessage: LoaderService.describe(error) };
     }
@@ -400,10 +407,10 @@ export class LoaderService implements LoaderPort {
       for (const chunk of chunks) {
         const values = [
           filing.filing_id, assetId, filing.filing_type,
-          chunk.section, chunk.page, chunk.seq, chunk.text,
+          chunk.section, chunk.item, chunk.page, chunk.seq, chunk.text,
         ];
         await writer.run(
-          "INSERT INTO asset_filing_chunks (filing_id, asset_id, document_type, section, page, seq, text) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          "INSERT INTO asset_filing_chunks (filing_id, asset_id, document_type, section, item, page, seq, text) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
           values,
         );
       }

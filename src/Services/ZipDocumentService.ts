@@ -1,4 +1,5 @@
 import type { ExtractedDocument, ExtractedSegment } from "@/Protocols/DocumentTextProtocol.ts";
+import { DfpAttachmentService } from "@/Services/DfpAttachmentService.ts";
 import { FormReferenceService } from "@/Services/FormReferenceService.ts";
 import { PdfTextService } from "@/Services/PdfTextService.ts";
 import { ZipFileUtil } from "@/Utils/ZipFileUtil.ts";
@@ -24,6 +25,8 @@ export class ZipDocumentService {
         segments.push({ section, page: segment.page, text: segment.text });
       }
     }
-    return { format: "pdf", pagesWithoutText, segments };
+    // Why: the notes of a DFP or ITR are read from the XML of the zip too, as their own section (issue #61, phase 4); a zip with no attachment adds nothing.
+    const attachments = await DfpAttachmentService.extract(bytes);
+    return { pagesWithoutText, format: "pdf", segments: [...segments, ...attachments.segments], skippedAttachments: attachments.skipped };
   }
 }

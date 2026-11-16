@@ -27,6 +27,7 @@ export class HttpAdapter implements HttpPort {
   private readonly allowedHosts: ReadonlySet<string>;
   private readonly isAnyHostAllowed: boolean;
   private readonly headers: HeaderNameToValue;
+  private readonly userAgent: string;
   private readonly maxBytes: number;
   private readonly timeoutMs: number;
   private readonly retryDelayMs: number;
@@ -35,6 +36,7 @@ export class HttpAdapter implements HttpPort {
     this.allowedHosts = new Set(options.allowedHosts);
     this.isAnyHostAllowed = options.isAnyHostAllowed ?? false;
     this.headers = options.headers ?? {};
+    this.userAgent = options.userAgent ?? HttpAdapter.USER_AGENT;
     this.maxBytes = options.maxBytes ?? HttpAdapter.DEFAULT_MAX_BYTES;
     this.timeoutMs = options.timeoutMs ?? HttpAdapter.DEFAULT_TIMEOUT_MS;
     this.retryDelayMs = options.retryDelayMs ?? HttpAdapter.DEFAULT_RETRY_DELAY_MS;
@@ -147,7 +149,7 @@ export class HttpAdapter implements HttpPort {
 
   private buildHeaders(requestHeaders: HeaderNameToValue): HeaderNameToValue {
     // Why: the client identity comes first; an adapter's own headers come after it and never replace it.
-    return { "User-Agent": HttpAdapter.USER_AGENT, ...this.headers, ...requestHeaders };
+    return { "User-Agent": this.userAgent, ...this.headers, ...requestHeaders };
   }
 
   private async fetchOnce(url: string, init: {

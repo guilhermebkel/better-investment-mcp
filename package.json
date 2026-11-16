@@ -45,6 +45,7 @@
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.mjs",
     "test:changed": "node scripts/test-changed.mjs",
+    "search:quality": "node scripts/search-quality.mjs",
     "smoke": "node scripts/package-smoke.mjs",
     "ensure-deps": "node scripts/ensure-deps.mjs",
     "lint-staged": "lint-staged",

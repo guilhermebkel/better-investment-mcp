@@ -22,5 +22,6 @@ export const LIMITS_GUIDE = `# Limits guide
 
 - sources: which vendor serves what.
 - analysis: the filing items for each theme, the quality flags and the units.
+- fre: the item numbers of the reference form (FRE) and its sections.
 - sql: the filter rule.
 `;
