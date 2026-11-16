@@ -24,6 +24,7 @@ export type LoadedEntry = {
   itemErrors?: string[];
   filingId?: string;
   pagesWithoutText?: number;
+  skippedAttachments?: number;
   indexError?: string;
   requestedPeriod?: PeriodWindow;
   periodicity?: string;
@@ -68,6 +69,7 @@ export type DownloadOutcome = {
   hash: string;
   chunks: ChunkRow[];
   pagesWithoutText: number;
+  skippedAttachments?: number;
   errorMessage?: string;
 };
 

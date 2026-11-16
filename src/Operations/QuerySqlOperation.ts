@@ -215,7 +215,11 @@ export class QuerySqlOperation implements OperationPort<QuerySqlInput> {
 
   private static describeScans(loaded: LoadedEntry[]): string {
     const pagesWithoutText = loaded.reduce((total, entry) => total + (entry.pagesWithoutText ?? 0), 0);
-    return pagesWithoutText > 0 ? ` ${pagesWithoutText} pages had no text, even after OCR (OCR needs ocrmypdf and tesseract with the por language).` : "";
+    const skipped = loaded.reduce((total, entry) => total + (entry.skippedAttachments ?? 0), 0);
+    const pages = pagesWithoutText > 0 ? ` ${pagesWithoutText} pages had no text, even after OCR (OCR needs ocrmypdf and tesseract with the por language).` : "";
+    // Why: an attachment of the notes that is not a readable PDF is skipped, and the answer says so (issue #61, S31).
+    const attachments = skipped > 0 ? ` ${skipped} attachment(s) of the notes were not a readable PDF and were skipped.` : "";
+    return `${pages}${attachments}`;
   }
 
   private static describeIndexFailures(loaded: LoadedEntry[]): string {
