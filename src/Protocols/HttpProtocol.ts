@@ -5,6 +5,7 @@ export type HttpOptions = {
   allowedHosts: readonly string[];
   isAnyHostAllowed?: boolean;
   headers?: HeaderNameToValue;
+  userAgent?: string;
   maxBytes?: number;
   timeoutMs?: number;
   retryDelayMs?: number;

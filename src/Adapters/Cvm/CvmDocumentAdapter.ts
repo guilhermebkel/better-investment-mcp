@@ -20,7 +20,10 @@ export class CvmDocumentAdapter implements DocumentProvider {
   // Why: a filing (a PDF of a reference form or a quarterly report) can be several megabytes; this limit is explicit for documents only, and the HTTP adapter refuses anything above it before storing.
   static readonly MAX_DOCUMENT_BYTES = MAX_DOCUMENT_MIB * BYTES_PER_MIB;
   // Why: a large filing takes longer than the default 20 seconds to arrive.
-  static readonly TIMEOUT_MS = 60_000;
+  // Why: a RAD DFP of 23 MB arrived at about 230 KB/s in the measurements of 2026-11-16 (ADR 0046), so 60 s cut it while it was still downloading; 300 s covers the whole transfer.
+  static readonly TIMEOUT_MS = 300_000;
+  // Why: RAD cut the transfers of the same documents when they were asked with the client identity of the other adapters, and sent them whole with a browser identity (ADR 0046, 2026-11-16). The value is a generic browser string; it names no person or project.
+  static readonly USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
   static readonly MARKETS: readonly "BR"[] = ["BR"];
   static readonly ASSET_TYPES: readonly ("stock" | "fii" | "etf")[] = ["stock", "fii", "etf"];
 
@@ -42,12 +45,13 @@ export class CvmDocumentAdapter implements DocumentProvider {
   }
 
   async fetchDocument(url: string): Promise<Uint8Array> {
-    if (!CvmDocumentAdapter.isDocumentLink(url)) {
+    const link = CvmDocumentAdapter.readSecureLink(url);
+    if (!CvmDocumentAdapter.isDocumentLink(link)) {
       throw new Error("the filing link is not an http or https address; no document was read");
     }
     for (let attempt = 1; ; attempt += 1) {
       try {
-        return await this.downloadOnce(url);
+        return await this.downloadOnce(link);
       } catch (error) {
         const isLastAttempt = attempt >= CvmDocumentAdapter.DOCUMENT_ATTEMPTS;
         // Why: a document over the size limit is refused by the HTTP adapter for good; another try would download it again for nothing.
@@ -91,6 +95,11 @@ export class CvmDocumentAdapter implements DocumentProvider {
     return new Promise((resolve) => {
       setTimeout(resolve, ms);
     });
+  }
+
+  static readSecureLink(url: string): string {
+    // Why: the filing list keeps RAD links as http://, and RAD answers them with a redirect to https://; the server does not follow redirects, so the document was refused (issue #61, phase 3, found 2026-11-16). The link is read as https from the start.
+    return url.replace(/^http:\/\/www\.rad\.cvm\.gov\.br\//u, "https://www.rad.cvm.gov.br/");
   }
 
   static isDocumentLink(url: string): boolean {

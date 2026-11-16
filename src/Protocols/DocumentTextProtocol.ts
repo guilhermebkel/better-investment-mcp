@@ -8,6 +8,7 @@ export type ExtractedSegment = {
 export type ExtractedDocument = {
   format: "pdf" | "html" | "form";
   pagesWithoutText: number;
+  skippedAttachments?: number;
   segments: ExtractedSegment[];
 };
 

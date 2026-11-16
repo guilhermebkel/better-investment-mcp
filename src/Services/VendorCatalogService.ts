@@ -58,6 +58,7 @@ export class VendorCatalogService {
     const cvmDocumentHttp = new HttpAdapter({
       allowedHosts: [],
       isAnyHostAllowed: true,
+      userAgent: CvmDocumentAdapter.USER_AGENT,
       maxBytes: CvmDocumentAdapter.MAX_DOCUMENT_BYTES,
       timeoutMs: CvmDocumentAdapter.TIMEOUT_MS,
     });

@@ -63,3 +63,33 @@ Evidence gathered on 2026-11-16. What is measured, and what is not known:
 - **RAD answers with its own back-end's errors.** Some answers say that `127.0.0.1:8182/Download/DownloadDocumento.svc` could not be activated or is unavailable or busy. That address is internal to RAD, and the response comes from a `server: BigIP` front (a load balancer). So a request reaches an internal download service, which is sometimes unavailable, and the external connection is closed during long transfers.
 
 Not known: which RAD component decides to close a transfer (the front, the internal service, or a timeout there), and why it does so only for some documents and times. The data above does not identify it, and RAD is not under this project's control. The conclusion for this ADR is unchanged: no complete rendered PDF of a DFP was obtained, so the containment question is still open.
+
+## Outcome of the research (2026-11-16)
+
+With a browser identity (ADR 0046), seven complete zips came whole: LREN3, PETR4, ITUB4 (a bank, and its ITR), MGLU3, WEGE3 and TOTS3. Their rendered PDFs are complete (they end with `%%EOF`, and they have their `startxref` and trailer; 64 to 288 pages). The check is the one of S25: 20 sentences of 8 words or more, spread over each attachment, are looked for in the text of the complete rendered PDF. A contained attachment has at least 18 of the 20.
+
+| Stock (`ID_DOC`) | Attachment (group) | Sentences found in the rendered PDF |
+| --- | --- | --- |
+| ITUB4 (`154591`) | management report (1653) | 18 of 20 |
+| ITUB4 | notes (412) | 20 of 20 |
+| ITUB4 | ITR projections (413) | 16 of 16 |
+| LREN3 (`155101`) | management report (1653) | 20 of 20 |
+| LREN3 | notes (412) | 20 of 20 |
+| MGLU3 (`155314`) | management report (1653) | 20 of 20 |
+| MGLU3 | notes (412) | **2 of 20** |
+| PETR4 (`155122`) | management report (1653) | 18 of 20 |
+| PETR4 | notes (412) | 20 of 20 |
+| PETR4 | ITR projections (413) | 18 of 20 |
+| TOTS3 (`154722`) | management report (1653) | 18 of 20 |
+| TOTS3 | notes (412) | 18 of 20 |
+| WEGE3 (`154872`) | management report (1653) | 20 of 20 |
+| WEGE3 | notes (412) | 20 of 20 |
+
+The MGLU3 notes are a complete document of the financial statements with the notes (79 pages, about 193 thousand characters). The rendered PDF of the same DFP has 64 pages and does not contain their text (for example, the title "Demonstrações Financeiras 31 de dezembro" is not in the rendered PDF). The mismatch is therefore real, not an extraction artifact.
+
+## Decision (phase 4 runs)
+
+- At least one checked attachment of type notes (group 412) is not contained in its rendered PDF, so phase 4 runs.
+- The management report (1653) is contained in every checked document (18 or more of 20 sentences), so it is not read again (S30).
+- The notes (412) are read from the XML of each DFP and ITR zip that holds them, with the section `NotasExplicativas` (S29). The ITR projections and the capital budget (413, 416) are not read in this phase: the sample has them contained, or too few sentences to decide.
+- A non-PDF attachment is skipped and counted, the other attachments are read (S31).
