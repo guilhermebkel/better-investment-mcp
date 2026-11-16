@@ -52,3 +52,14 @@ The cut does not depend on the size of the document alone: a zip of 8.4 MB and o
 ## Status
 
 Phase 3 remains open, and phase 4 is not decided. What would close it: a complete copy of a DFP's rendered PDF (from another network path or another moment when RAD does not cut), or the rendered PDF of a document from another source. This ADR does not decide containment, so the research is not closed.
+
+## Why the RAD downloads are cut (analysis, 2026-11-16)
+
+Evidence gathered on 2026-11-16. What is measured, and what is not known:
+
+- **The cut is specific to RAD.** `https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/DFP/DADOS/dfp_cia_aberta_2025.zip` (12,863,177 bytes) went through the same sandbox proxy in 1.3 s and was a complete, valid zip. The proxy is not cutting large transfers in general.
+- **The proxy records the RAD failures.** The proxy status (`/__agentproxy/status`, `recentRelayFailures`) has an entry for `www.rad.cvm.gov.br:443`: `ws_closed_mid_exchange`, tunnel closed with code 1006 after 10 s, 517 B sent, 39 B received, client reading, 0 B still queued in the relay. The relay had delivered everything it held, so the tunnel closed on the far side of the relay, between the proxy and RAD.
+- **RAD is much slower.** Transfers from RAD ran at about 228 KB/s (an 8.5 MB zip took 37.6 s and was cut), against about 10 MB/s from `dados.cvm.gov.br`.
+- **RAD answers with its own back-end's errors.** Some answers say that `127.0.0.1:8182/Download/DownloadDocumento.svc` could not be activated or is unavailable or busy. That address is internal to RAD, and the response comes from a `server: BigIP` front (a load balancer). So a request reaches an internal download service, which is sometimes unavailable, and the external connection is closed during long transfers.
+
+Not known: which RAD component decides to close a transfer (the front, the internal service, or a timeout there), and why it does so only for some documents and times. The data above does not identify it, and RAD is not under this project's control. The conclusion for this ADR is unchanged: no complete rendered PDF of a DFP was obtained, so the containment question is still open.
