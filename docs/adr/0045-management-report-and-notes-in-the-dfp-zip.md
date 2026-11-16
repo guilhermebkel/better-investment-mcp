@@ -37,3 +37,18 @@ The attachments themselves are complete, and they are read from the XML. What is
 ## Next step
 
 Phase 3 is open. To answer it, a DFP whose rendered PDF arrives complete is needed (RAD does not give one here), or an alternative source of the rendered PDF. Until then Phase 4 stays undecided, and the issue is closed only when it is decided.
+
+## Further attempts (2026-11-16)
+
+Every route tried to get a DFP whose rendered PDF arrives complete:
+
+- The same document over `https` (the `http` address answers 302 to it). It answered 200 with a zip header, and the body was cut (`transfer closed with outstanding read data remaining`). PETR4 (`155122`) was cut at 22,749,102 bytes in one try and at 22,529,695 in another.
+- `Range` requests are ignored: the server answers 200 with the whole body, so an interrupted transfer cannot be resumed.
+- HTTP/1.1 forced, `Connection: close`, and the older `/ENET/` address: the answers were 162 or 297 bytes, the RAD download service saying it is unavailable or busy (`127.0.0.1:8182/Download/DownloadDocumento.svc`), not a document.
+- Smaller DFPs of 2025 from other sectors (ABEV3 `154733`, BRSR6 `154711` (a bank), LREN3 `155101`, TAEE11 `155448`, VALE3 `154745`), with four tries each over `https`: none of the five zips opened. They were cut at 8,432,973 to 16,424,666 bytes, and ABEV3 answered the busy message. One timed transfer (LREN3) received 8,557,590 bytes in 37.6 s at 228 KB/s and was cut.
+
+The cut does not depend on the size of the document alone: a zip of 8.4 MB and one of 22.5 MB are both cut. The cause is on RAD's side or on the path to it, and this machine cannot change it. So no complete rendered PDF of a DFP was obtained, and the question of this ADR is still open.
+
+## Status
+
+Phase 3 remains open, and phase 4 is not decided. What would close it: a complete copy of a DFP's rendered PDF (from another network path or another moment when RAD does not cut), or the rendered PDF of a document from another source. This ADR does not decide containment, so the research is not closed.
