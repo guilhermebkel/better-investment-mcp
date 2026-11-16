@@ -104,6 +104,18 @@ The same five filings and the same questions, run by `pnpm search:quality` on th
 
 Against the baseline: one question less in the top 5 for (a), and MRR@10 lower by 0.004 for (a), 0.022 for (c) and 0.025 for (d). The cause of the difference was not investigated: the baseline was measured before the item column and the chunk changes of this issue, and the five filings were downloaded again from RAD, which answered with retries. The baseline is not changed. The search ranking is the one of ADR 0044.
 
+### Run of 2026-11-16 (after phase 4 and the browser download identity, ADR 0046)
+
+The same five FREs, all loaded again by the server (the FRE downloads now follow RAD's https redirect and use the document identity of ADR 0046). The run measured all 30 questions, which the earlier run did not complete on ITUB4.
+
+| How the query was written | Hits in top 5 | Hits in top 10 | MRR@10 | Median chunks matched | Queries with zero results |
+| --- | --- | --- | --- | --- | --- |
+| (a) Keywords with variants, no filter | 29/30 | 30/30 | 0.842 | 165 | 0 |
+| (c) Keywords with variants and an `ILIKE` phrase filter | 30/30 | 30/30 | 0.829 | 8 | 0 |
+| (d) Any word, the full question as the query | 19/30 | 22/30 | 0.521 | 505.5 | 0 |
+
+This run agrees with the run of 2026-11-15 to within 0.01 of MRR@10 in each mode. Against the baseline it is the same as the earlier run: one question less in the top 5 for (a), and lower MRR@10 for (c) and (d). The cause of that difference is not investigated, and the baseline is not changed.
+
 ## Limits
 
 - OCR is done for scanned pages when OCRmyPDF and Tesseract are installed, and the table reader runs when PyMuPDF is installed (ADR 0027). Without them a scanned page has no text, and the answer counts it (`pagesWithoutText`).
