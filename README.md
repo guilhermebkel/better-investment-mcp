@@ -13,6 +13,7 @@
 
 <p align="center">
   <a href="#quick-start"><img src="https://img.shields.io/badge/Quick_start-f4e40c" alt="Quick start" /></a>
+  <a href="https://www.npmjs.com/package/better-investment-mcp"><img src="https://img.shields.io/npm/dm/better-investment-mcp.svg?style=flat-square" alt="npm downloads per month" /></a>
   <a href="https://github.com/guilhermebkel/better-investment-mcp/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/guilhermebkel/better-investment-mcp/ci.yml?branch=main&label=CI" alt="CI" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow" alt="License: MIT" /></a>
 </p>
